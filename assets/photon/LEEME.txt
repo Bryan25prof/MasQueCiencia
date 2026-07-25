@@ -1,0 +1,20 @@
+CARPETA: assets/photon/
+=========================================================
+ESTADO: VACÍA A PROPÓSITO (limpieza Beta v1.0, EOP-035)
+
+Desde EOP-034, "La Curiosidad" es un modelo vectorial construido
+directamente en código (js/shared/photon.js) — no depende de ningún
+archivo de esta carpeta.
+
+Los archivos históricos que quedaban acá (photon-oficial.png,
+photon-placeholder.svg — el PNG aprobado en EOP-027, ya reemplazado)
+se eliminaron en la limpieza de empaquetado de Beta v1.0, tal como
+ya se había anticipado en la versión anterior de este archivo: no
+tenían ninguna referencia activa en el proyecto, solo se mencionaban
+en comentarios históricos de código.
+
+Si en el futuro se decide volver a un activo externo (PNG/SVG
+ilustrado a mano) en vez del modelo construido en código, el punto
+de integración sigue siendo js/shared/photon.js → buildSVG()/buildDom().
+Ver CHANGELOG.md (EOP-027, EOP-034) para el historial completo de
+esta decisión.

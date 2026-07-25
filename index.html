@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <!-- ============================================================
+       QUÍMICA INTERACTIVA 10°  — Lic. Bryan Chavarría C.
+       FASE 0: Fundación de la Plataforma
+       Archivo: index.html  |  Punto de entrada único (SPA)
+  ============================================================ -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Plataforma educativa de Química 10° — Lic. Bryan Chavarría C.">
+  <title>Química Interactiva 10° | Lic. Bryan Chavarría C.</title>
+  <!-- Identidad v2.0: favicon SVG propio (átomo — núcleo + 3 órbitas), reemplaza el emoji -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='17' cy='17' r='4.4' fill='%23FFD700'/%3E%3Cg fill='none' stroke='%231FDBFF' stroke-width='1.6'%3E%3Cellipse cx='17' cy='17' rx='15' ry='6'/%3E%3Cellipse cx='17' cy='17' rx='15' ry='6' transform='rotate(60 17 17)'/%3E%3Cellipse cx='17' cy='17' rx='15' ry='6' transform='rotate(120 17 17)'/%3E%3C/g%3E%3Ccircle cx='2' cy='17' r='2' fill='%237B2FFF'/%3E%3Ccircle cx='32' cy='17' r='2' fill='%2300FF88'/%3E%3C/svg%3E">
+
+  <!-- Google Fonts: Space Grotesk (display), Inter (body), JetBrains Mono (code/fórmulas) — Identidad v2.0 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Hoja de estilos principal -->
+  <link rel="stylesheet" href="css/main.css">
+  <!-- FASE 1.5: estilos de los sistemas compartidos (glosario, búsqueda, xref, hints, PNE) -->
+  <link rel="stylesheet" href="css/standards.css">
+  <!-- Componente Photon — EOP-034: activo oficial ahora es un modelo vectorial (SVG con ojos), ya no un PNG externo -->
+  <link rel="stylesheet" href="css/photon.css">
+</head>
+<body>
+
+<!-- ============================================================
+     LOGOTIPO — Identidad v2.0 (Sprint de Dirección de Arte)
+     Marca "átomo": núcleo dorado + 3 órbitas cian + 2 electrones
+     (violeta/verde). Reutilizable vía <use href="#mqc-atom-logo">.
+============================================================ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <g id="mqc-atom-logo">
+      <circle cx="17" cy="17" r="4.4" fill="#FFD700"/>
+      <g fill="none" stroke="#1FDBFF" stroke-width="1.5">
+        <ellipse cx="17" cy="17" rx="15" ry="6"/>
+        <ellipse cx="17" cy="17" rx="15" ry="6" transform="rotate(60 17 17)"/>
+        <ellipse cx="17" cy="17" rx="15" ry="6" transform="rotate(120 17 17)"/>
+      </g>
+      <circle cx="2" cy="17" r="2" fill="#7B2FFF"/><circle cx="32" cy="17" r="2" fill="#00FF88"/>
+    </g>
+  </defs>
+</svg>
+
+<!-- ============================================================
+     ESTRUCTURA SPA — todo el contenido se renderiza en #content
+     El router (js/core/router.js) maneja la navegación
+============================================================ -->
+<div id="app">
+
+  <!-- ── PANTALLA DE CARGA ────────────────────────────────── -->
+  <div id="loading-screen">
+    <div class="loading-atom">
+      <div class="nucleus"></div>
+      <div class="orbit orbit-1"><div class="electron"></div></div>
+      <div class="orbit orbit-2"><div class="electron"></div></div>
+      <div class="orbit orbit-3"><div class="electron"></div></div>
+    </div>
+    <p class="loading-text">QUÍMICA INTERACTIVA 10°</p>
+    <p class="loading-sub">Tu laboratorio te espera.</p>
+  </div>
+
+  <!-- ── MODAL DE BIENVENIDA (primera visita) ─────────────── -->
+  <div id="welcome-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="welcome-title-id">
+    <div class="modal-card welcome-card">
+      <div class="welcome-atom-icon"><svg width="52" height="52" viewBox="0 0 34 34"><use href="#mqc-atom-logo"/></svg></div>
+      <h2 class="welcome-title" id="welcome-title-id">QUÍMICA INTERACTIVA</h2>
+      <p class="welcome-subtitle">Décimo Año — Lic. Bryan Chavarría C.</p>
+      <p class="welcome-desc">
+        Bienvenido a tu laboratorio digital de química.<br>
+        ¿Cómo te llamas, estudiante?
+      </p>
+      <div class="welcome-form">
+        <label for="student-name-input" class="sr-only">Escribe tu nombre</label>
+        <input
+          type="text"
+          id="student-name-input"
+          class="welcome-input"
+          placeholder="Escribe tu nombre aquí"
+          maxlength="30"
+          autocomplete="off"
+          aria-label="Escribe tu nombre"
+        >
+        <button id="start-btn" class="btn btn-primary btn-lg">
+          ¡Comenzar! 🚀
+        </button>
+      </div>
+      <p class="welcome-footer">
+        Tu progreso se guarda automáticamente en este dispositivo.
+      </p>
+    </div>
+  </div>
+
+  <!-- ── LAYOUT PRINCIPAL (visible tras login) ─────────────── -->
+  <div id="main-layout" class="hidden">
+
+    <!-- TOPBAR MÓVIL -->
+    <header id="topbar">
+      <button id="menu-toggle" class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <span class="topbar-title">QUÍMICA 10°</span>
+      <div class="topbar-info">
+        <span class="topbar-badge" id="topbar-level-badge">⚛️ Nv.1</span>
+        <span class="topbar-xp" id="topbar-xp">0 XP</span>
+      </div>
+    </header>
+
+    <!-- OVERLAY OSCURO (cierra el sidebar en móvil) -->
+    <div id="sidebar-overlay"></div>
+
+    <!-- ── SIDEBAR / MENÚ LATERAL ──────────────────────────── -->
+    <nav id="sidebar">
+
+      <!-- Logo y título -->
+      <div class="sidebar-brand">
+        <div class="brand-icon"><svg width="30" height="30" viewBox="0 0 34 34"><use href="#mqc-atom-logo"/></svg></div>
+        <div class="brand-text">
+          <span class="brand-name">QUÍMICA 10°</span>
+          <span class="brand-author">Lic. Bryan Chavarría C.</span>
+        </div>
+      </div>
+
+      <!-- Tarjeta del usuario -->
+      <div class="sidebar-user-card">
+        <div class="user-avatar" id="user-avatar">🧪</div>
+        <div class="user-info">
+          <div class="user-name" id="sidebar-user-name">Estudiante</div>
+          <div class="user-level" id="sidebar-user-level">⚛️ Átomo Novato</div>
+        </div>
+        <div class="user-xp-section">
+          <div class="xp-bar-wrap">
+            <div class="xp-bar-fill" id="sidebar-xp-fill" style="width:0%"></div>
+          </div>
+          <div class="xp-text" id="sidebar-xp-text">0 / 200 XP</div>
+        </div>
+      </div>
+
+      <!-- Navegación principal -->
+      <!--
+        ╔═══════════════════════════════════════════╗
+        ║  AGREGAR NUEVAS SECCIONES AL MENÚ AQUÍ    ║
+        ║  data-section="nombre"  debe coincidir    ║
+        ║  con el nombre registrado en router.js     ║
+        ╚═══════════════════════════════════════════╝
+      -->
+      <ul class="sidebar-nav" id="sidebar-nav" role="navigation" aria-label="Navegación principal">
+        <li class="nav-item active" data-section="home" role="button" tabindex="0" aria-current="page">
+          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>
+</svg></span>
+          <span class="nav-label">Inicio</span>
+        </li>
+        <li class="nav-item" data-section="units" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M4 5h7v14H4z"/><path d="M13 5h7v14h-7z"/><path d="M4 9h7M13 9h7"/>
+</svg></span>
+          <span class="nav-label">Unidades</span>
+        </li>
+        <li class="nav-item" data-section="integrador" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M12 3l3 3-3 3-3-3z"/><path d="M21 12l-3 3-3-3 3-3z"/><path d="M12 21l-3-3 3-3 3 3z"/><path d="M3 12l3-3 3 3-3 3z"/>
+</svg></span>
+          <span class="nav-label">Proyecto Integrador</span>
+        </li>
+
+        <!-- Separador -->
+        <li class="nav-separator" role="separator"><span>Recursos</span></li>
+
+        <li class="nav-item" data-section="periodic-table" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="3" width="5" height="5"/><rect x="9.5" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="9.5" width="5" height="5"/><rect x="9.5" y="9.5" width="5" height="5"/><rect x="16" y="9.5" width="5" height="5"/>
+</svg></span>
+          <span class="nav-label">Tabla Periódica</span>
+        </li>
+        <li class="nav-item" data-section="progress" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M4 20V13M10 20V8M16 20V11M22 20V5" stroke-linecap="round"/><path d="M2 20h20"/>
+</svg></span>
+          <span class="nav-label">Mi Progreso</span>
+        </li>
+        <li class="nav-item" data-section="about" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">ℹ️</span>
+          <span class="nav-label">Acerca de</span>
+        </li>
+      </ul>
+
+      <!-- EOP-023: Accesos rápidos — antes flotaban sobre la interfaz
+           (js/shared/launcher.js), ahora viven de forma permanente
+           dentro del sidebar. Misma funcionalidad, sin cambios de
+           lógica: launcher.js ahora ata sus listeners a estos botones
+           en vez de inyectar una barra flotante. -->
+      <div class="mqc-quick-access">
+        <div class="mqc-quick-access-label">Accesos rápidos</div>
+        <button class="mqc-quick-access-item" id="qi-launch-search">
+          <span class="mqc-qa-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8"/>
+</svg></span>
+          <span><span class="mqc-qa-name">Buscar</span><span class="mqc-qa-desc">Encuentra lo que necesitas</span></span>
+        </button>
+        <button class="mqc-quick-access-item" id="qi-launch-gloss">
+          <span class="mqc-qa-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<path d="M6 3h12v18l-6-3.5L6 21z"/>
+</svg></span>
+          <span><span class="mqc-qa-name">Glosario</span><span class="mqc-qa-desc">Términos y definiciones</span></span>
+        </button>
+        <button class="mqc-quick-access-item" id="qi-launch-pne">
+          <span class="mqc-qa-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="12" cy="12" r="9"/><circle cx="12" cy="7.5" r="1.4" fill="currentColor" stroke="none"/><path d="M7 10.5h10M12 10.5v4.5M9 19l3-4 3 4"/>
+</svg></span>
+          <span><span class="mqc-qa-name">Accesibilidad</span><span class="mqc-qa-desc">Ajustes visuales y de uso</span></span>
+        </button>
+      </div>
+
+      <!-- Pie del sidebar -->
+      <div class="sidebar-footer">
+        <span>Versión 1.0 — Fase 0</span>
+      </div>
+    </nav><!-- /sidebar -->
+
+    <!-- ── ÁREA DE CONTENIDO PRINCIPAL ─────────────────────── -->
+    <main id="content">
+      <!--
+        ╔══════════════════════════════════════════════════╗
+        ║  TODO EL CONTENIDO SE INYECTA AQUÍ              ║
+        ║  El router.js llama al módulo correspondiente   ║
+        ║  que genera el HTML y lo inserta en este div.   ║
+        ╚══════════════════════════════════════════════════╝
+      -->
+    </main>
+
+  </div><!-- /main-layout -->
+
+  <!-- ── MODAL GLOBAL (tabla periódica, logros, etc.) ───────── -->
+  <div id="global-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div id="global-modal-content" class="modal-card">
+      <!-- Contenido generado dinámicamente -->
+    </div>
+  </div>
+
+  <!-- ── CONTENEDOR DE TOASTS / NOTIFICACIONES ─────────────── -->
+  <div id="toast-container" aria-live="polite"></div>
+
+  <!-- ── CONTENEDOR DE "LA CURIOSIDAD" (Photon) ─────────────────
+       EOP-028: reubicado. #toast-container vive en bottom:24px;
+       right:24px con z-index:9990 — el mismo rincón que ocupaba el
+       Fotón (z-index:700), y ambos se disparan con los MISMOS
+       eventos (XP, nivel, insignia), por lo que competían por el
+       mismo espacio justo cuando más coincidían en aparecer. Ahora
+       vive arriba a la derecha, bajo el topbar, lejos de los toasts
+       y del sidebar (izquierda).
+       EOP-030: posición y tamaño DEFINITIVOS, validados con el
+       configurador interactivo (top:96px/right:73px/124px de
+       diámetro — este último ajustado en css/photon.css .mqc-photon,
+       no aquí). El activo visual es
+       assets/photon/photon-oficial.png (EOP-027) — archivo eliminado
+       en la limpieza de Beta v1.0 (EOP-035), sin uso desde EOP-034. -->
+  <div id="photon-root" class="mqc-photon-root-anchor" style="position:fixed;width:1px;height:1px;z-index:700;pointer-events:none"></div>
+
+</div><!-- /app -->
+
+<!-- ============================================================
+     SCRIPTS — Orden de carga importante
+     1. Datos estáticos (sin fetch, para compatibilidad file://)
+     2. Módulos core
+     3. Módulos de página
+     4. Inicializador principal
+============================================================ -->
+
+<!-- 1. Datos -->
+<script src="js/data/elementos.js"></script>
+<!-- BUG-02 CORREGIDO: fuente única de datos de unidades (reemplaza UNITS y UNITS_META) -->
+<script src="js/data/unidades.js"></script>
+<!-- FASE 1A: banco de preguntas de la Unidad I (30 preguntas) -->
+<script src="js/data/preguntas-u01.js"></script>
+<script src="js/data/banco-pne-u01.js"></script>
+<script src="js/data/preguntas-u02.js"></script>
+<script src="js/data/banco-pne-u02.js"></script>
+<script src="js/data/preguntas-u03.js"></script>
+<script src="js/data/banco-pne-u03.js"></script>
+<script src="js/data/preguntas-u04.js"></script>
+<script src="js/data/banco-pne-u04.js"></script>
+<script src="js/data/preguntas-u05.js"></script>
+<script src="js/data/banco-pne-u05.js"></script>
+<script src="js/data/preguntas-u06.js"></script>
+<script src="js/data/banco-pne-u06.js"></script>
+<script src="js/data/preguntas-u07.js"></script>
+<script src="js/data/banco-pne-u07.js"></script>
+<script src="js/data/preguntas-u08.js"></script>
+<script src="js/data/banco-pne-u08.js"></script>
+<script src="js/data/preguntas-u09.js"></script>
+<script src="js/data/banco-pne-u09.js"></script>
+
+<!-- 2. Core -->
+<script src="js/core/storage.js"></script>
+<script src="js/core/gamification.js"></script>
+<script src="js/core/router.js"></script>
+<script src="js/shared/profiles.js"></script>
+<script src="js/shared/profiles-ui.js"></script>
+
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║  SISTEMAS COMPARTIDOS — FASE 1.5 (ESTANDARIZACIÓN)        ║
+  ║  Cargan tras el core y ANTES de las unidades, para que    ║
+  ║  toda unidad (unit-01, unit-02, …) los herede al cargar.  ║
+  ╚══════════════════════════════════════════════════════════╝
+-->
+<script src="js/shared/qi.js"></script>
+<script src="js/shared/glossary.js"></script>
+<script src="js/shared/assets.js"></script>
+<script src="js/shared/media.js"></script>
+<script src="js/shared/xref.js"></script>
+<script src="js/shared/search.js"></script>
+<script src="js/shared/hints.js"></script>
+<script src="js/shared/pne.js"></script>
+<script src="js/shared/viz.js"></script>
+<script src="js/shared/chem.js"></script>
+<script src="js/shared/mqc.js"></script>
+<script src="js/shared/mentor.js"></script>
+<script src="js/shared/insights.js"></script>
+<script src="js/shared/pne-bank.js"></script>
+<!-- Componente Photon — EOP-034: modelo vectorial oficial con ojos, construido en código (sin archivo de activo externo) -->
+<script src="js/shared/photon.js"></script>
+<script src="js/shared/launcher.js"></script>
+
+<!-- 3. Módulos de página -->
+<script src="js/modules/home.js"></script>
+<script src="js/modules/units.js"></script>
+<!--
+  ╔══════════════════════════════════════════════════════════╗
+  ║  PLUGINS DE UNIDAD (FASE 1+)                             ║
+  ║  Se cargan DESPUÉS de units.js (que crea UNIT_PLUGINS).  ║
+  ║  Cada archivo registra sus renderizadores de tabs.       ║
+  ║  Para agregar la Unidad II: <script ... unit-02.js>      ║
+  ╚══════════════════════════════════════════════════════════╝
+-->
+<script src="js/units/unit-01.js"></script>
+<script src="js/units/unit-02.js"></script>
+<script src="js/units/unit-03.js"></script>
+<script src="js/units/unit-04.js"></script>
+<script src="js/units/unit-05.js"></script>
+<script src="js/units/unit-06.js"></script>
+<script src="js/units/unit-07.js"></script>
+<script src="js/units/unit-08.js"></script>
+<script src="js/units/unit-09.js"></script>
+<script src="js/modules/periodic-table.js"></script>
+<script src="js/modules/progress.js"></script>
+
+<!-- Proyecto Integrador Final MQC — módulo activo (Router), no es una Experience ni un slot reservado -->
+<script src="js/modules/integrador.js"></script>
+
+<!-- 4. App init (siempre al final) -->
+<script src="js/app.js"></script>
+
+</body>
+</html>

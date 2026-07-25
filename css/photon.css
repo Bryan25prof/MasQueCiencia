@@ -1,0 +1,97 @@
+/* ================================================================
+   MÁSQUECIENCIA — css/photon.css
+   ESTRUCTURA Y ANIMACIÓN DE "LA CURIOSIDAD" — modelo vectorial oficial
+   ================================================================
+   EOP-034: el activo oficial pasó de un PNG cargado externamente a
+   un SVG construido en código (ver js/shared/photon.js → buildSVG).
+   Esto resuelve la limitación de resolución del PNG anterior
+   (520×470px de origen) — un vector no tiene límite de nitidez en
+   ningún tamaño de pantalla.
+
+   Este archivo define: posición del contenedor, tamaño oficial,
+   flotado idle, y las animaciones (respiración, giro de órbitas,
+   vibración del corazón) que photon.js dispara por clase, más las
+   custom properties de color (--pc) que cada estado fija en el SVG.
+================================================================ */
+
+.mqc-photon {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 139px;
+  height: 139px;
+  margin: -69.5px 0 0 -69.5px; /* EOP-034: tamaño definitivo (139px de diámetro), validado con el configurador de coordenadas */
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity .5s ease, transform .5s ease;
+  will-change: transform, opacity;
+}
+
+.mqc-photon--visible {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.mqc-photon svg { width: 100%; height: 100%; display: block; }
+
+/* ---------------- Flotado idle (drift suave) ---------------- */
+.mqc-photon--floating {
+  animation: mqcPhotonDrift 6s ease-in-out infinite;
+}
+@keyframes mqcPhotonDrift {
+  0%   { margin-top: -69.5px; }
+  50%  { margin-top: -77.5px; }
+  100% { margin-top: -69.5px; }
+}
+
+/* ---------------- Respiración del núcleo ---------------- */
+@keyframes mqcPBreathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+.p-core { transform-origin: 110px 110px; transition: fill .5s ease; }
+
+/* ---------------- Giro de las 3 órbitas (velocidad variable por estado) ---------------- */
+.p-ring0, .p-ring1, .p-ring2, .p-qring0, .p-qring1, .p-qring2 {
+  transform-origin: 110px 110px;
+  transition: transform .4s ease;
+}
+@keyframes mqcPSpin0 { from{transform:rotate(0deg)}   to{transform:rotate(360deg)} }
+@keyframes mqcPSpin1 { from{transform:rotate(60deg)}  to{transform:rotate(420deg)} }
+@keyframes mqcPSpin2 { from{transform:rotate(120deg)} to{transform:rotate(-240deg)} }
+
+/* ---------------- Vibración del corazón (Motivación) ---------------- */
+@keyframes mqcPVibrateHeart {
+  0%, 100% { stroke-width: 1.6; opacity: .55; }
+  50%      { stroke-width: 2.3; opacity: .85; }
+}
+
+/* Respeta la preferencia de movimiento reducido del sistema operativo */
+@media (prefers-reduced-motion: reduce) {
+  .mqc-photon--floating,
+  .p-core, .p-ring0, .p-ring1, .p-ring2, .p-qring0, .p-qring1, .p-qring2,
+  .p-heartPath {
+    animation: none !important;
+  }
+  .mqc-photon { transition-duration: .01ms !important; }
+}
+
+/* ================================================================
+   Posición responsive del ancla del Fotón
+   ================================================================
+   EOP-033: corregido de top:96px (colisionaba con el título de las
+   tarjetas en desktop). EOP-034: valores definitivos confirmados con
+   el configurador interactivo de coordenadas.
+================================================================ */
+.mqc-photon-root-anchor {
+  top: 64px;
+  right: 76px;
+}
+@media (max-width: 1023px) {
+  .mqc-photon-root-anchor {
+    top: 70px; /* debajo de la topbar móvil (--topbar-height: 56px) + margen */
+    right: 16px;
+  }
+}
