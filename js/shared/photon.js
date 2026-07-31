@@ -410,6 +410,12 @@
         return;
       }
     }
+
+    /* HOTFIX-04: sonido — solo se llama acá, después del guardián de
+       prioridad, así que nunca suena para una reacción que en
+       realidad fue ignorada. Independiente y opcional (silencioso
+       si photon-sound.js no está cargado o el usuario lo desactivó). */
+    if (typeof PhotonSound !== 'undefined' && PhotonSound.play) { try { PhotonSound.play(name); } catch (e) {} }
     inst.stateStartTime = Date.now();
 
     inst.state = name;

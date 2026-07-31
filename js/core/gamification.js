@@ -191,7 +191,7 @@ const Gamification = (() => {
       id:   'pne-desbloqueado',
       name: 'Desafío Desbloqueado',
       icon: '🔓',
-      desc: 'Aprobaste los exámenes de las 9 unidades y desbloqueaste el Desafío Final PNE'
+      desc: 'Aprobaste al menos 5 de las 9 unidades y desbloqueaste el Desafío Final PNE'
     },
     {
       id:   'pne-aprobado',
@@ -406,14 +406,15 @@ const Gamification = (() => {
       newBadges.push('integrador-final');
     }
 
-    // 'pne-desbloqueado' — aprobó los exámenes de las 9 unidades (HOTFIX-02)
+    // 'pne-desbloqueado' — aprobó un mínimo de 5 de las 9 unidades (actualizado a pedido del usuario, antes exigía 9/9)
     if (typeof UNIDADES_DATA !== 'undefined') {
-      const unlockedPNE = UNIDADES_DATA.every(u => {
+      const PNE_MIN_UNITS = 5;
+      const passedCount = UNIDADES_DATA.filter(u => {
         const uData = data.units[u.id];
         const passMin = (u.exam && u.exam.pass) || 70;
         return uData && (uData.examBest || 0) >= passMin;
-      });
-      if (unlockedPNE && !data.badges.includes('pne-desbloqueado')) {
+      }).length;
+      if (passedCount >= PNE_MIN_UNITS && !data.badges.includes('pne-desbloqueado')) {
         newBadges.push('pne-desbloqueado');
       }
     }

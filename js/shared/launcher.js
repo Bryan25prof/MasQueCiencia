@@ -17,13 +17,29 @@
     const ov = document.createElement('div');
     ov.className = 'qi-overlay';
     ov.id = 'qi-pne-overlay';
+    /* HOTFIX-04: el interruptor de sonido vive en el mismo panel por
+       conveniencia de interfaz (un solo lugar de preferencias para
+       el estudiante) — pero photon-sound.js es completamente
+       independiente de pne.js, no hay acoplamiento de código. */
+    const soundRow = (typeof PhotonSound !== 'undefined') ? `
+        <label class="qi-pne-row">
+          <span>🔊 Sonidos de La Curiosidad</span>
+          <input type="checkbox" class="qi-pne-toggle" id="qi-sound-toggle" ${PhotonSound.isEnabled() ? 'checked' : ''}>
+        </label>` : '';
     ov.innerHTML = `<div class="qi-overlay-card">
         <div class="qi-overlay-head"><h3>♿ Accesibilidad</h3>
           <button class="btn btn-ghost btn-sm" id="qi-pne-x">✕</button></div>
-        <div class="qi-overlay-body">${PNE.renderPanel()}</div>
+        <div class="qi-overlay-body">${PNE.renderPanel()}${soundRow}</div>
       </div>`;
     document.body.appendChild(ov);
     PNE.bindPanel(ov);
+    const soundToggle = document.getElementById('qi-sound-toggle');
+    if (soundToggle) {
+      soundToggle.addEventListener('change', () => {
+        PhotonSound.setEnabled(soundToggle.checked);
+        if (soundToggle.checked) PhotonSound.play('celebracion'); /* confirmación audible inmediata al activar */
+      });
+    }
     ov.addEventListener('click', e => { if (e.target === ov) ov.remove(); });
     document.getElementById('qi-pne-x').addEventListener('click', () => ov.remove());
   }

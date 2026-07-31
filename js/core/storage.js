@@ -130,6 +130,12 @@ const Storage = (() => {
     exam: {
       general: { attempts: 0, best: 0 }
     },
+    /* Sonidos de La Curiosidad (HOTFIX-04) — preferencia general de
+       la plataforma, independiente de las banderas de accesibilidad
+       de PNE. Activado por defecto. */
+    sound: {
+      enabled: true
+    },
     /* Desafío Final PNE (HOTFIX-02) — estadísticas propias, independientes
        de las 9 unidades. Aditivo, retrocompatible. */
     pne: {

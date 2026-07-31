@@ -73,9 +73,11 @@ Router.register('units', (() => {
       `;
     }).join('');
 
-    /* HOTFIX-02: tarjeta del Desafío Final PNE — no es una Unidad X
-       curricular (no está en UNIDADES_DATA), es una tarjeta adicional
-       que se desbloquea al aprobar los exámenes de las 9 unidades. */
+    /* HOTFIX-02 (actualizado a pedido del usuario): tarjeta del
+       Desafío Final PNE — no es una Unidad X curricular (no está en
+       UNIDADES_DATA), es una tarjeta adicional. Se desbloquea con un
+       mínimo de PNE_MIN_UNITS exámenes aprobados, no los 9 completos. */
+    const PNE_MIN_UNITS = 5;
     const passCounts = UNIDADES_DATA.map(u => {
       const uData = data.units[u.id] || {};
       const passMin = (u.exam && u.exam.pass) || 70;
@@ -83,7 +85,7 @@ Router.register('units', (() => {
     });
     const passedCount = passCounts.reduce((a, b) => a + b, 0);
     const totalUnits = UNIDADES_DATA.length;
-    const pneUnlocked = passedCount >= totalUnits;
+    const pneUnlocked = passedCount >= PNE_MIN_UNITS;
     const pneData = data.pne || {};
 
     const pneCard = `
@@ -100,7 +102,7 @@ Router.register('units', (() => {
         <div class="unit-meta">
           ${pneUnlocked
             ? `<span class="unit-meta-item">🎯 ${pneData.attempts || 0} intento${(pneData.attempts||0)!==1?'s':''} · mejor: ${pneData.bestScore || 0}/100</span>`
-            : `<span class="unit-meta-item">Aprueba los exámenes de las 9 unidades para desbloquear el Desafío PNE.</span>`}
+            : `<span class="unit-meta-item">Aprueba los exámenes de al menos ${PNE_MIN_UNITS} de las 9 unidades para desbloquear el Desafío PNE.</span>`}
           <div class="unit-progress">
             <div class="unit-progress-bar">
               <div class="unit-progress-fill" style="width:${Math.round((passedCount/totalUnits)*100)}%;background:${pneUnlocked?'var(--xp-gold, #F9FF4D)':''}"></div>
@@ -354,7 +356,7 @@ Router.register('units', (() => {
     });
     document.querySelectorAll('[data-action="locked-pne"]').forEach(el => {
       el.addEventListener('click', () => {
-        _localToast('🔒', 'Desafío bloqueado', 'Aprueba los exámenes de las 9 unidades para desbloquearlo.');
+        _localToast('🔒', 'Desafío bloqueado', 'Aprueba los exámenes de al menos 5 de las 9 unidades para desbloquearlo.');
       });
     });
     document.querySelectorAll('[data-action="open-unit"]').forEach(el => {

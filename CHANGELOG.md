@@ -347,3 +347,19 @@ Se incorporó "PNE — Prueba Nacional Estandarizada" como experiencia final des
 - **Hallazgo real durante el desarrollo:** la integración pendiente de la Unidad I (documentada en el diagnóstico HOTFIX-01) resultó tener una causa más profunda de lo que parecía — a `unit-01.js` le faltaba por completo la clave `pne:` en su `QI.registerUnit()` (el punto real donde `qi.js` registra el banco adaptado en `PNEBank`). Agregar solo `present()` no alcanzaba. Ya corregido y verificado.
 - Auditoría: `node --check` limpio en 57/57 archivos; 22/22 pruebas de la lista de verificación obligatoria en PASS, más una prueba adicional end-to-end con el DOM real.
 - **"Desafío Final PNE integrado, validado y listo para actualización de MásQueCiencia Beta."**
+
+### HOTFIX-03 — Umbral de desbloqueo de PNE: de 9/9 a mínimo 5/9
+Cambio explícito solicitado por el usuario tras probar la plataforma.
+
+- Actualizado en las 3 ubicaciones donde la condición vivía de forma independiente (podían haber quedado inconsistentes entre sí si se cambiaba solo una): `js/modules/pne-final.js` (guardia real de acceso al módulo), `js/modules/units.js` (estado visual de la tarjeta), `js/core/gamification.js` (condición de la insignia "Desafío Desbloqueado").
+- Mensajes de texto actualizados en los 3 lugares donde mencionaban "las 9 unidades" para reflejar el nuevo mínimo de 5.
+- Verificado con prueba de caso límite exacto: 4/9 aprobadas sigue bloqueado, 5/9 desbloquea correctamente — en el módulo, en la tarjeta, y en la insignia, los 3 de forma consistente.
+- `node --check` limpio en 57/57 archivos.
+
+### HOTFIX-04 — PhotonSound: sonidos por estado, primera implementación real
+Resuelve un hallazgo documentado desde el QA de Beta (EOP-034): "los sonidos funcionan" siempre había marcado como no aplicable porque el sistema nunca existió. Ahora sí.
+
+- **Nuevo módulo:** `js/shared/photon-sound.js` — 5 tonos generados en código con Web Audio API (sin archivos de audio, 0 peso agregado, 100% offline), validados primero en un laboratorio de prueba interactivo antes de integrarse. Mapeados a los estados reales de Photon: Motivación (correcto), Ayuda (incorrecto, suave), Celebración (examen aprobado / insignia desbloqueada — comparten el mismo tono porque ya comparten el mismo estado), Nivel (subida de nivel), Desafío (inicio de examen).
+- **Integración de un solo punto:** el sonido se engancha dentro de `photon.js` → `setState()`, justo después del guardián de prioridad (EOP-038) — no se tocó ninguna de las 9 unidades ni gamification.js. Una reacción que el guardián de prioridad ignora (por ejemplo, "motivación" intentando interrumpir "nivel") tampoco suena — verificado explícitamente con prueba.
+- **Preferencia persistente**, activada por defecto, con su propio interruptor en el panel de Accesibilidad (mismo lugar de interfaz que las banderas de PNE, pero código completamente independiente — el sonido no es una bandera de accesibilidad).
+- Auditoría: `node --check` limpio en 58/58 archivos; 6/6 pruebas del sistema de sonido (activado por defecto, tono real al reaccionar, silencio en estados sin tono asignado, silencio en reacciones bloqueadas por prioridad, silencio total al desactivar, persistencia en Storage); recorrido de regresión completo sin fallos.

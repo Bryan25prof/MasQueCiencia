@@ -21,6 +21,9 @@ Router.register('pne-final', (() => {
   const TOTAL_QUESTIONS = 30;
   const MIN_PER_UNIT = 3;
   const TIME_MIN = 45;
+  /* Cambio explícito a pedido del usuario: antes exigía 9/9, ahora un
+     mínimo de 5 de las 9 unidades aprobadas. */
+  const MIN_UNITS_REQUIRED = 5;
   const PASS_PCT = (typeof UNIDADES_DATA !== 'undefined' && UNIDADES_DATA[0] && UNIDADES_DATA[0].exam)
     ? UNIDADES_DATA[0].exam.pass : 70;
 
@@ -51,7 +54,7 @@ Router.register('pne-final', (() => {
       const passMin = (meta && meta.exam && meta.exam.pass) || 70;
       if ((uData.examBest || 0) >= passMin) passed++;
     });
-    return { passed, total: UNIT_IDS.length, unlocked: passed >= UNIT_IDS.length };
+    return { passed, total: UNIT_IDS.length, unlocked: passed >= MIN_UNITS_REQUIRED };
   }
 
   function _buildAttempt() {
@@ -104,7 +107,7 @@ Router.register('pne-final', (() => {
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;text-align:center;max-width:520px;margin:0 auto">
         <div style="font-size:2.4rem">🔒</div>
         <h3 style="margin:.5rem 0">Todavía no está desbloqueado</h3>
-        <p style="color:var(--text-secondary);font-size:.9rem">Aprueba los exámenes de las 9 unidades para desbloquear el Desafío PNE.</p>
+        <p style="color:var(--text-secondary);font-size:.9rem">Aprueba los exámenes de al menos ${MIN_UNITS_REQUIRED} de las 9 unidades para desbloquear el Desafío PNE.</p>
         <div class="progress-bar" style="margin:1rem 0"><div class="progress-fill progress-fill-cyan" style="width:${Math.round((status.passed/status.total)*100)}%"></div></div>
         <p style="font-family:var(--font-code);color:var(--text-muted)">${status.passed}/${status.total} unidades aprobadas</p>
         <button class="btn btn-ghost" id="pne-back">← Volver a Unidades</button>
