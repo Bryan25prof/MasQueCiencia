@@ -1115,6 +1115,15 @@ code, .formula {
   min-height: 180px;
 }
 
+/* HOTFIX-02: mismo lenguaje visual ya usado para insignias bloqueadas
+   (.badge-item:not(.unlocked)) — no se inventa un estilo nuevo. */
+.unit-card-locked {
+  filter: grayscale(0.85);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.unit-card-locked:hover { transform: none; }
+
 .unit-card::before {
   content: '';
   position: absolute;

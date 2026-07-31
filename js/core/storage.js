@@ -130,6 +130,31 @@ const Storage = (() => {
     exam: {
       general: { attempts: 0, best: 0 }
     },
+    /* Desafío Final PNE (HOTFIX-02) — estadísticas propias, independientes
+       de las 9 unidades. Aditivo, retrocompatible. */
+    pne: {
+      attempts: 0,
+      firstAttemptTs: null,
+      lastAttemptTs: null,
+      lastScore: 0,
+      bestScore: 0,
+      passCount: 0,
+      failCount: 0,
+      scoreHistory: [],
+      perUnit: {
+        'unit-01': { best: 0, correctSum: 0, totalSum: 0, errors: 0 },
+        'unit-02': { best: 0, correctSum: 0, totalSum: 0, errors: 0 },
+        'unit-03': { best: 0, correctSum: 0, totalSum: 0, errors: 0 },
+        'unit-04': { best: 0, correctSum: 0, totalSum: 0, errors: 0 },
+        'unit-05': { best: 0, correctSum: 0, totalSum: 0, errors: 0 },
+        'unit-06': { best: 0, correctSum: 0, totalSum: 0, errors: 0 },
+        'unit-07': { best: 0, correctSum: 0, totalSum: 0, errors: 0 },
+        'unit-08': { best: 0, correctSum: 0, totalSum: 0, errors: 0 },
+        'unit-09': { best: 0, correctSum: 0, totalSum: 0, errors: 0 }
+      },
+      recentMissedQuestionIds: [],
+      lastAttemptQuestionIds: []
+    },
     /* Bitácora Científica MQC (EOP-009) — aditivo, retrocompatible */
     reflexiones: {
       /* unitId: "texto de la reflexión del estudiante" */

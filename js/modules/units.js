@@ -73,6 +73,44 @@ Router.register('units', (() => {
       `;
     }).join('');
 
+    /* HOTFIX-02: tarjeta del Desafío Final PNE — no es una Unidad X
+       curricular (no está en UNIDADES_DATA), es una tarjeta adicional
+       que se desbloquea al aprobar los exámenes de las 9 unidades. */
+    const passCounts = UNIDADES_DATA.map(u => {
+      const uData = data.units[u.id] || {};
+      const passMin = (u.exam && u.exam.pass) || 70;
+      return (uData.examBest || 0) >= passMin ? 1 : 0;
+    });
+    const passedCount = passCounts.reduce((a, b) => a + b, 0);
+    const totalUnits = UNIDADES_DATA.length;
+    const pneUnlocked = passedCount >= totalUnits;
+    const pneData = data.pne || {};
+
+    const pneCard = `
+      <div class="unit-card ${pneUnlocked ? '' : 'unit-card-locked'}"
+           style="--unit-color:#F9FF4D"
+           data-action="${pneUnlocked ? 'open-pne' : 'locked-pne'}">
+        <div class="unit-badge" style="color:${pneUnlocked ? 'var(--xp-gold, #F9FF4D)' : 'var(--text-muted)'};border-color:${pneUnlocked ? 'rgba(249,255,77,.3)' : 'var(--border)'}">
+          ${pneUnlocked ? '🔓 Desbloqueado' : '🔒 Bloqueado'}
+        </div>
+        <div class="unit-number">PNE</div>
+        <div class="unit-symbol">${pneUnlocked ? '🏆' : '🔒'}</div>
+        <div class="unit-name">Desafío Final PNE</div>
+        <div style="font-size:.72rem;color:var(--text-muted);margin:.2rem 0 .5rem">Prueba Nacional Estandarizada</div>
+        <div class="unit-meta">
+          ${pneUnlocked
+            ? `<span class="unit-meta-item">🎯 ${pneData.attempts || 0} intento${(pneData.attempts||0)!==1?'s':''} · mejor: ${pneData.bestScore || 0}/100</span>`
+            : `<span class="unit-meta-item">Aprueba los exámenes de las 9 unidades para desbloquear el Desafío PNE.</span>`}
+          <div class="unit-progress">
+            <div class="unit-progress-bar">
+              <div class="unit-progress-fill" style="width:${Math.round((passedCount/totalUnits)*100)}%;background:${pneUnlocked?'var(--xp-gold, #F9FF4D)':''}"></div>
+            </div>
+            <span>${passedCount}/${totalUnits}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
     return `
       <div class="units-page">
         <div class="section-header">
@@ -83,7 +121,7 @@ Router.register('units', (() => {
           El programa de Química Décimo Año consta de <strong>9 unidades</strong>
           con teoría, simuladores, juegos y exámenes. Selecciona una unidad para comenzar.
         </p>
-        <div class="units-grid">${cards}</div>
+        <div class="units-grid">${cards}${pneCard}</div>
       </div>
     `;
   }
@@ -298,7 +336,27 @@ Router.register('units', (() => {
 
   /* ── Eventos ────────────────────────────────────────────── */
 
+  function _localToast(icon, title, msg) {
+    const container = document.getElementById('toast-container');
+    if (!container) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast toast-info';
+    toast.innerHTML = `<span class="toast-icon">${icon}</span><div class="toast-body"><div class="toast-title">${title}</div>${msg ? `<p class="toast-msg">${msg}</p>` : ''}</div>`;
+    container.appendChild(toast);
+    setTimeout(() => { toast.classList.add('fade-out'); setTimeout(() => toast.remove(), 400); }, 3500);
+  }
+
   function _bindListEvents() {
+    document.querySelectorAll('[data-action="open-pne"]').forEach(el => {
+      el.addEventListener('click', () => {
+        if (typeof Router !== 'undefined' && Router.navigate) Router.navigate('pne-final');
+      });
+    });
+    document.querySelectorAll('[data-action="locked-pne"]').forEach(el => {
+      el.addEventListener('click', () => {
+        _localToast('🔒', 'Desafío bloqueado', 'Aprueba los exámenes de las 9 unidades para desbloquearlo.');
+      });
+    });
     document.querySelectorAll('[data-action="open-unit"]').forEach(el => {
       el.addEventListener('click', () => {
         _currentTab    = 'teoria';

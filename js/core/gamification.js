@@ -73,6 +73,14 @@ const Gamification = (() => {
     'exam-100':           200,   // obtener nota perfecta
     'general-exam-done':  100,   // examen general completado
 
+    /* Desafío Final PNE (HOTFIX-02) — reglas anti-farming se aplican
+       en pne-final.js antes de llamar a addXP(), no acá: XP completo
+       solo la primera aprobación; bonificación solo al mejorar el
+       mejor resultado propio; nunca por repetir un intento igual o
+       inferior. */
+    'pne-first-pass':     150,   // primera vez que aprueba el Desafío Final PNE
+    'pne-improved':        50,   // mejora su mejor resultado histórico en PNE
+
     /* Periódica */
     'element-explored':     5,   // abrir ficha de un elemento
 
@@ -178,6 +186,24 @@ const Gamification = (() => {
       name: 'Científico Integral',
       icon: '🧩',
       desc: 'Completaste el Proyecto Integrador Final MQC'
+    },
+    {
+      id:   'pne-desbloqueado',
+      name: 'Desafío Desbloqueado',
+      icon: '🔓',
+      desc: 'Aprobaste los exámenes de las 9 unidades y desbloqueaste el Desafío Final PNE'
+    },
+    {
+      id:   'pne-aprobado',
+      name: 'Desafío Superado',
+      icon: '🏅',
+      desc: 'Aprobaste el Desafío Final PNE por primera vez'
+    },
+    {
+      id:   'pne-dominio',
+      name: 'Dominio PNE',
+      icon: '👑',
+      desc: 'Obtuviste una puntuación sobresaliente (90 o más) en el Desafío Final PNE'
     }
   ];
 
@@ -378,6 +404,28 @@ const Gamification = (() => {
     // 'integrador-final' — completó el Proyecto Integrador Final (aditivo, MQC v1.0)
     if (data.integrador && data.integrador.completado && !data.badges.includes('integrador-final')) {
       newBadges.push('integrador-final');
+    }
+
+    // 'pne-desbloqueado' — aprobó los exámenes de las 9 unidades (HOTFIX-02)
+    if (typeof UNIDADES_DATA !== 'undefined') {
+      const unlockedPNE = UNIDADES_DATA.every(u => {
+        const uData = data.units[u.id];
+        const passMin = (u.exam && u.exam.pass) || 70;
+        return uData && (uData.examBest || 0) >= passMin;
+      });
+      if (unlockedPNE && !data.badges.includes('pne-desbloqueado')) {
+        newBadges.push('pne-desbloqueado');
+      }
+    }
+
+    // 'pne-aprobado' — primera aprobación del Desafío Final PNE
+    if (data.pne && data.pne.passCount >= 1 && !data.badges.includes('pne-aprobado')) {
+      newBadges.push('pne-aprobado');
+    }
+
+    // 'pne-dominio' — puntuación sobresaliente (90+) en el Desafío Final PNE
+    if (data.pne && data.pne.bestScore >= 90 && !data.badges.includes('pne-dominio')) {
+      newBadges.push('pne-dominio');
     }
 
     /*

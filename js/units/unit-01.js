@@ -737,6 +737,9 @@
     if (start) start.addEventListener('click', startExam);
   }
 
+  /* HOTFIX-02: present() — mismo patrón que las Unidades II-IX */
+  function present(q){return (typeof PNEBank!=='undefined')?PNEBank.present(UNIT_ID,q):q;}
+
   function startExam() {
     const bank = getBank();
     exam = {
@@ -763,7 +766,7 @@
   function drawQuestion() {
     const root = document.getElementById('u1-exam-root');
     if (!root || !exam) return;
-    const q = exam.qs[exam.i];
+    const q = present(exam.qs[exam.i]);
     const m = String(Math.floor(exam.remaining / 60)).padStart(2, '0');
     const s = String(exam.remaining % 60).padStart(2, '0');
 
@@ -801,7 +804,7 @@
   }
 
   function answerQuestion(choice) {
-    const q = exam.qs[exam.i];
+    const q = present(exam.qs[exam.i]);
     const ok = choice === q.correcta;
     exam.answers.push({ id: q.id, choice, ok });
 
@@ -1293,7 +1296,13 @@
       /* Imágenes (sistema listo; sin archivo aún → placeholder automático) */
       images: {} /* EOP-038: se retiraron las 2 imágenes sin archivo real (mostraban un recuadro de placeholder visible — mismo criterio que los videos retirados en EOP-037). Reactivar cuando existan archivos reales. */,
       /* Videos (preparado; muestran "próximamente" hasta cargar el archivo) */
-      videos: [] /* EOP-037: se retiraron los videos sin archivo real (mostraban "Disponible próximamente" — contradice el cierre del núcleo, EOP-014/019). Reactivar cuando existan archivos reales. */
+      videos: [] /* EOP-037: se retiraron los videos sin archivo real (mostraban "Disponible próximamente" — contradice el cierre del núcleo, EOP-014/019). Reactivar cuando existan archivos reales. */,
+      /* HOTFIX-02: causa raíz real de la desconexión de Unidad I — esta
+         clave faltaba por completo. qi.js lee manifest.pne y llama
+         PNEBank.register(unitId, manifest.pne) automáticamente; sin
+         esta clave, agregar present() en el examen no alcanzaba, porque
+         PNEBank nunca tenía nada registrado para 'unit-01'. */
+      pne: (typeof window!=='undefined'&&window.BANCO_PNE_U01)?window.BANCO_PNE_U01:null
     });
   }
 

@@ -336,3 +336,14 @@ Sprint de organización, sin ningún cambio funcional ni de identidad visual.
 - **CHANGELOG (Fase 7):** se agregó un bloque de registro oficial de versión en el encabezado (Beta v1.0, estado, última corrección funcional).
 - **GitHub Release (Fase 8):** preparado `GITHUB_RELEASE_DRAFT.md` — listo para copiar y pegar al crear el Release real en GitHub, combinando notas de versión, known issues y roadmap futuro.
 - **Sin `git init`, sin publicar** — tal como se indicó explícitamente. El repositorio queda organizado y documentado, el paso de inicializar Git y subirlo queda pendiente para cuando se autorice.
+
+### FINAL HOTFIX-02 — Desafío Final PNE integrado
+Se incorporó "PNE — Prueba Nacional Estandarizada" como experiencia final desbloqueable y acumulativa, reutilizando exclusivamente arquitectura y bancos ya existentes.
+
+- **Nuevo módulo:** `js/modules/pne-final.js` — desbloqueo automático al aprobar los exámenes de las 9 unidades, generación balanceada de 30 preguntas (mínimo 3 por unidad + 3 aleatorias, sin duplicados, distinta combinación cada intento), resultados con desempeño por unidad, estadísticas propias persistentes, lectura por voz bajo demanda (nunca automática), y reacciones de Photon usando exclusivamente estados ya existentes.
+- **Persistencia:** `data.pne` agregado a `storage.js` (aditivo).
+- **Gamificación:** 3 insignias nuevas + 2 entradas de XP con reglas anti-farming (XP completo solo en la primera aprobación; bonificación solo al mejorar el mejor resultado propio).
+- **Tarjeta en "Todas las Unidades":** bloqueada/desbloqueada con contador X/9, reutilizando el mismo lenguaje visual ya usado para insignias bloqueadas.
+- **Hallazgo real durante el desarrollo:** la integración pendiente de la Unidad I (documentada en el diagnóstico HOTFIX-01) resultó tener una causa más profunda de lo que parecía — a `unit-01.js` le faltaba por completo la clave `pne:` en su `QI.registerUnit()` (el punto real donde `qi.js` registra el banco adaptado en `PNEBank`). Agregar solo `present()` no alcanzaba. Ya corregido y verificado.
+- Auditoría: `node --check` limpio en 57/57 archivos; 22/22 pruebas de la lista de verificación obligatoria en PASS, más una prueba adicional end-to-end con el DOM real.
+- **"Desafío Final PNE integrado, validado y listo para actualización de MásQueCiencia Beta."**
