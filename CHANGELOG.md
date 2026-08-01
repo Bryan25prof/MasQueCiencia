@@ -363,3 +363,24 @@ Resuelve un hallazgo documentado desde el QA de Beta (EOP-034): "los sonidos fun
 - **Integración de un solo punto:** el sonido se engancha dentro de `photon.js` → `setState()`, justo después del guardián de prioridad (EOP-038) — no se tocó ninguna de las 9 unidades ni gamification.js. Una reacción que el guardián de prioridad ignora (por ejemplo, "motivación" intentando interrumpir "nivel") tampoco suena — verificado explícitamente con prueba.
 - **Preferencia persistente**, activada por defecto, con su propio interruptor en el panel de Accesibilidad (mismo lugar de interfaz que las banderas de PNE, pero código completamente independiente — el sonido no es una bandera de accesibilidad).
 - Auditoría: `node --check` limpio en 58/58 archivos; 6/6 pruebas del sistema de sonido (activado por defecto, tono real al reaccionar, silencio en estados sin tono asignado, silencio en reacciones bloqueadas por prioridad, silencio total al desactivar, persistencia en Storage); recorrido de regresión completo sin fallos.
+
+### HOTFIX-05 — Uniformidad visual de tarjetas en "Todas las Unidades"
+Corrección puramente visual, confirmada en navegador real por el usuario: la fila con la tarjeta PNE se veía más alta que las demás.
+
+- **Causa raíz real:** la tarjeta PNE tenía una línea de subtítulo extra que ninguna otra tarjeta tiene, y su mensaje de "bloqueado" era una oración larga que se envolvía a 2-3 líneas dentro de una fila que en el resto de las tarjetas siempre es de una sola línea — `.unit-card` usaba `min-height` (no una altura fija), así que el grid completo se estiraba para acomodar ese contenido más alto.
+- **Archivos modificados (2):** `css/main.css` (altura fija de 192px + recorte de texto a 2 líneas, con `overflow` como respaldo — escrito con el selector `.units-grid .unit-card` para no afectar las tarjetas de Inicio, que ya se veían bien y no se tocaron) y `js/modules/units.js` (se fusionó el subtítulo dentro de la misma zona flexible que usan las demás tarjetas, y se acortó el texto de bloqueo, referenciando la constante real `PNE_MIN_UNITS` en vez de un número suelto).
+- **Verificación real, no solo teórica:** se renderizó el CSS real con `wkhtmltoimage` (motor WebKit) en 3 anchos (1200px, 768px, 375px) y se inspeccionaron las imágenes resultantes — confirmado que las 10 tarjetas quedan con la misma altura en los 3 casos, incluso forzando nombres de unidad deliberadamente largos como prueba de estrés.
+- **Confirmado: sin cambios funcionales.** La lógica de desbloqueo, PNE, unidades, progreso, gamificación, Photon, sonidos y navegación quedaron exactamente iguales — verificado con una prueba de regresión de 6 casos (incluyendo que el desbloqueo con 5/9 sigue funcionando idéntico y las 36 combinaciones unidad:pestaña siguen intactas).
+- `node --check` limpio en 58/58 archivos.
+
+### MULTIGRADO Fase 1 — Arquitectura de continuidad Química 10.º → 11.º
+Infraestructura completa para convertir MQC en un sistema multigrado — sin desarrollar todavía el contenido de Química 11.º. Ver `docs/multigrado/` para la documentación completa (5 documentos + informe de QA).
+
+- **Decisión de arquitectura central:** no se re-anidó el esquema existente bajo una estructura "grade10/grade11" — se investigó primero y se confirmó que `Storage.load()` ya hacía un *merge* profundo automático con el esquema por defecto, así que agregar 4 claves nuevas (`profileMeta`, `identityLock`, `grade11Unlock`, `grade11`) fue toda la "migración" necesaria — los perfiles existentes las reciben solas.
+- **Identificador único e inmutable** por perfil (`MQC-XXXXXX`), generado en creación/reset/importación.
+- **Bloqueo progresivo de identidad**: nombre y grupo se bloquean automáticamente al aprobar el primer examen de cualquier unidad — detectado en un único punto (`Gamification.checkBadges()`), sin tocar ninguna de las 9 unidades. Avatar y preferencias nunca se bloquean.
+- **Química 11.º desbloqueable** con 2 rutas independientes (6/9 exámenes de décimo, o PNE ≥80) — verificado en el límite exacto (5 no alcanza, 6 sí; 79 no alcanza, 80 sí).
+- **3 archivos nuevos:** metadata de las 4 unidades de 11.º (todas "En desarrollo"), el selector de ruta académica ("Selecciona tu ruta científica"), y la vista de Química 11.º — reutilizando el 100% del Design System existente (0 líneas de CSS nuevas, hereda directamente el arreglo de uniformidad de tarjetas de HOTFIX-05).
+- **Mi Progreso y Bitácora actualizados** de forma aditiva: nueva sección de identidad académica + resumen por nivel; filtro de la Bitácora por grado (Todo/10.º/PNE/11.º), clasificando el historial existente sin modificar su texto guardado.
+- Auditoría: `node --check` limpio en 61/61 archivos; 47 pruebas ejecutadas (migración, identidad, desbloqueo, navegación, datos) — 100% en PASS.
+- **"Arquitectura multigrado 10.º → 11.º integrada, migrada y lista para incorporar las cuatro experiencias de Química 11.º."**

@@ -1099,6 +1099,33 @@ code, .formula {
   margin-top: 1.5rem;
 }
 
+/* HOTFIX-05: uniformidad visual — SOLO en la vista "Todas las
+   Unidades" (.units-grid), no afecta las tarjetas de Inicio
+   (.units-grid-home), que ya se ven uniformes y no se tocan.
+   Antes .unit-card tenía min-height, así que una tarjeta con más
+   texto (la de PNE) estiraba toda su fila del grid. Ahora es una
+   altura fija real, con recorte de texto como respaldo. */
+.units-grid .unit-card {
+  height: 192px;
+  overflow: hidden;
+}
+.units-grid .unit-card .unit-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Texto descriptivo variable (ej. mensaje de bloqueo de PNE) —
+   recortado a 2 líneas máximo, nunca empuja la altura de la tarjeta.
+   El indicador de progreso (ej. "5/9") vive aparte y nunca se recorta. */
+.units-grid .unit-meta-item-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+}
+
 /* Tarjeta de unidad — diseño como elemento de tabla periódica */
 .unit-card {
   background: var(--bg-card);

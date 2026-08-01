@@ -199,7 +199,11 @@ const App = (() => {
     }
 
     /* Navegar a la sección inicial */
-    Router.navigate('home');
+    /* Multigrado (Fase 1): la pantalla de aterrizaje ahora es el
+       selector de ruta académica, no directamente Inicio. El acceso
+       directo a Química 10.º (nav "Inicio", "Unidades") sigue intacto
+       — esto solo agrega una capa superior de navegación. */
+    Router.navigate('grade-select');
   }
 
   /* ── Actualización de la UI del sidebar ─────────────────── */

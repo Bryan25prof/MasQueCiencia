@@ -409,17 +409,41 @@ window.MQCProfilesUI = (function () {
   function openTimeline(id){
     const p=P(); const b=p.buildBitacora(id); if(!b)return;
     const ov=_overlay('mqc-timeline');
-    const items = b.cronologia.length ? b.cronologia.map(c=>`
-      <div style="display:flex;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--border,#1e1e4a)">
-        <div style="width:8px;height:8px;border-radius:50%;background:var(--cyan,#1FDBFF);margin-top:.35rem;flex-shrink:0"></div>
-        <div style="flex:1"><div style="font-size:.85rem;color:var(--text-primary,#E8E8FF)">${esc(c.texto)} ${c.amount?`<span style="color:var(--gold,#F9FF4D);font-size:.76rem">+${c.amount} XP</span>`:''}</div>
-        <div style="font-size:.72rem;color:var(--text-muted,#8484D6)">${c.fecha?fecha(c.fecha):''}</div></div>
-      </div>`).join('') : '<p style="color:var(--text-muted,#8484D6);text-align:center;font-size:.86rem">Aún no hay actividad registrada. ¡Empieza a explorar!</p>';
+    /* Multigrado (Fase 1): filtro por grado — "Todo" por defecto */
+    function _renderItems(filter) {
+      const list = filter === 'all' ? b.cronologia : b.cronologia.filter(c => String(c.grade) === String(filter));
+      if (!list.length) {
+        const msg = filter === 'all' ? 'Aún no hay actividad registrada. ¡Empieza a explorar!'
+          : filter === 11 ? 'Todavía no hay actividad en Química 11.º — se irá llenando cuando el contenido esté disponible.'
+          : 'No hay actividad registrada en esta categoría todavía.';
+        return `<p style="color:var(--text-muted,#8484D6);text-align:center;font-size:.86rem">${msg}</p>`;
+      }
+      return list.map(c=>`
+        <div style="display:flex;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--border,#1e1e4a)">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--cyan,#1FDBFF);margin-top:.35rem;flex-shrink:0"></div>
+          <div style="flex:1"><div style="font-size:.85rem;color:var(--text-primary,#E8E8FF)">${esc(c.texto)} ${c.amount?`<span style="color:var(--gold,#F9FF4D);font-size:.76rem">+${c.amount} XP</span>`:''}</div>
+          <div style="font-size:.72rem;color:var(--text-muted,#8484D6)">${c.fecha?fecha(c.fecha):''}</div></div>
+        </div>`).join('');
+    }
+    const FILTERS = [['all','Todo'],[10,'Química 10.º'],['pne','PNE'],[11,'Química 11.º']];
+    const filterBtns = FILTERS.map(([val,label],i)=>
+      `<button class="btn btn-ghost btn-sm mqc-tl-filter" data-filter="${val}" style="${i===0?'border-color:var(--cyan,#1FDBFF)':''}">${label}</button>`
+    ).join('');
     ov.innerHTML=_panel(`<div style="padding:1.3rem 1.4rem">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem"><h2 style="margin:0;color:var(--text-primary,#E8E8FF);font-size:1.15rem">🕒 Vista cronológica</h2><button id="mqc-tl-close" style="background:none;border:none;color:var(--text-muted,#8484D6);font-size:1.4rem;cursor:pointer">×</button></div>
-      <p style="font-size:.8rem;color:var(--text-muted,#8484D6);margin:0 0 .8rem">Tu historia de aprendizaje, del evento más reciente al más antiguo.</p>
-      <div style="max-height:60vh;overflow-y:auto">${items}</div></div>`,480);
+      <p style="font-size:.8rem;color:var(--text-muted,#8484D6);margin:0 0 .6rem">Tu historia de aprendizaje, del evento más reciente al más antiguo.</p>
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem">${filterBtns}</div>
+      <div id="mqc-tl-items" style="max-height:60vh;overflow-y:auto">${_renderItems('all')}</div></div>`,480);
     ov.querySelector('#mqc-tl-close').addEventListener('click',()=>ov.remove());
+    ov.querySelectorAll('.mqc-tl-filter').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        ov.querySelectorAll('.mqc-tl-filter').forEach(b=>b.style.borderColor='');
+        btn.style.borderColor='var(--cyan,#1FDBFF)';
+        const raw = btn.getAttribute('data-filter');
+        const filter = (raw==='all'||raw==='pne') ? raw : parseInt(raw,10);
+        ov.querySelector('#mqc-tl-items').innerHTML = _renderItems(filter);
+      });
+    });
     ov.addEventListener('click',e=>{ if(e.target===ov) ov.remove(); });
   }
 

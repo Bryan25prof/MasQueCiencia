@@ -29,6 +29,18 @@ window.MQCProfiles = (function () {
   function _lsSet(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch(e){ return false; } }
   function _lsDel(k){ try { localStorage.removeItem(k); } catch(e){} }
   function _uid(){ return 'p' + Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
+
+  /* Multigrado (Fase 1): identificador visible, permanente e inmutable
+     por perfil — MQC-XXXXXX. Distinto de _uid() (la clave interna de
+     almacenamiento, que nunca se muestra al estudiante); este sí
+     aparece en informes/respaldos. Se genera una sola vez, en
+     create()/resetProgress()/importProfile() (solo si falta). */
+  function _genProfileId() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let s = '';
+    for (let i = 0; i < 6; i++) s += chars[Math.floor(Math.random() * chars.length)];
+    return 'MQC-' + s;
+  }
   function _today(){ return new Date().toISOString().split('T')[0]; }
   function _dataKey(id){ return DATA_PREFIX + id; }
 
@@ -118,6 +130,10 @@ window.MQCProfiles = (function () {
     /* progreso inicial con el alias como nombre (para el saludo del hero) */
     const fresh = (typeof Storage !== 'undefined' && Storage.defaults) ? Storage.defaults() : { units:{} };
     if (fresh.user) { fresh.user.name = a; fresh.user.joined = Date.now(); fresh.user.lastSeen = Date.now(); }
+    if (fresh.profileMeta) {
+      fresh.profileMeta.profileId = _genProfileId();
+      fresh.profileMeta.createdAt = Date.now();
+    }
     _lsSet(_dataKey(id), fresh);
     _reg.guest = false; _reg.activeId = id;
     _saveReg();
@@ -138,13 +154,23 @@ window.MQCProfiles = (function () {
     ready(); const a=(alias||'').trim();
     if (!_reg.profiles[id]) return { ok:false, message:'Perfil no encontrado.' };
     if (!a) return { ok:false, message:'El alias no puede estar vacío.' };
+    const d0 = _lsGet(_dataKey(id));
+    if (d0 && d0.identityLock && d0.identityLock.locked) {
+      return { ok:false, reason:'identity-locked', message:'Identidad académica protegida: este perfil ya contiene resultados evaluativos. El nombre y el grupo no pueden modificarse para preservar la integridad del progreso.' };
+    }
     _reg.profiles[id].alias = a; _saveReg();
-    /* refleja el alias en el saludo (user.name) */
     const d = _lsGet(_dataKey(id)); if (d && d.user){ d.user.name = a; _lsSet(_dataKey(id), d); }
     return { ok:true };
   }
   function setAvatar(id, avatar){ ready(); if(!_reg.profiles[id]) return {ok:false}; _reg.profiles[id].avatar=avatar||'🧪'; _saveReg(); return {ok:true}; }
-  function setGroup(id, group){ ready(); if(!_reg.profiles[id]) return {ok:false}; _reg.profiles[id].group=(group||'').trim(); _saveReg(); return {ok:true}; }
+  function setGroup(id, group){
+    ready(); if(!_reg.profiles[id]) return {ok:false};
+    const d0 = _lsGet(_dataKey(id));
+    if (d0 && d0.identityLock && d0.identityLock.locked) {
+      return { ok:false, reason:'identity-locked', message:'Identidad académica protegida: este perfil ya contiene resultados evaluativos. El nombre y el grupo no pueden modificarse para preservar la integridad del progreso.' };
+    }
+    _reg.profiles[id].group=(group||'').trim(); _saveReg(); return {ok:true};
+  }
 
   function remove(id){
     ready();
@@ -162,6 +188,10 @@ window.MQCProfiles = (function () {
     if (!_reg.profiles[id]) return { ok:false, message:'Perfil no encontrado.' };
     const fresh = (typeof Storage !== 'undefined' && Storage.defaults) ? Storage.defaults() : { units:{} };
     if (fresh.user){ fresh.user.name = _reg.profiles[id].alias; fresh.user.joined = Date.now(); fresh.user.lastSeen = Date.now(); }
+    if (fresh.profileMeta) {
+      fresh.profileMeta.profileId = _genProfileId();
+      fresh.profileMeta.createdAt = Date.now();
+    }
     _lsSet(_dataKey(id), fresh);
     return { ok:true };
   }
@@ -230,6 +260,13 @@ window.MQCProfiles = (function () {
       if (!data.units) data.units = base.units;
     }
     if (data.user) data.user.name = obj.alias.trim();
+    if (!data.profileMeta) data.profileMeta = Storage.defaults ? Storage.defaults().profileMeta : {};
+    if (!data.profileMeta.profileId) {
+      data.profileMeta.profileId = _genProfileId();
+      data.profileMeta.createdAt = data.profileMeta.createdAt || obj.created || Date.now();
+    }
+    data.profileMeta.lastImportAt = Date.now();
+    data.profileMeta.importCount = (data.profileMeta.importCount || 0) + 1;
     _reg.profiles[id] = _meta(id, obj.alias.trim(), obj.group||'', obj.avatar||'🧪');
     if (obj.created) _reg.profiles[id].created = obj.created;
     _reg.order.push(id);
@@ -318,8 +355,20 @@ window.MQCProfiles = (function () {
     const iniciadas = porExperiencia.filter(e=>e.started).sort((a,b)=>_num(b.id)-_num(a.id));
     const ultima = iniciadas.length ? iniciadas[0] : null;
     const rawHist = ((d.xp && d.xp.history) || []).slice();
+    /* Multigrado (Fase 1): clasificar cada entrada por grado sin
+       modificar el texto histórico guardado — solo se calcula al
+       construir la Bitácora. Los registros que empiezan con 'pne-'
+       son del Desafío Final PNE; el resto, al no existir todavía XP
+       de Química 11.º, se interpretan como Química 10.º (regla
+       explícita para registros sin campo grade). */
+    const _gradeOf = (source) => {
+      if (source && source.indexOf('pne-') === 0) return 'pne';
+      if (source && source.indexOf('g11-') === 0) return 11;
+      return 10;
+    };
     const cronologia = rawHist.slice(-30).reverse().map(h=>({
-      fecha: h.ts || null, amount: h.amount || 0, source: h.source || '', texto: _histText(h.source)
+      fecha: h.ts || null, amount: h.amount || 0, source: h.source || '', texto: _histText(h.source),
+      grade: _gradeOf(h.source)
     }));
     const reflex = d.reflexiones || {};
     const reflexiones = Object.keys(reflex).map(uid=>{

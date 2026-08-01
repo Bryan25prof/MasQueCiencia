@@ -65,6 +65,8 @@ Router.register('progress', (() => {
 
         ${_buildHero(levelInfo, data)}
 
+        ${_buildMultigrado(data)}
+
         ${_buildStats(streak, totalTopics, completedUnits, unlockedBadges, badges.length, joinedDate)}
 
         ${_buildXpBar(levelInfo)}
@@ -81,6 +83,52 @@ Router.register('progress', (() => {
 
       </div>
     `;
+  }
+
+  /* Multigrado (Fase 1): identidad académica + resumen 10º + acceso 11º.
+     Sección aditiva — no toca ninguna de las secciones existentes.
+     Usa los tokens del Design System directamente (mismo patrón que
+     grade-select.js) en vez de inventar una clase CSS nueva. */
+  function _buildMultigrado(data) {
+    const cardStyle = 'background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem;margin-bottom:1rem';
+    const meta = (typeof MQCProfiles !== 'undefined' && MQCProfiles.activeId) ? MQCProfiles.get(MQCProfiles.activeId()) : null;
+    const lock = data.identityLock || {};
+    const g11 = data.grade11Unlock || {};
+    const pne = data.pne || {};
+
+    const examsPassed = (typeof UNIDADES_DATA !== 'undefined') ? UNIDADES_DATA.filter(u => {
+      const uData = data.units[u.id];
+      const passMin = (u.exam && u.exam.pass) || 70;
+      return uData && (uData.examBest || 0) >= passMin;
+    }).length : 0;
+
+    const identityBlock = `
+      <div style="${cardStyle}">
+        <h3 style="margin:0 0 .6rem;font-size:.95rem">🪪 Identidad académica</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;font-size:.85rem">
+          <div><span style="color:var(--text-muted)">Nombre</span><br>${_escapeHTML(meta ? meta.alias : data.user.name)}</div>
+          <div><span style="color:var(--text-muted)">Grupo</span><br>${_escapeHTML((meta && meta.group) || '—')}</div>
+          <div><span style="color:var(--text-muted)">ID de perfil</span><br><span style="font-family:var(--font-code)">${(data.profileMeta && data.profileMeta.profileId) || '—'}</span></div>
+          <div><span style="color:var(--text-muted)">Estado</span><br>${lock.locked ? '🔒 Protegida' : '🔓 Editable'}</div>
+        </div>
+        ${lock.locked ? `<p style="font-size:.78rem;color:var(--text-muted);margin-top:.6rem">Identidad académica protegida — este perfil ya contiene resultados evaluativos. El nombre y el grupo no pueden modificarse para preservar la integridad del progreso.</p>` : ''}
+      </div>`;
+
+    const g10Block = `
+      <div style="${cardStyle}">
+        <h3 style="margin:0 0 .6rem;font-size:.95rem">🧪 Química 10.º</h3>
+        <div style="font-size:.85rem;color:var(--text-secondary)">${examsPassed}/9 exámenes aprobados · Mejor PNE: ${pne.bestScore || 0}/100</div>
+      </div>`;
+
+    const g11Block = `
+      <div style="${cardStyle}">
+        <h3 style="margin:0 0 .6rem;font-size:.95rem">🎓 Acceso a Química 11.º</h3>
+        ${g11.unlocked
+          ? `<div style="font-size:.85rem;color:var(--green)">🔓 Desbloqueada — ${g11.method === 'six-exams' ? 'vía 6 exámenes aprobados' : 'vía PNE ≥80'}, el ${new Date(g11.unlockedAt).toLocaleDateString('es-CR')}</div>`
+          : `<div style="font-size:.85rem;color:var(--text-muted)">🔒 Bloqueada — ${examsPassed}/6 exámenes o PNE ${pne.bestScore || 0}/80</div>`}
+      </div>`;
+
+    return identityBlock + g10Block + g11Block;
   }
 
   /* Tarjeta hero con nivel actual */

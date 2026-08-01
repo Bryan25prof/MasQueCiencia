@@ -204,6 +204,12 @@ const Gamification = (() => {
       name: 'Dominio PNE',
       icon: '👑',
       desc: 'Obtuviste una puntuación sobresaliente (90 o más) en el Desafío Final PNE'
+    },
+    {
+      id:   'grade11-unlocked',
+      name: 'Ruta de Undécimo Desbloqueada',
+      icon: '🎓',
+      desc: 'Desbloqueaste el acceso a Química 11.º'
     }
   ];
 
@@ -428,6 +434,57 @@ const Gamification = (() => {
     if (data.pne && data.pne.bestScore >= 90 && !data.badges.includes('pne-dominio')) {
       newBadges.push('pne-dominio');
     }
+
+    /* ================================================================
+       MULTIGRADO (Fase 1) — bloqueo de identidad + desbloqueo de 11.º
+       ================================================================
+       Punto único de detección: checkBadges() ya se llama de forma
+       amplia (tras cada addXP, al abrir Mi Progreso/Bitácora, etc.),
+       así que es el lugar correcto para revisar estas dos condiciones
+       sin tocar ninguna de las 9 unidades. IMPORTANTE: Storage.save()
+       más abajo en esta función SOLO corre si hay una insignia nueva
+       — el bloqueo de identidad no siempre otorga una, así que se
+       guarda explícito acá mismo para no perder el cambio en silencio. */
+    let _multigradoChanged = false;
+
+    if (typeof UNIDADES_DATA !== 'undefined' && data.identityLock && !data.identityLock.locked) {
+      const anyExamPassed = UNIDADES_DATA.some(u => {
+        const uData = data.units[u.id];
+        const passMin = (u.exam && u.exam.pass) || 70;
+        return uData && (uData.examBest || 0) >= passMin;
+      });
+      if (anyExamPassed) {
+        data.identityLock.locked = true;
+        data.identityLock.lockedAt = Date.now();
+        data.identityLock.reason = 'first-exam-passed';
+        _multigradoChanged = true;
+      }
+    }
+
+    if (typeof UNIDADES_DATA !== 'undefined' && data.grade11Unlock && !data.grade11Unlock.unlocked) {
+      const examsPassed = UNIDADES_DATA.filter(u => {
+        const uData = data.units[u.id];
+        const passMin = (u.exam && u.exam.pass) || 70;
+        return uData && (uData.examBest || 0) >= passMin;
+      }).length;
+      const pneBest = (data.pne && data.pne.bestScore) || 0;
+      const routeA = examsPassed >= 6;
+      const routeB = pneBest >= 80;
+      if (routeA || routeB) {
+        data.grade11Unlock.unlocked = true;
+        data.grade11Unlock.method = routeA ? 'six-exams' : 'pne-80';
+        data.grade11Unlock.unlockedAt = Date.now();
+        data.grade11Unlock.evidence = { examsPassed, pneBestScore: pneBest };
+        _multigradoChanged = true;
+        if (!data.badges.includes('grade11-unlocked')) newBadges.push('grade11-unlocked');
+        if (typeof Photon !== 'undefined' && Photon.react) { try { Photon.react('level-up'); } catch (e) {} }
+        setTimeout(() => {
+          _toast('🔓', '¡Química 11.º desbloqueada!', routeA ? 'Aprobaste 6 de 9 exámenes de décimo.' : 'Obtuviste 80+ en el Desafío Final PNE.', 'info');
+        }, 400);
+      }
+    }
+
+    if (_multigradoChanged) Storage.save(data);
 
     /*
       ╔══════════════════════════════════════════════════════╗

@@ -4,9 +4,9 @@
 
 ---
 
-## 🔒 Estado del proyecto: BETA v1.0 — PAQUETE DE PUBLICACIÓN LISTO (EOP-035)
+## 🔒 Estado del proyecto: MULTIGRADO FASE 1 — infraestructura 10.º→11.º integrada y migrada
 
-**El desarrollo funcional de MásQueCiencia ha concluido.** A partir de ahora, cualquier trabajo pertenece exclusivamente a identidad visual, branding, experiencia de usuario o mejoras cosméticas (Sprint de Dirección de Arte) — **no** a nuevas funcionalidades, sistemas, o cambios de arquitectura.
+**El núcleo de Química 10.º sigue congelado y sin regresiones.** A partir de esta fase, el proyecto es multigrado: existe infraestructura real (identidad, migración, desbloqueo, navegación, 4 unidades "en desarrollo") para Química 11.º, aunque su contenido académico todavía no se desarrolló — eso es la próxima fase real pendiente. Ver `docs/multigrado/MQC_MULTIGRADO_ARCHITECTURE.md` para el detalle completo.
 
 ## Qué es este proyecto
 

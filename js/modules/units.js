@@ -97,12 +97,11 @@ Router.register('units', (() => {
         </div>
         <div class="unit-number">PNE</div>
         <div class="unit-symbol">${pneUnlocked ? '🏆' : '🔒'}</div>
-        <div class="unit-name">Desafío Final PNE</div>
-        <div style="font-size:.72rem;color:var(--text-muted);margin:.2rem 0 .5rem">Prueba Nacional Estandarizada</div>
+        <div class="unit-name">Desafío Final PNE<br><span style="font-weight:400;color:var(--text-muted);font-size:.85em">Prueba Nacional Estandarizada</span></div>
         <div class="unit-meta">
           ${pneUnlocked
             ? `<span class="unit-meta-item">🎯 ${pneData.attempts || 0} intento${(pneData.attempts||0)!==1?'s':''} · mejor: ${pneData.bestScore || 0}/100</span>`
-            : `<span class="unit-meta-item">Aprueba los exámenes de al menos ${PNE_MIN_UNITS} de las 9 unidades para desbloquear el Desafío PNE.</span>`}
+            : `<span class="unit-meta-item unit-meta-item-clamp">Aprueba ${PNE_MIN_UNITS} de ${totalUnits} exámenes para desbloquear</span>`}
           <div class="unit-progress">
             <div class="unit-progress-bar">
               <div class="unit-progress-fill" style="width:${Math.round((passedCount/totalUnits)*100)}%;background:${pneUnlocked?'var(--xp-gold, #F9FF4D)':''}"></div>

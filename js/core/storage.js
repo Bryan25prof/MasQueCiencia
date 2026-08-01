@@ -186,6 +186,47 @@ const Storage = (() => {
         ║  _visitedSim: false, _visitedLab: false, etc.        ║
         ╚═══════════════════════════════════════════════════════╝
       */
+    },
+    /* ================================================================
+       MULTIGRADO (Fase 1) — infraestructura para Química 11.º
+       ================================================================
+       Aditivo a propósito: NO se renombró data.units/data.xp/data.pne/
+       etc. a "grade10" — esas claves YA representan implícitamente el
+       progreso de décimo (es lo único que existió hasta ahora), y
+       renombrarlas habría obligado a tocar los ~56 archivos que ya las
+       leen, violando "mínima modificación". En vez de eso, MQC 10.º
+       sigue funcionando exactamente igual, sin saber que existe un
+       "grade10" — y toda la infraestructura nueva vive en estas 3
+       claves nuevas. Storage.load() ya hace un merge profundo con
+       SCHEMA_DEFAULT (ver _mergeDeep), así que un perfil creado antes
+       de esta fase recibe estas claves automáticamente la próxima vez
+       que se carga — sin necesitar una función de migración aparte. */
+    profileMeta: {
+      profileId: null,       /* formato MQC-XXXXXX, se genera una sola vez en create()/resetProgress()/importProfile() */
+      createdAt: null,
+      lastImportAt: null,
+      importCount: 0,
+      schemaVersion: 2       /* 1 = solo décimo (implícito, sin este campo); 2 = multigrado */
+    },
+    identityLock: {
+      locked: false,
+      lockedAt: null,
+      reason: null           /* 'first-exam-passed' */
+    },
+    grade11Unlock: {
+      unlocked: false,
+      method: null,          /* 'six-exams' | 'pne-80' */
+      unlockedAt: null,
+      evidence: null         /* { examsPassed, pneBestScore } */
+    },
+    /* Progreso propio de 11.º — separado de data.units (10.º) a
+       propósito, para no mezclar porcentajes entre niveles. Vacío
+       mientras las 4 unidades sigan "En desarrollo". */
+    grade11: {
+      'g11-u01': _emptyUnit(),
+      'g11-u02': _emptyUnit(),
+      'g11-u03': _emptyUnit(),
+      'g11-u04': _emptyUnit()
     }
   };
 
