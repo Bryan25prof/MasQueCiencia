@@ -1,0 +1,28 @@
+# MásQueCiencia — .gitignore
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swp.bak
+*~
+
+# Node (si en el futuro se agrega alguna herramienta de build/lint)
+node_modules/
+npm-debug.log*
+
+# Archivos temporales de trabajo
+*.tmp
+*.bak
+*.old
+
+# Empaquetados generados (no versionar los .zip de release junto al código fuente)
+*.zip
+
+# Logs
+*.log

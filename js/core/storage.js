@@ -227,6 +227,23 @@ const Storage = (() => {
       'g11-u02': _emptyUnit(),
       'g11-u03': _emptyUnit(),
       'g11-u04': _emptyUnit()
+    },
+    /* HOTFIX-06 — Proyecto Integrador: antes vivía implícito (sin
+       entrada en el esquema, creado ad-hoc por integrador.js vía
+       Storage.get/set con campos sueltos: informe/completado/fecha).
+       Se formaliza acá agregando los campos de protección anti-
+       duplicación, SIN renombrar los campos viejos (retrocompatible
+       con perfiles reales que ya tengan completado:true guardado). */
+    integrador: {
+      informe: '',            /* campo histórico — se mantiene */
+      completado: false,      /* campo histórico — se mantiene, sigue siendo la fuente de verdad de "finalizado académicamente" */
+      fecha: null,            /* campo histórico — se mantiene */
+      report: '',             /* alias legible del informe (igual a informe, agregado en HOTFIX-06) */
+      completedAt: null,      /* igual que fecha, nombre más explícito */
+      xpAwarded: false,       /* ÚNICA fuente de verdad de si ya se pagó la recompensa */
+      xpAwardedAt: null,
+      submissionCount: 0,     /* cuántas veces se guardó un informe (primera entrega + actualizaciones) */
+      lastUpdatedAt: null
     }
   };
 

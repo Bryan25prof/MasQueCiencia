@@ -384,3 +384,15 @@ Infraestructura completa para convertir MQC en un sistema multigrado — sin des
 - **Mi Progreso y Bitácora actualizados** de forma aditiva: nueva sección de identidad académica + resumen por nivel; filtro de la Bitácora por grado (Todo/10.º/PNE/11.º), clasificando el historial existente sin modificar su texto guardado.
 - Auditoría: `node --check` limpio en 61/61 archivos; 47 pruebas ejecutadas (migración, identidad, desbloqueo, navegación, datos) — 100% en PASS.
 - **"Arquitectura multigrado 10.º → 11.º integrada, migrada y lista para incorporar las cuatro experiencias de Química 11.º."**
+
+### HOTFIX-06 — Bloqueo de recompensas repetidas del Proyecto Integrador (bug crítico)
+Corregido un bug crítico de gamificación confirmado en navegador real: el botón "Entregar informe y completar el proyecto" podía presionarse repetidamente, otorgando +300 XP cada vez.
+
+- **Causa raíz real:** la variable que decidía si ya se había premiado se leía **una sola vez al dibujar la pantalla**, no en cada clic — un segundo clic sin recargar la pantalla nunca veía que el primero ya había completado el proyecto.
+- **Corrección en dos capas:** el botón se deshabilita mientras procesa (interfaz), y la función real que otorga XP siempre relee el estado fresco desde Storage antes de decidir (idempotente por diseño, no solo por la interfaz).
+- **Protección retroactiva:** perfiles que ya tenían `completado:true` de antes de este hotfix dejan de recibir XP adicional desde el primer clic posterior, sin esperar una reparación manual.
+- **Esquema formalizado:** `data.integrador` (antes implícito) ahora incluye `xpAwarded`, `xpAwardedAt`, `submissionCount`, `completedAt`, `lastUpdatedAt` — sin renombrar los campos históricos (`informe`, `completado`, `fecha`).
+- **Nueva herramienta de reparación** (`js/shared/integrador-repair.js`) para perfiles ya afectados por el bug — diagnostica duplicados, calcula el XP a corregir, y solo aplica con confirmación explícita (nunca automática). Limitación documentada honestamente: no revoca insignias, ya que el sistema actual no tiene mecanismo de revocado.
+- **Hallazgo adicional documentado, fuera de alcance:** `section-visited` (5 XP) se otorga sin protección en cada visita a la sección — mecanismo genérico preexistente, no el bug reportado, no se modificó.
+- Auditoría: `node --check` limpio en 63/63 archivos; 17/18 pruebas en PASS (la única salvedad es la misma advertencia benigna de Photon ya documentada en sprints anteriores). El primer intento de estas pruebas falló por una limitación real del arnés de prueba (no del código real) — corregida antes de confiar en los resultados.
+- **"Recompensa del Proyecto Integrador protegida contra duplicación y entregas posteriores habilitadas sin XP adicional."**

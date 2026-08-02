@@ -324,25 +324,110 @@
       </div>
     `);
     document.getElementById('int-back').addEventListener('click',()=>goTo(ESTACIONES.length-2));
-    document.getElementById('int-finish').addEventListener('click',()=>{
+
+    const btn = document.getElementById('int-finish');
+    /* HOTFIX-06: reflejar el estado real desde el momento en que se
+       dibuja la pantalla — si el estudiante ya completó el proyecto
+       en una sesión anterior, el botón debe decir "Actualizar
+       informe" desde el inicio, no solo tras un clic en esta sesión. */
+    if (st.completado) {
+      btn.textContent = 'Actualizar informe';
+      const fechaTxt = st.completedAt || st.fecha;
+      if (fechaTxt) {
+        document.getElementById('int-final-fb').innerHTML =
+          `<p style="font-size:.78rem;color:var(--text-muted);text-align:center">Completado el ${new Date(fechaTxt).toLocaleDateString('es-CR',{day:'numeric',month:'long',year:'numeric'})}</p>`;
+      }
+    }
+
+    btn.addEventListener('click', () => {
+      /* Protección de interfaz (capa 1): bloquear el botón mientras
+         se procesa, para que un doble clic accidental no dispare dos
+         entregas en el mismo instante. */
+      if (btn.disabled) return;
+      btn.disabled = true;
+
       const texto = document.getElementById('int-informe').value.trim();
       if (texto.length < 30) {
         document.getElementById('int-final-fb').innerHTML = `<p style="color:var(--gold);font-size:.85rem">Escribe un poco más (al menos unas líneas) para que tu informe quede completo en la Bitácora.</p>`;
+        btn.disabled = false;
         return;
       }
-      const wasCompleted = st.completado;
-      saveState(Object.assign({}, st, { informe:texto, completado:true, fecha:Date.now() }));
+
+      const result = _submitInformeOnce(texto);
+
       if (typeof MQCProfiles!=='undefined' && MQCProfiles.activeId && MQCProfiles.saveReflection) {
         const id = MQCProfiles.activeId();
         if (id) MQCProfiles.saveReflection(id, 'integrador', texto);
       }
-      if (!wasCompleted) awardXP('integrador-completado');
-      document.getElementById('int-final-fb').innerHTML = `<div style="text-align:center;padding:1rem;background:var(--bg-elevated);border-radius:var(--radius-md);border:1px solid ${C}">
-        <div style="font-size:2rem">🎉</div>
-        <p style="color:${C};font-weight:700;margin:.4rem 0">¡Proyecto Integrador Final completado!</p>
-        <p style="color:var(--text-secondary);font-size:.85rem">Tu informe quedó guardado en tu Bitácora Científica. ¡Completaste el recorrido completo de Química Interactiva 10°!</p>
-      </div>`;
+
+      if (result.justAwarded) {
+        document.getElementById('int-final-fb').innerHTML = `<div style="text-align:center;padding:1rem;background:var(--bg-elevated);border-radius:var(--radius-md);border:1px solid ${C}">
+          <div style="font-size:2rem">🎉</div>
+          <p style="color:${C};font-weight:700;margin:.4rem 0">¡Proyecto Integrador Final completado!</p>
+          <p style="color:var(--text-secondary);font-size:.85rem">Tu informe quedó guardado en tu Bitácora Científica. ¡Completaste el recorrido completo de Química Interactiva 10°!</p>
+        </div>`;
+      } else {
+        document.getElementById('int-final-fb').innerHTML = `<div style="text-align:center;padding:1rem;background:var(--bg-elevated);border-radius:var(--radius-md);border:1px solid var(--border)">
+          <p style="color:var(--text-secondary);font-size:.88rem">Proyecto ya completado. Tu informe fue actualizado sin otorgar XP adicional.</p>
+          <p style="font-size:.78rem;color:var(--text-muted);margin-top:.3rem">Completado el ${new Date(result.completedAt).toLocaleDateString('es-CR',{day:'numeric',month:'long',year:'numeric'})}</p>
+        </div>`;
+      }
+      btn.textContent = 'Actualizar informe';
+      btn.disabled = false;
     });
+  }
+
+  /* ================================================================
+     HOTFIX-06 — Entrega idempotente del Proyecto Integrador
+     ================================================================
+     Capa 2 de protección (la función real que otorga XP, no solo la
+     interfaz): SIEMPRE relee el estado más fresco desde Storage en
+     el momento de llamarse — nunca confía en una variable capturada
+     cuando se dibujó la pantalla, que era la causa raíz real del bug
+     original (un segundo clic en la misma pantalla nunca veía que el
+     primer clic ya había marcado completado:true, porque el cierre
+     seguía usando la copia vieja de "st").
+
+     Compatibilidad retroactiva: un perfil que YA tenía
+     completado:true de antes de este hotfix (posiblemente con XP
+     duplicado por el bug) recibe xpAwarded:false por defecto al
+     fusionarse con el esquema nuevo — así que la condición de "ya
+     premiado" revisa completado TAMBIÉN, no solo xpAwarded, para
+     detener inmediatamente cualquier premio nuevo en esos perfiles
+     desde el primer clic posterior a este hotfix. La reparación del
+     XP ya duplicado en el pasado es una herramienta aparte y
+     explícita (ver js/shared/integrador-repair.js), nunca automática.
+  ================================================================ */
+  function _submitInformeOnce(texto) {
+    const fresh = loadState();
+    const alreadyAwarded = (fresh.xpAwarded === true) || (fresh.completado === true);
+    const now = Date.now();
+
+    const newState = Object.assign({}, fresh, {
+      informe: texto,
+      report: texto,
+      completado: true,
+      completedAt: fresh.completedAt || fresh.fecha || now,
+      fecha: fresh.fecha || now,
+      lastUpdatedAt: now,
+      submissionCount: (fresh.submissionCount || 0) + 1
+    });
+
+    if (!alreadyAwarded) {
+      newState.xpAwarded = true;
+      newState.xpAwardedAt = now;
+    }
+    saveState(newState);
+
+    if (!alreadyAwarded) {
+      awardXP('integrador-completado');
+      if (typeof Photon !== 'undefined' && Photon.react) { try { Photon.react('course-complete'); } catch (e) {} }
+    }
+    /* Si ya estaba premiado, deliberadamente NO se llama a awardXP()
+       ni a Photon.react() — ninguna celebración de "gran logro" se
+       repite en una actualización ordinaria del informe. */
+
+    return { justAwarded: !alreadyAwarded, completedAt: newState.completedAt };
   }
 
   /* ============================================================
