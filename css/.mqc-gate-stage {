@@ -2276,6 +2276,14 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   display: flex; flex-direction: column; align-items: center;
   width: 100%; max-width: 560px;
   max-height: 94vh; overflow-y: auto;
+  /* HOTFIX-07: en navegadores móviles reales, "vh" se calcula contra el
+     viewport SIN la barra de direcciones (más alto de lo visible en
+     realidad), así que "94vh" podía exceder el espacio verdadero
+     disponible. "dvh" (dynamic viewport height) sí se ajusta a la
+     barra de direcciones real — se declara DESPUÉS a propósito: los
+     navegadores que no lo soportan simplemente ignoran esta línea y
+     siguen usando el "vh" de arriba, no se rompe nada en ninguno. */
+  max-height: 94dvh;
   padding: 1rem 0;
 }
 .mqc-gate-headline {
