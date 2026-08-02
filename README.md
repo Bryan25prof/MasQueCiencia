@@ -1,10 +1,15 @@
 # MásQueCiencia (MQC)
-### Química Interactiva 10° · Beta v1.0
 
-**MásQueCiencia** es una plataforma educativa de química para Décimo Año (programa oficial del MEP, Costa Rica), construida en HTML5, CSS3 y JavaScript puro — sin frameworks, sin backend, sin build, 100% funcional en el navegador.
+### Plataforma Interactiva de Química • 10.° y 11.° Año (MEP Costa Rica) · Beta v1.1
 
-> Autor del contenido académico: **Lic. Bryan Chavarría C.**
+**MásQueCiencia (MQC)** es una plataforma educativa interactiva de química desarrollada para la Educación Diversificada del Ministerio de Educación Pública (MEP) de Costa Rica.
 
+Actualmente incorpora la ruta completa de **Química de 10.° Año** y la arquitectura académica de **11.° Año**, permitiendo la continuidad del progreso del estudiante entre ambos niveles mediante un sistema de perfiles, gamificación y evaluación progresiva.
+
+La plataforma está desarrollada íntegramente con **HTML5, CSS3 y JavaScript puro**, sin frameworks, sin backend y sin procesos de compilación (build), funcionando completamente en el navegador.
+
+> **Proyecto, arquitectura de software y contenido académico:**  
+> **Lic. Bryan Chavarría C.**
 ---
 
 ## Descripción
