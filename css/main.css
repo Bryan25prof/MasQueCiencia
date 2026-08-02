@@ -1,0 +1,2485 @@
+/* ================================================================
+   QUÍMICA INTERACTIVA 10° — Lic. Bryan Chavarría C.
+   css/main.css  |  Sistema de Diseño Completo
+   ================================================================
+   ÍNDICE:
+   1.  Variables (Design Tokens)
+   2.  Reset & Base
+   3.  Tipografía
+   4.  Layout SPA (Sidebar + Main)
+   5.  Pantalla de Carga
+   6.  Modal de Bienvenida
+   7.  Topbar Móvil
+   8.  Sidebar / Menú Lateral
+   9.  Botones
+   10. Cards & Panels
+   11. Progress Bars
+   12. Toast Notifications
+   13. Modal Global
+   14. FAB (Floating Action Button)
+   15. Home Page
+   16. Units Page
+   17. Tabla Periódica
+   18. Progress Page
+   19. About Page
+   20. Placeholder Pages
+   21. Animations & Keyframes
+   22. Responsive (Mobile First)
+================================================================ */
+
+/* ----------------------------------------------------------------
+   1. VARIABLES — Design Tokens
+   Para cambiar el tema, solo modifica estas variables.
+---------------------------------------------------------------- */
+:root {
+  /* ================================================================
+     IDENTIDAD VISUAL v2.0 — "Cosmos de Laboratorio"
+     Adoptada del documento PROPUESTA_VISUAL_MasQueCiencia_1 (Sprint
+     de Dirección de Arte). Solo cambian los VALORES; los NOMBRES de
+     variable se mantienen intactos para no romper ningún componente
+     ni lógica existente — toda la app referencia var(--nombre).
+  ================================================================ */
+
+  /* Colores de fondo */
+  --void:         #070714;
+  --bg-deep:      #0d0d24;
+  --bg-main:      #111130;
+  --bg-card:      #16163a;
+  --bg-elevated:  #1e1e4a;
+  --bg-input:     #1a1a42;
+  --border:       rgba(130, 140, 220, 0.38); /* EOP-021: antes .28 — más visible, misma familia */
+  --border-glow:  rgba(0, 212, 255, 0.5);    /* EOP-021: antes .4 */
+
+  /* Colores de acento */
+  --cyan:         #1FDBFF; /* EOP-021: antes #00D4FF — leve aumento de intensidad, mismo tono */
+  --cyan-dim:     #00A8CC;
+  --cyan-glow:    rgba(31, 219, 255, 0.24);  /* EOP-021: antes .15 — glow más presente */
+  --violet:       #7B2FFF;
+  --violet-dim:   #6320CC;
+  /* EOP-030.5: --blue nunca existió como token, pero ~15 referencias
+     var(--blue, ...) ya vivían en standards.css (componentes del
+     Método MQC: detonante/commit/mentor, usados en las 9 unidades) y
+     en 3 archivos de unidad, todas cayendo siempre a un hex viejo
+     (#1A73E8/#2D9CDB) sin saberlo. Se define como alias real de un
+     token existente — no se inventa un color nuevo. */
+  --blue:         var(--cyan-dim);
+  --green:        #00FF88;
+  --green-dim:    #00CC6D;
+  --orange:       #FF6B00;
+  --red:          #FF2266;
+  --gold:         #FFD700;
+  --gold-dim:     #E0BD00;
+  /* EOP-023: amarillo fosforescente dedicado EXCLUSIVAMENTE a XP/Nivel/
+     Medallas/Logros — no reemplaza --gold (que sigue usándose para
+     énfasis de texto general en saludos/hero). Mantiene el amarillo
+     como acento puntual, nunca como color dominante del sitio. */
+  --xp-gold:      #F9FF4D;
+  --xp-gold-dim:  #D4E600;
+  --xp-gold-glow: rgba(249, 255, 77, 0.35);
+
+  /* Texto */
+  --text-primary:   #E8E8FF;
+  --text-secondary: #9898CC;
+  --text-muted:     #8484D6; /* EOP-014: ajustado de #5858AA (3.23:1) a 5.96:1 — cumple WCAG AA. Misma familia de color, sin cambiar la identidad. */
+  --text-on-accent: #070714;
+
+  /* Tipografía */
+  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-body:    'Inter', 'Segoe UI', sans-serif;
+  --font-code:    'JetBrains Mono', 'Courier New', monospace;
+
+  /* Tamaños */
+  --sidebar-width: 240px;
+  --topbar-height: 56px;
+  --radius-sm:     8px;
+  --radius-md:     14px;
+  --radius-lg:     22px;
+  --radius-xl:     30px;
+  --radius-full:   9999px;
+
+  /* Sombras */
+  --shadow-card:   0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-glow:   0 0 20px var(--cyan-glow);
+  --shadow-modal:  0 8px 48px rgba(0, 0, 0, 0.85);
+
+  /* Transiciones */
+  --transition-fast:   all 0.15s ease;
+  --transition-normal: all 0.3s ease;
+  --transition-slow:   all 0.5s ease;
+
+  /* Colores de tipos de elementos (Tabla Periódica) — sin cambios,
+     fuera del alcance de la propuesta visual recibida */
+  --el-nonmetal:         #6fcd8c;
+  --el-alkali:           #ff7070;
+  --el-alkaline-earth:   #ffaa57;
+  --el-transition:       #5bb8ff;
+  --el-post-transition:  #b5d44a;
+  --el-metalloid:        #4de8c2;
+  --el-halogen:          #c18fff;
+  --el-noble:            #82e8ff;
+  --el-lanthanide:       #ff95d0;
+  --el-actinide:         #ffd966;
+  --el-unknown:          #8899aa;
+
+  /* Colores temáticos de unidades (9, del documento de propuesta) */
+  --unit-01: #00BCD4;
+  --unit-02: #1A73E8;
+  --unit-03: #00C853;
+  --unit-04: #9C27B0;
+  --unit-05: #FF6F00;
+  --unit-06: #E91E63;
+  --unit-07: #607D8B;
+  --unit-08: #FF5722;
+  --unit-09: #795548;
+}
+
+/* ----------------------------------------------------------------
+   1b. UTILIDAD GLOBAL — debe ir antes del reset para máxima precedencia
+---------------------------------------------------------------- */
+/*
+  BUG-01 CORREGIDO: .hidden es la clase maestra para ocultar elementos.
+  Se usa en: #main-layout, #welcome-modal, #global-modal, #profe-bryan-fab.
+  !important garantiza que ninguna regla de display posterior la sobreescriba.
+*/
+.hidden { display: none !important; }
+
+/* ----------------------------------------------------------------
+   2. RESET & BASE
+---------------------------------------------------------------- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  font-size: 16px;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--bg-deep);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--cyan); text-decoration: none; }
+a:hover { color: var(--text-primary); }
+
+ul, ol { list-style: none; }
+
+input, button, select, textarea {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  outline: none;
+  border: none;
+}
+
+button { cursor: pointer; background: none; }
+
+img, svg { display: block; max-width: 100%; }
+
+/* ----------------------------------------------------------------
+   3. TIPOGRAFÍA
+---------------------------------------------------------------- */
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+}
+
+h1 { font-size: clamp(1.6rem, 4vw, 2.4rem); font-weight: 900; }
+h2 { font-size: clamp(1.2rem, 3vw, 1.8rem); font-weight: 700; }
+h3 { font-size: clamp(1rem, 2.5vw, 1.3rem); font-weight: 600; }
+h4 { font-size: 1rem; font-weight: 600; }
+
+p { margin-bottom: 0.75rem; }
+p:last-child { margin-bottom: 0; }
+
+.text-cyan    { color: var(--cyan); }
+.text-green   { color: var(--green); }
+.text-gold    { color: var(--gold); }
+.text-dim     { color: var(--text-secondary); }
+.text-muted   { color: var(--text-muted); }
+.text-center  { text-align: center; }
+.text-sm      { font-size: 0.85rem; }
+.text-xs      { font-size: 0.75rem; }
+
+code, .formula {
+  font-family: var(--font-code);
+  background: rgba(31, 219, 255, 0.1);
+  color: var(--cyan);
+  padding: 0.1em 0.4em;
+  border-radius: var(--radius-sm);
+  font-size: 0.9em;
+}
+
+/* ----------------------------------------------------------------
+   4. LAYOUT SPA
+---------------------------------------------------------------- */
+#app { position: relative; min-height: 100vh; }
+
+#main-layout {
+  display: flex;
+  min-height: 100vh;
+  padding-top: var(--topbar-height); /* space for mobile topbar */
+}
+
+/* Content area fills the rest */
+#content {
+  flex: 1;
+  min-height: calc(100vh - var(--topbar-height));
+  padding: 1.5rem;
+  overflow-y: auto;
+  transition: var(--transition-normal);
+}
+
+/* ----------------------------------------------------------------
+   5. PANTALLA DE CARGA
+---------------------------------------------------------------- */
+#loading-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--void);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+#loading-screen.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.loading-atom {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nucleus {
+  width: 20px;
+  height: 20px;
+  background: radial-gradient(circle, var(--cyan), var(--violet));
+  border-radius: 50%;
+  box-shadow: 0 0 20px var(--cyan), 0 0 40px var(--violet);
+  animation: nucleusPulse 2s ease-in-out infinite;
+}
+
+.orbit {
+  position: absolute;
+  border: 1.5px solid var(--border-glow);
+  border-radius: 50%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.orbit-1 { width: 50px; height: 50px; animation: orbit1 1.2s linear infinite; }
+.orbit-2 { width: 68px; height: 68px; animation: orbit2 2s linear infinite; }
+.orbit-3 { width: 86px; height: 86px; animation: orbit3 2.8s linear infinite; transform-origin: center; }
+
+.electron {
+  width: 6px;
+  height: 6px;
+  background: var(--cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--cyan);
+  margin-top: -3px;
+}
+
+.loading-text {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--cyan);
+  text-shadow: 0 0 20px var(--cyan);
+}
+
+.loading-sub {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin: 0;
+  animation: blink 1.5s ease-in-out infinite;
+}
+
+/* ----------------------------------------------------------------
+   6. MODAL DE BIENVENIDA
+---------------------------------------------------------------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 8888;
+  background: rgba(6, 20, 26, 0.85);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-overlay.hidden { display: none; }
+
+.modal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 2.5rem 2rem;
+  max-width: 440px;
+  width: 100%;
+  box-shadow: var(--shadow-modal);
+  position: relative;
+  animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.welcome-card { text-align: center; }
+
+.welcome-atom-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  display: block;
+  animation: float 3s ease-in-out infinite;
+}
+
+.welcome-title {
+  font-family: var(--font-display);
+  color: var(--cyan);
+  font-size: 1.4rem;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 20px var(--cyan-glow);
+  margin-bottom: 0.25rem;
+}
+
+.welcome-subtitle {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: 1.5rem;
+}
+
+.welcome-desc {
+  color: var(--text-primary);
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.welcome-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.welcome-input {
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.25rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+  text-align: center;
+  transition: var(--transition-fast);
+}
+
+.welcome-input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px var(--cyan-glow);
+}
+
+.welcome-input::placeholder { color: var(--text-muted); }
+
+.welcome-footer {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* ----------------------------------------------------------------
+   7. TOPBAR MÓVIL
+---------------------------------------------------------------- */
+#topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 700;
+  height: var(--topbar-height);
+  background: rgba(10, 30, 38, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  gap: 0.75rem;
+}
+
+.menu-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.menu-toggle span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--cyan);
+  border-radius: 2px;
+  transition: var(--transition-fast);
+}
+
+.menu-toggle:hover { background: var(--bg-elevated); }
+
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--cyan);
+  flex: 1;
+}
+
+.topbar-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.topbar-badge {
+  background: var(--bg-elevated);
+  border: 1px solid var(--xp-gold);
+  border-radius: var(--radius-full);
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--xp-gold);
+  text-shadow: 0 0 8px var(--xp-gold-glow);
+}
+
+.topbar-xp {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--cyan);
+}
+
+/* ----------------------------------------------------------------
+   8. SIDEBAR / MENÚ LATERAL
+---------------------------------------------------------------- */
+#sidebar-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 750;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+#sidebar-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  z-index: 800;
+  width: var(--sidebar-width);
+  background: linear-gradient(180deg, #0d0d28 0%, #0a0a1e 100%);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  overflow-x: hidden;
+  transform: translateX(-100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* scrollbar */
+  scrollbar-width: thin;
+  scrollbar-color: var(--bg-elevated) transparent;
+}
+
+#sidebar.open { transform: translateX(0); }
+
+/* Brand */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1.25rem 1rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.brand-icon { font-size: 1.8rem; line-height: 1; }
+
+.brand-name {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+}
+
+.brand-author {
+  display: block;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 0.1rem;
+}
+
+/* User card */
+.sidebar-user-card {
+  padding: 1rem;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.user-avatar {
+  font-size: 1.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  margin-bottom: 0.1rem;
+}
+
+.user-level {
+  font-size: 0.72rem;
+  color: var(--xp-gold);
+  font-weight: 600;
+  margin-bottom: 0.6rem;
+}
+
+.xp-bar-wrap {
+  height: 5px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  border-radius: var(--radius-full);
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.xp-text {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* Navigation */
+.sidebar-nav {
+  flex: 1;
+  padding: 0.5rem 0;
+  overflow-y: auto;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.6rem 1rem;
+  margin: 0.1rem 0.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition-fast);
+  position: relative;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.nav-item:hover {
+  background: rgba(31, 219, 255, 0.08);
+  color: var(--text-primary);
+}
+
+.nav-item.active {
+  background: rgba(31, 219, 255, 0.12);
+  color: var(--cyan);
+  border: 1px solid rgba(31, 219, 255, 0.2);
+}
+
+.nav-item.active .nav-icon { filter: drop-shadow(0 0 4px var(--cyan)); }
+
+.nav-icon { font-size: 1.1rem; flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
+.nav-icon svg { width: 18px; height: 18px; display: block; }
+
+.nav-label { flex: 1; }
+
+.nav-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 0.15rem 0.4rem;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.nav-badge.soon {
+  background: rgba(123, 47, 255, 0.2);
+  color: var(--violet);
+  border: 1px solid rgba(123, 47, 255, 0.3);
+}
+
+.nav-separator {
+  padding: 0.75rem 1rem 0.25rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.sidebar-footer {
+  padding: 0.75rem 1rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-align: center;
+  border-top: 1px solid var(--border);
+}
+
+/* ----------------------------------------------------------------
+   9. BOTONES
+---------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-body);
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  padding: 0.6rem 1.25rem;
+  font-size: 0.9rem;
+  transition: var(--transition-fast);
+  cursor: pointer;
+  border: 1.5px solid transparent;
+  letter-spacing: 0.02em;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--cyan-dim), var(--cyan));
+  color: var(--text-on-accent);
+  transition: transform .3s cubic-bezier(0.16,0.8,0.3,1), box-shadow .35s ease;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 22px var(--cyan-glow); /* EOP-024: antes rgba(23,200,196,...) — hex de la identidad v1.0 sin migrar */
+}
+
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  border-color: var(--border);
+}
+
+.btn-secondary:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border);
+}
+
+.btn-ghost:hover { background: var(--bg-elevated); color: var(--text-primary); }
+
+.btn-danger {
+  background: rgba(255, 34, 102, 0.15);
+  color: var(--red);
+  border-color: rgba(255, 34, 102, 0.3);
+}
+
+.btn-success {
+  background: rgba(0, 255, 136, 0.15);
+  color: var(--green);
+  border-color: rgba(0, 255, 136, 0.3);
+}
+
+.btn-lg { padding: 0.85rem 2rem; font-size: 1rem; }
+.btn-sm { padding: 0.35rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-sm); }
+.btn-block { width: 100%; }
+
+/* ----------------------------------------------------------------
+   10. CARDS & PANELS
+---------------------------------------------------------------- */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  transition: var(--transition-normal);
+}
+
+.card:hover {
+  border-color: var(--border-glow);
+  box-shadow: var(--shadow-glow);
+  transform: translateY(-2px);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin-bottom: 0.5rem;
+}
+
+.card-value {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+/* Section wrappers */
+.section-header {
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 0.3rem;
+}
+
+.section-heading {
+  font-size: clamp(1.2rem, 3vw, 1.7rem);
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+/* ----------------------------------------------------------------
+   11. PROGRESS BARS
+---------------------------------------------------------------- */
+.progress-bar {
+  height: 8px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  position: relative;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: var(--radius-full);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 20px;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  filter: blur(4px);
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+.progress-fill-cyan   { background: linear-gradient(90deg, var(--cyan-dim), var(--cyan)); }
+.progress-fill-violet { background: linear-gradient(90deg, var(--violet-dim), var(--violet)); }
+.progress-fill-green  { background: linear-gradient(90deg, var(--green-dim), var(--green)); }
+.progress-fill-gold   { background: linear-gradient(90deg, var(--xp-gold-dim), var(--xp-gold)); box-shadow: 0 0 8px var(--xp-gold-glow); }
+
+/* Circular progress */
+.progress-circle {
+  position: relative;
+  width: 64px;
+  height: 64px;
+}
+
+.progress-circle svg {
+  width: 64px;
+  height: 64px;
+  transform: rotate(-90deg);
+}
+
+.progress-circle-bg {
+  fill: none;
+  stroke: var(--bg-elevated);
+  stroke-width: 5;
+}
+
+.progress-circle-fill {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-dasharray: 163.36;
+  stroke-dashoffset: 163.36;
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-circle-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* ----------------------------------------------------------------
+   12. TOAST NOTIFICATIONS
+---------------------------------------------------------------- */
+#toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 9990;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-width: 320px;
+}
+
+.toast {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.88rem;
+  animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: var(--shadow-card);
+  transition: var(--transition-normal);
+}
+
+.toast.fade-out {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toast-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.05rem; }
+
+.toast-body { flex: 1; }
+.toast-title { font-weight: 700; color: var(--text-primary); }
+.toast-msg { font-size: 0.8rem; color: var(--text-secondary); margin: 0.1rem 0 0; }
+
+.toast-success { border-left: 3px solid var(--green); }
+.toast-error   { border-left: 3px solid var(--red); }
+.toast-info    { border-left: 3px solid var(--cyan); }
+.toast-xp      { border-left: 3px solid var(--xp-gold); box-shadow: -2px 0 12px var(--xp-gold-glow); }
+
+/* ----------------------------------------------------------------
+   13. MODAL GLOBAL
+---------------------------------------------------------------- */
+#global-modal .modal-card {
+  max-width: 520px;
+  max-height: 85vh;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+.modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  gap: 1rem;
+}
+
+.modal-close {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  transition: var(--transition-fast);
+}
+
+.modal-close:hover { background: var(--red); color: white; border-color: var(--red); }
+
+/* ----------------------------------------------------------------
+   14. FAB (Floating Action Button)
+---------------------------------------------------------------- */
+.fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 600;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--violet-dim), var(--violet));
+  box-shadow: 0 4px 20px rgba(123, 47, 255, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-fast);
+  border: none;
+}
+
+.fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(123, 47, 255, 0.6);
+}
+
+.fab-icon { font-size: 1.4rem; }
+.fab.hidden { display: none; }
+
+/* ----------------------------------------------------------------
+   15. HOME PAGE
+---------------------------------------------------------------- */
+.home-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+  animation: pageIn 0.4s ease;
+}
+
+/* Canvas de partículas */
+#particles-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* Hero section */
+.home-hero {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2rem;
+}
+
+.hero-eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--cyan);
+}
+
+.hero-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.4rem, 5vw, 2.6rem);
+  font-weight: 900;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.hero-title .accent { color: var(--cyan); text-shadow: 0 0 30px rgba(31, 219, 255,0.4); }
+
+.hero-welcome {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+}
+
+.hero-welcome strong { color: var(--gold); }
+
+.hero-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+/* Atom decoration in hero */
+.hero-atom {
+  position: absolute;
+  right: 0;
+  top: -0.5rem;
+  width: 100px;
+  height: 100px;
+  opacity: 0.3;
+  display: none;
+}
+
+/* Stats strip */
+.stats-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+  position: relative;
+  z-index: 1;
+}
+
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  transition: var(--transition-normal);
+}
+
+.stat-card:hover { border-color: var(--border-glow); }
+
+.stat-icon { font-size: 1.4rem; }
+
+.stat-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--text-muted);
+  margin-bottom: 0.1rem;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+/* Units grid on home */
+.units-grid-home {
+  position: relative;
+  z-index: 1;
+}
+
+/* ----------------------------------------------------------------
+   16. UNITS PAGE — Tarjetas tipo elemento periódico
+---------------------------------------------------------------- */
+.units-page { max-width: 1200px; margin: 0 auto; animation: pageIn 0.4s ease; }
+
+.units-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+/* HOTFIX-05: uniformidad visual — SOLO en la vista "Todas las
+   Unidades" (.units-grid), no afecta las tarjetas de Inicio
+   (.units-grid-home), que ya se ven uniformes y no se tocan.
+   Antes .unit-card tenía min-height, así que una tarjeta con más
+   texto (la de PNE) estiraba toda su fila del grid. Ahora es una
+   altura fija real, con recorte de texto como respaldo. */
+.units-grid .unit-card {
+  height: 192px;
+  overflow: hidden;
+}
+.units-grid .unit-card .unit-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+/* Texto descriptivo variable (ej. mensaje de bloqueo de PNE) —
+   recortado a 2 líneas máximo, nunca empuja la altura de la tarjeta.
+   El indicador de progreso (ej. "5/9") vive aparte y nunca se recorta. */
+.units-grid .unit-meta-item-clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.35;
+}
+
+/* Tarjeta de unidad — diseño como elemento de tabla periódica */
+.unit-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  cursor: pointer;
+  transition: var(--transition-normal);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-height: 180px;
+}
+
+/* HOTFIX-02: mismo lenguaje visual ya usado para insignias bloqueadas
+   (.badge-item:not(.unlocked)) — no se inventa un estilo nuevo. */
+.unit-card-locked {
+  filter: grayscale(0.85);
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.unit-card-locked:hover { transform: none; }
+
+.unit-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--unit-color, var(--cyan));
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.unit-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+              0 0 0 1px var(--unit-color, var(--cyan)) 33;
+  border-color: var(--unit-color, var(--cyan));
+}
+
+.unit-number {
+  font-family: var(--font-code);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.unit-symbol {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 900;
+  line-height: 1;
+  color: var(--unit-color, var(--cyan));
+  text-shadow: 0 0 20px var(--unit-color, var(--cyan));
+  margin: 0.25rem 0;
+}
+
+.unit-name {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  line-height: 1.3;
+  flex: 1;
+}
+
+.unit-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+.unit-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.68rem;
+  color: var(--text-muted);
+}
+
+.unit-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+}
+
+.unit-progress-bar {
+  width: 40px;
+  height: 3px;
+  background: var(--bg-elevated);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.unit-progress-fill {
+  height: 100%;
+  background: var(--unit-color, var(--cyan));
+  border-radius: var(--radius-full);
+  transition: width 0.6s ease;
+}
+
+/* Badge "próximamente" en tarjeta de unidad */
+.unit-badge {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted);
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--border);
+}
+
+/* Pantalla de unidad individual (placeholder) */
+.unit-detail-page { max-width: 900px; margin: 0 auto; animation: pageIn 0.4s ease; }
+
+.unit-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  margin-bottom: 1.5rem;
+}
+
+.unit-detail-symbol {
+  font-family: var(--font-display);
+  font-size: 3.5rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.unit-detail-tabs {
+  display: flex;
+  gap: 0.25rem;
+  margin-bottom: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.3rem;
+  overflow-x: auto;
+}
+
+.tab-btn {
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.tab-btn.active {
+  background: var(--bg-elevated);
+  color: var(--cyan);
+}
+
+.tab-btn:hover:not(.active) { color: var(--text-primary); }
+
+/* Coming soon panel */
+.coming-soon-panel {
+  background: var(--bg-card);
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.coming-soon-icon { font-size: 3rem; margin-bottom: 1rem; display: block; opacity: 0.6; }
+
+/* ----------------------------------------------------------------
+   17. TABLA PERIÓDICA
+---------------------------------------------------------------- */
+.periodic-page { animation: pageIn 0.4s ease; }
+
+.pt-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-bottom: 1.25rem;
+  position: sticky;
+  top: calc(var(--topbar-height) + 0.5rem);
+  z-index: 10;
+  background: var(--bg-deep);
+  padding: 0.75rem 0;
+}
+
+.pt-search {
+  background: var(--bg-input);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.85rem;
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  min-width: 180px;
+  transition: var(--transition-fast);
+}
+
+.pt-search:focus { border-color: var(--cyan); box-shadow: 0 0 0 2px var(--cyan-glow); }
+.pt-search::placeholder { color: var(--text-muted); }
+
+.pt-filter-btn {
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-md);
+  font-size: 0.78rem;
+  font-weight: 700;
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.pt-filter-btn:hover, .pt-filter-btn.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(31, 219, 255, 0.08);
+}
+
+/* Legend */
+.pt-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+}
+
+.legend-item:hover { background: var(--bg-elevated); }
+
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* Tabla periódica — CSS Grid */
+.periodic-table-wrap {
+  overflow-x: auto;
+  padding-bottom: 0.5rem;
+}
+
+.periodic-table {
+  display: grid;
+  grid-template-columns: repeat(18, minmax(42px, 1fr));
+  grid-template-rows: repeat(10, auto);
+  gap: 3px;
+  min-width: 780px;
+}
+
+/* Celda de elemento */
+.element-cell {
+  aspect-ratio: 1 / 1.1;
+  min-height: 42px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  position: relative;
+  overflow: hidden;
+  padding: 2px;
+}
+
+.element-cell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.12;
+  transition: opacity 0.2s;
+}
+
+.element-cell:hover {
+  transform: scale(1.15);
+  z-index: 5;
+  border-color: transparent;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+}
+
+.element-cell:hover::before { opacity: 0.3; }
+
+.element-cell.dimmed { opacity: 0.2; }
+
+.el-z {
+  font-family: var(--font-code);
+  font-size: 0.5rem;
+  color: rgba(255,255,255,0.5);
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  line-height: 1;
+}
+
+.el-symbol {
+  font-family: var(--font-display);
+  font-size: clamp(0.65rem, 1.5vw, 0.85rem);
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+}
+
+.el-mass {
+  font-family: var(--font-code);
+  font-size: 0.42rem;
+  color: rgba(255,255,255,0.5);
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.el-name {
+  font-size: 0.38rem;
+  color: rgba(255,255,255,0.4);
+  line-height: 1;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+  padding: 0 2px;
+}
+
+/* Element type background colors */
+.el-type-nonmetal::before        { background: var(--el-nonmetal); }
+.el-type-alkali-metal::before    { background: var(--el-alkali); }
+.el-type-alkaline-earth::before  { background: var(--el-alkaline-earth); }
+.el-type-transition-metal::before{ background: var(--el-transition); }
+.el-type-post-transition::before { background: var(--el-post-transition); }
+.el-type-metalloid::before       { background: var(--el-metalloid); }
+.el-type-halogen::before         { background: var(--el-halogen); }
+.el-type-noble-gas::before       { background: var(--el-noble); }
+.el-type-lanthanide::before      { background: var(--el-lanthanide); }
+.el-type-actinide::before        { background: var(--el-actinide); }
+.el-type-unknown::before         { background: var(--el-unknown); }
+
+/* Color the symbol too */
+.el-type-nonmetal .el-symbol        { color: var(--el-nonmetal); }
+.el-type-alkali-metal .el-symbol    { color: var(--el-alkali); }
+.el-type-alkaline-earth .el-symbol  { color: var(--el-alkaline-earth); }
+.el-type-transition-metal .el-symbol{ color: var(--el-transition); }
+.el-type-post-transition .el-symbol { color: var(--el-post-transition); }
+.el-type-metalloid .el-symbol       { color: var(--el-metalloid); }
+.el-type-halogen .el-symbol         { color: var(--el-halogen); }
+.el-type-noble-gas .el-symbol       { color: var(--el-noble); }
+.el-type-lanthanide .el-symbol      { color: var(--el-lanthanide); }
+.el-type-actinide .el-symbol        { color: var(--el-actinide); }
+.el-type-unknown .el-symbol         { color: var(--el-unknown); }
+
+/* Placeholder de lantánidos/actínidos */
+.element-placeholder {
+  aspect-ratio: 1 / 1.1;
+  min-height: 42px;
+  background: var(--bg-elevated);
+  border: 1px dashed var(--border);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.5rem;
+  color: var(--text-muted);
+  cursor: default;
+}
+
+/* Fila separadora entre TP y bloque f */
+.pt-row-separator {
+  grid-column: 1 / -1;
+  height: 8px;
+}
+
+/* Modal de elemento */
+.element-modal-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.element-modal-symbol-box {
+  width: 70px;
+  height: 80px;
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.element-modal-symbol-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.25;
+}
+
+.em-z {
+  font-family: var(--font-code);
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.6);
+  line-height: 1;
+}
+
+.em-symbol {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.em-mass {
+  font-family: var(--font-code);
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.5);
+}
+
+.em-info h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.3rem;
+}
+
+.em-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.em-chip {
+  font-size: 0.68rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: var(--radius-full);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+}
+
+.em-data-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.6rem;
+  margin: 1rem 0;
+}
+
+.em-data-item {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+}
+
+.em-data-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 0.1rem;
+}
+
+.em-data-value {
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.em-config {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  margin: 0.75rem 0;
+}
+
+.em-config-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 0.35rem;
+}
+
+.em-config-value {
+  font-family: var(--font-code);
+  font-size: 0.88rem;
+  color: var(--cyan);
+  line-height: 1.6;
+  word-break: break-all;
+}
+
+.em-uses, .em-curiosity {
+  margin-top: 0.75rem;
+}
+
+.em-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--cyan);
+  margin-bottom: 0.35rem;
+  letter-spacing: 0.1em;
+}
+
+.em-uses-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.em-use-item {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.em-use-item::before {
+  content: '▸';
+  color: var(--cyan);
+  flex-shrink: 0;
+  margin-top: 0.05rem;
+}
+
+.em-curiosity-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* ----------------------------------------------------------------
+   18. PROGRESS PAGE
+---------------------------------------------------------------- */
+.progress-page { max-width: 900px; margin: 0 auto; animation: pageIn 0.4s ease; }
+
+.progress-hero {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.progress-level-badge {
+  font-size: 3rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.progress-hero-info { flex: 1; }
+
+.progress-level-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--xp-gold);
+  margin-bottom: 0.2rem;
+  text-shadow: 0 0 10px var(--xp-gold-glow);
+}
+
+.progress-xp-text {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+
+.badges-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.badge-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.75rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-width: 72px;
+  transition: var(--transition-fast);
+}
+
+.badge-item:not(.unlocked) { filter: grayscale(1); opacity: 0.3; }
+.badge-item.unlocked { border-color: var(--xp-gold); box-shadow: 0 0 12px var(--xp-gold-glow); }
+.badge-item.unlocked:hover { transform: scale(1.05); }
+
+.badge-icon { font-size: 1.6rem; }
+.badge-name { font-size: 0.62rem; text-align: center; color: var(--text-muted); }
+
+/* Units progress list */
+.units-progress-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.unit-progress-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+}
+
+.upi-number {
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  width: 24px;
+  flex-shrink: 0;
+}
+
+.upi-color { width: 4px; height: 32px; border-radius: 2px; flex-shrink: 0; }
+
+.upi-name {
+  flex: 1;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.upi-bar-wrap {
+  width: 100px;
+  flex-shrink: 0;
+}
+
+.upi-pct {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-align: right;
+  margin-bottom: 0.2rem;
+}
+
+/* ----------------------------------------------------------------
+   19. ABOUT PAGE
+---------------------------------------------------------------- */
+.about-page { max-width: 700px; margin: 0 auto; animation: pageIn 0.4s ease; }
+
+.about-hero {
+  text-align: center;
+  padding: 2rem 1rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+
+.about-icon { font-size: 4rem; display: block; margin-bottom: 1rem; animation: float 4s ease-in-out infinite; }
+
+.about-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+
+/* ----------------------------------------------------------------
+   20. PLACEHOLDER PAGES (Simuladores, Lab, Juegos, Examen, Profe Bryan)
+---------------------------------------------------------------- */
+.placeholder-page {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 3rem 1rem;
+  animation: pageIn 0.4s ease;
+}
+
+.placeholder-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 1.5rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+.placeholder-title {
+  margin-bottom: 0.75rem;
+}
+
+.placeholder-desc {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 1.5rem;
+}
+
+.placeholder-coming-soon {
+  display: inline-block;
+  background: rgba(123, 47, 255, 0.1);
+  border: 1.5px dashed rgba(123, 47, 255, 0.4);
+  color: var(--violet);
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* ----------------------------------------------------------------
+   21. ANIMATIONS & KEYFRAMES
+---------------------------------------------------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(24px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateX(100%); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%       { transform: translateY(-8px); }
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+
+@keyframes shimmer {
+  0%   { left: -30px; opacity: 0; }
+  50%  { opacity: 0.3; }
+  100% { left: 110%; opacity: 0; }
+}
+
+@keyframes nucleusPulse {
+  0%, 100% { box-shadow: 0 0 12px var(--cyan), 0 0 24px var(--violet); transform: scale(1); }
+  50%       { box-shadow: 0 0 24px var(--cyan), 0 0 48px var(--violet); transform: scale(1.1); }
+}
+
+@keyframes orbit1 {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes orbit2 {
+  0%   { transform: rotate(60deg); }
+  100% { transform: rotate(420deg); }
+}
+
+@keyframes orbit3 {
+  0%   { transform: rotate(120deg) rotateX(60deg); }
+  100% { transform: rotate(480deg) rotateX(60deg); }
+}
+
+@keyframes xpGain {
+  0%   { opacity: 0; transform: translateY(0) scale(0.8); }
+  30%  { opacity: 1; transform: translateY(-8px) scale(1.1); }
+  80%  { opacity: 1; transform: translateY(-24px) scale(1); }
+  100% { opacity: 0; transform: translateY(-36px) scale(0.9); }
+}
+
+@keyframes levelUp {
+  0%   { box-shadow: 0 0 0 0 rgba(255,215,0,0.5); }
+  50%  { box-shadow: 0 0 0 16px rgba(255,215,0,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,215,0,0); }
+}
+
+@keyframes confetti {
+  0%   { transform: translateY(0) rotate(0); opacity: 1; }
+  100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+}
+
+/* Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ----------------------------------------------------------------
+   22. RESPONSIVE — Mobile First
+---------------------------------------------------------------- */
+
+/* MOBILE (< 768px) — Layout sin sidebar */
+@media (max-width: 767px) {
+  :root { --sidebar-width: 260px; }
+
+  #content { padding: 1rem; }
+
+  .stats-strip { grid-template-columns: repeat(2, 1fr); }
+
+  .units-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+
+  .unit-card { min-height: 150px; }
+
+  .periodic-table { min-width: 700px; gap: 2px; }
+  .element-cell { min-height: 36px; }
+  .el-name { display: none; }
+
+  .hero-atom { display: none; }
+
+  .progress-hero { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .upi-bar-wrap { width: 70px; }
+
+  #toast-container { left: 1rem; right: 1rem; max-width: none; }
+
+  .em-data-grid { grid-template-columns: 1fr; }
+}
+
+/* TABLET (768px - 1023px) */
+@media (min-width: 768px) {
+  .hero-atom { display: block; }
+
+  .stats-strip { grid-template-columns: repeat(4, 1fr); }
+
+  .units-grid { grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); }
+}
+
+/* DESKTOP (>= 1024px) — Sidebar visible y fijo */
+@media (min-width: 1024px) {
+  #main-layout { padding-top: 0; }
+
+  #topbar { display: none; }
+
+  #sidebar {
+    transform: translateX(0);
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+  }
+
+  #content {
+    margin-left: var(--sidebar-width);
+    padding: 2rem 2.5rem;
+    min-height: 100vh;
+  }
+
+  #sidebar-overlay { display: none; }
+
+  .fab { bottom: 2rem; right: 2rem; }
+
+  #toast-container { bottom: 2rem; right: 2rem; }
+
+  .units-grid { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+
+  .element-cell { min-height: 46px; }
+  .el-name { display: block; }
+}
+
+/* WIDE (>= 1400px) */
+@media (min-width: 1400px) {
+  #content { padding: 2rem 3rem; }
+  .element-cell { min-height: 50px; }
+  .el-symbol { font-size: 0.9rem; }
+}
+
+/* ════════════════════════════════════════════════════════════════
+   MQC DESIGN SYSTEM v1.0 — Migración visual (Fase 1)
+   Fondo científico sutil · tokens de sombra/glow · lema del hero.
+   Aditivo y retrocompatible. No altera la arquitectura ni la lógica.
+   ════════════════════════════════════════════════════════════════ */
+:root{
+  --sh-1: 0 1px 2px rgba(0,0,0,.4);
+  --sh-2: 0 6px 18px -8px rgba(0,0,0,.55);
+  --sh-3: 0 18px 50px -20px rgba(0,0,0,.7);
+  --glow-turq: 0 0 24px -6px rgba(31,219,255,.55); /* EOP-030.5: antes rgba(23,200,196,...) — cian v1.0 sin migrar */
+  --glow-gold: 0 0 26px -6px rgba(249,255,77,.6); /* EOP-030.5: antes rgba(255,194,77,...) — dorado v1.0 sin migrar */
+}
+/* Fondo no plano: dos resplandores + patrón de hexágonos/partículas a baja opacidad */
+body{
+  background:
+    radial-gradient(1100px 700px at 82% -8%, rgba(31,219,255,.10), transparent 55%), /* EOP-030.5: antes rgba(23,200,196,...) */
+    radial-gradient(900px 600px at -8% 15%, rgba(123,47,255,.09), transparent 52%), /* EOP-030.5: antes rgba(45,156,219,...) — azul v1.0, ahora violeta oficial */
+    var(--bg-deep);
+  background-attachment: fixed;
+}
+body::before{
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none; opacity:.4;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='104' viewBox='0 0 120 104'><g fill='none' stroke='%232a2a6a' stroke-width='1' stroke-opacity='0.5'><path d='M30 0 L60 17 L60 52 L30 69 L0 52 L0 17 Z'/><path d='M90 0 L120 17 L120 52 L90 69 L60 52 L60 17 Z'/><path d='M30 69 L60 86 L60 104'/><path d='M90 69 L120 86 L120 104'/></g><g fill='%231FDBFF' fill-opacity='0.35'><circle cx='60' cy='17' r='1.6'/><circle cx='0' cy='52' r='1.6'/><circle cx='120' cy='52' r='1.6'/></g></svg>");
+}
+@media (prefers-reduced-motion:reduce){ body{ background-attachment: scroll; } }
+
+/* Hero — lema oficial y saludo */
+.hero-lema{
+  font-family: var(--font-display); font-weight: 600; font-size: .9rem;
+  color: var(--text-primary); letter-spacing: .02em; margin-top: .25rem;
+}
+.hero-greeting{ font-size: .95rem; color: var(--text-secondary); }
+.hero-greeting strong{ color: var(--gold); }
+
+/* ================================================================
+   ACCESIBILIDAD — EOP-014 (cierre del núcleo funcional)
+   ================================================================
+   Foco de teclado visible en toda la plataforma. No introduce
+   colores nuevos: reutiliza --cyan, ya usado como color de foco en
+   .pt-search:focus y .welcome-input:focus.
+================================================================ */
+:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+/* Los .nav-item ahora son focoables por teclado (tabindex+role=button,
+   ver index.html). Su foco visible respeta el radio de la tarjeta. */
+.nav-item:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: -2px;
+}
+/* Nunca ocultar el foco por accidente en elementos custom */
+[tabindex]:focus-visible, button:focus-visible, a:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
+/* Utilidad estándar para etiquetas accesibles visualmente ocultas
+   (ej. <label> del input de nombre en el modal de bienvenida) */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ================================================================
+   EOP-021 — FIRST IMPRESSION SPRINT
+   ================================================================
+   Solo experiencia visual. No architecture, no lógica. Reutiliza los
+   mismos tokens (--cyan, --bg-*, --border) — no se introduce paleta
+   nueva, solo mayor intensidad y atmósfera.
+================================================================ */
+
+/* ---- Fondo vivo reutilizable (gate + página principal) ----
+   Gradientes radiales que respiran muy lento. Puramente decorativo:
+   position:absolute detrás del contenido, pointer-events:none. */
+.mqc-living-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.mqc-living-bg::before, .mqc-living-bg::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  animation: mqcLivingDrift 22s ease-in-out infinite;
+}
+.mqc-living-bg::before {
+  width: 46vw; height: 46vw; max-width: 620px; max-height: 620px;
+  top: -12%; right: -8%;
+  background: radial-gradient(circle, var(--cyan-glow) 0%, transparent 70%);
+  opacity: 0.9;
+}
+.mqc-living-bg::after {
+  width: 38vw; height: 38vw; max-width: 520px; max-height: 520px;
+  bottom: -14%; left: -6%;
+  background: radial-gradient(circle, rgba(123, 47, 255, 0.16) 0%, transparent 70%);
+  animation-delay: -11s;
+  animation-duration: 26s;
+}
+@keyframes mqcLivingDrift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50%      { transform: translate(-3%, 4%) scale(1.08); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mqc-living-bg::before, .mqc-living-bg::after { animation: none; }
+}
+/* Estrellas sutiles, mismas en el gate y en el fondo vivo de home */
+.mqc-stars {
+  position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: 0.5;
+  background-image:
+    radial-gradient(1px 1px at 12% 22%, #fff, transparent),
+    radial-gradient(1px 1px at 82% 15%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 68% 62%, #fff, transparent),
+    radial-gradient(1px 1px at 30% 78%, #fff, transparent),
+    radial-gradient(1px 1px at 92% 70%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 45% 40%, #fff, transparent);
+  background-size: 100% 100%;
+}
+
+/* ================================================================
+   EOP-022 — PORTAL DE ENTRADA
+   ================================================================
+   Rediseño profundo de la puerta de entrada. Solo experiencia visual:
+   Router, Storage, Perfiles, Photon y toda la lógica permanecen
+   exactamente iguales — únicamente cambia el markup de presentación
+   dentro de openGate() (profiles-ui.js) y este CSS.
+================================================================ */
+
+/* ---- Atmósfera de fondo: nebulosa + hexágonos + líneas científicas ----
+   Todo el movimiento es extremadamente lento (28-60s) y de amplitud
+   mínima. Nada de partículas cayendo ni efectos llamativos. */
+.mqc-gate-atmosphere {
+  position: fixed; inset: 0; z-index: 9000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(1600px 1000px at 50% -15%, rgba(31, 219, 255, 0.09) 0%, transparent 55%),
+    radial-gradient(1200px 800px at 92% 105%, rgba(123, 47, 255, 0.10) 0%, transparent 55%),
+    radial-gradient(900px 900px at 8% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 60%),
+    var(--void);
+  animation: fadeIn 0.6s ease;
+  overflow: hidden;
+}
+/* Nebulosa azul muy tenue, deriva casi imperceptible */
+.mqc-gate-atmosphere::before {
+  content: '';
+  position: absolute; inset: -10%;
+  background: radial-gradient(ellipse 60% 40% at 50% 20%, rgba(31,219,255,.05), transparent 70%);
+  animation: mqcNebulaDrift 62s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes mqcNebulaDrift {
+  0%, 100% { transform: translate(0,0) scale(1); opacity: .8; }
+  50%      { transform: translate(2%, -2%) scale(1.06); opacity: 1; }
+}
+
+/* Retículas moleculares (nanotubo/fullereno) — EOP-023.
+   Sustituyen los hexágonos sólidos y el grid rígido anteriores.
+   Rotación extremadamente lenta (70-100s) + deriva mínima. */
+.mqc-gate-molecule {
+  position: absolute; z-index: 0; pointer-events: none;
+  filter: blur(1.5px);
+  opacity: 0.55;
+}
+.mqc-gate-molecule svg { width: 100%; height: 100%; display: block; }
+.mqc-gate-molecule.a {
+  width: 44vw; height: 44vw; max-width: 620px; max-height: 620px;
+  top: -10%; left: -12%;
+  animation: mqcMoleculeSpin 130s linear infinite;
+}
+.mqc-gate-molecule.b {
+  width: 38vw; height: 38vw; max-width: 540px; max-height: 540px;
+  bottom: -12%; right: -10%;
+  animation: mqcMoleculeSpin 165s linear infinite reverse;
+}
+@keyframes mqcMoleculeSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+/* Partículas diminutas tipo fotón, deriva vertical lentísima */
+.mqc-gate-photons { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.mqc-gate-photons i {
+  position: absolute;
+  width: 2.5px; height: 2.5px; border-radius: 50%;
+  background: var(--cyan);
+  box-shadow: 0 0 6px 1.5px var(--cyan-glow);
+  opacity: 0;
+  animation: mqcPhotonDrift linear infinite;
+}
+@keyframes mqcPhotonDrift {
+  0%   { opacity: 0; transform: translateY(0); }
+  10%  { opacity: .7; }
+  90%  { opacity: .5; }
+  100% { opacity: 0; transform: translateY(-140px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mqc-gate-molecule, .mqc-gate-photons i, .mqc-gate-atmosphere::before { animation: none; }
+}
+
+/* ---- Accesos rápidos en el sidebar (EOP-023) ----
+   Antes flotaban sobre la interfaz (#qi-launcher); ahora viven de
+   forma permanente dentro de la navegación lateral. */
+.mqc-quick-access {
+  margin: 1rem .9rem 0;
+  padding-top: .9rem;
+  border-top: 1px solid var(--border);
+}
+.mqc-quick-access-label {
+  font-family: var(--font-code);
+  font-size: .66rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: .5rem;
+  padding: 0 .3rem;
+}
+.mqc-quick-access-item {
+  display: flex; align-items: center; gap: .65rem;
+  width: 100%; text-align: left;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: .6rem .7rem;
+  margin-bottom: .4rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: var(--transition-fast);
+}
+.mqc-quick-access-item:hover, .mqc-quick-access-item:focus-visible {
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px var(--cyan-glow);
+  transform: translateX(2px);
+}
+.mqc-qa-icon {
+  font-size: 1.15rem;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, rgba(31,219,255,.14), transparent 70%);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mqc-qa-name { display: block; font-size: .82rem; font-weight: 700; }
+.mqc-qa-desc { display: block; font-size: .68rem; color: var(--text-muted); }
+
+/* ---- Columna central: mensaje → submensaje → panel → acciones ---- */
+.mqc-gate-stage {
+  position: relative; z-index: 2;
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; max-width: 560px;
+  max-height: 94vh; overflow-y: auto;
+  /* HOTFIX-07: en navegadores móviles reales, "vh" se calcula contra el
+     viewport SIN la barra de direcciones (más alto de lo visible en
+     realidad), así que "94vh" podía exceder el espacio verdadero
+     disponible. "dvh" (dynamic viewport height) sí se ajusta a la
+     barra de direcciones real — se declara DESPUÉS a propósito: los
+     navegadores que no lo soportan simplemente ignoran esta línea y
+     siguen usando el "vh" de arriba, no se rompe nada en ninguno. */
+  max-height: 94dvh;
+  padding: 1rem 0;
+}
+.mqc-gate-headline {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 4vw, 2.1rem);
+  line-height: 1.35;
+  text-align: center;
+  color: var(--text-primary);
+  max-width: 22ch;
+  margin: 0 0 .7rem;
+  text-shadow: 0 0 30px rgba(31,219,255,.15);
+}
+.mqc-gate-headline em {
+  font-style: normal;
+  background: linear-gradient(100deg, var(--cyan), #c9a6ff);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.mqc-gate-subheadline {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.92rem;
+  max-width: 40ch;
+  line-height: 1.7;
+  margin: 0 0 2.2rem;
+}
+
+/* ---- El panel: despierta como una consola científica, en secuencia ----
+   EOP-024: ya no es un solo fundido — se activa por partes, en este
+   orden: indicador verde → línea superior → contenido → botón
+   principal. Duración total ~820ms. */
+.mqc-gate-card {
+  position: relative;
+  width: 100%;
+  background: linear-gradient(180deg, rgba(22, 22, 58, 0.88), rgba(13, 13, 36, 0.94));
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-xl);
+  padding: 1.9rem 1.8rem 1.7rem;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.55), 0 0 70px rgba(31, 219, 255, 0.07);
+  animation: mqcConsoleShell 0.4s ease both, mqcPanelBreathe 9s ease-in-out 1s infinite;
+  overflow: hidden;
+}
+@keyframes mqcConsoleShell {
+  0%   { opacity: 0; transform: translateY(18px) scale(.98); filter: blur(4px); }
+  100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+}
+/* Respiración muy lenta y casi imperceptible — empieza tras la secuencia de entrada */
+@keyframes mqcPanelBreathe {
+  0%, 100% { box-shadow: 0 30px 90px rgba(0,0,0,0.55), 0 0 70px rgba(31, 219, 255, 0.07); }
+  50%      { box-shadow: 0 30px 90px rgba(0,0,0,0.55), 0 0 84px rgba(31, 219, 255, 0.11); }
+}
+/* Línea superior — se "dibuja" de izquierda a derecha */
+.mqc-gate-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  transform: scaleX(0); transform-origin: left center;
+  animation: mqcLineDraw 0.4s ease .22s both;
+}
+@keyframes mqcLineDraw {
+  to { transform: scaleX(1); }
+}
+.mqc-gate-card-label {
+  display: flex; align-items: center; gap: .5rem;
+  font-family: var(--font-code);
+  font-size: .7rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 1.1rem;
+  padding-bottom: .9rem;
+  border-bottom: 1px solid var(--border);
+}
+.mqc-gate-card-label .dot {
+  width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink:0;
+  opacity: 0; box-shadow: 0 0 0 rgba(0,255,136,0);
+  animation: mqcDotWake 0.35s ease .08s both;
+}
+@keyframes mqcDotWake {
+  0%   { opacity: 0; transform: scale(.3); box-shadow: 0 0 0 rgba(0,255,136,0); }
+  60%  { opacity: 1; transform: scale(1.3); box-shadow: 0 0 12px var(--green); }
+  100% { opacity: 1; transform: scale(1); box-shadow: 0 0 8px var(--green); }
+}
+/* Contenido (lista de perfiles) — entra tras la línea */
+.mqc-gate-content-fade {
+  animation: mqcContentRise 0.4s ease .42s both;
+}
+@keyframes mqcContentRise {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+/* Acción principal — la última en aparecer, con un leve pulso de glow */
+.mqc-gate-action-fade {
+  animation: mqcActionWake 0.4s ease .62s both;
+}
+@keyframes mqcActionWake {
+  0%   { opacity: 0; transform: translateY(8px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Perfiles como credenciales científicas: más aire, más elegancia ---- */
+.mqc-badge-profile {
+  display: flex; align-items: center; gap: 1rem;
+  width: 100%; text-align: left;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-left: 2px solid var(--border-glow);
+  border-radius: var(--radius-md);
+  padding: 1rem 1.1rem;
+  margin-bottom: .65rem;
+  cursor: pointer;
+  color: var(--text-primary);
+  transition: transform .35s cubic-bezier(0.16,0.8,0.3,1), box-shadow .4s ease, border-color .3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.mqc-badge-profile::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(140px 70px at 15% 50%, var(--cyan-glow), transparent 70%);
+  opacity: 0; transition: opacity .3s ease;
+}
+.mqc-badge-profile:hover, .mqc-badge-profile:focus-visible {
+  border-color: var(--cyan);
+  border-left-color: var(--cyan);
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0,0,0,.4), 0 0 0 1px var(--border-glow);
+}
+.mqc-badge-profile:hover::before, .mqc-badge-profile:focus-visible::before { opacity: 1; }
+.mqc-badge-profile .mqc-badge-icon {
+  font-size: 1.9rem;
+  width: 50px; height: 50px;
+  display: flex; align-items: center; justify-content: center;
+  background: radial-gradient(circle, rgba(31,219,255,.16), transparent 70%);
+  border: 1px solid var(--border-glow);
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative; z-index: 1;
+  transition: var(--transition-fast);
+}
+.mqc-badge-profile:hover .mqc-badge-icon {
+  transform: scale(1.08) rotate(-4deg);
+  box-shadow: 0 0 18px var(--cyan-glow);
+}
+.mqc-badge-profile .mqc-badge-name { font-weight: 700; display: block; letter-spacing: .01em; }
+.mqc-badge-profile .mqc-badge-meta { font-size: .74rem; color: var(--text-muted); font-family: var(--font-code); }
+
+/* ---- Jerarquía de acciones: crear perfil es la protagonista ---- */
+.mqc-gate-actions { margin-top: 1.2rem; }
+.mqc-gate-primary-action {
+  width: 100%;
+  font-size: .96rem;
+  padding: .95rem 1.2rem;
+  box-shadow: 0 0 0 1px var(--border-glow), 0 8px 24px rgba(31,219,255,.12);
+  animation: mqcButtonGlowPulse 5s ease-in-out 1.4s infinite;
+}
+@keyframes mqcButtonGlowPulse {
+  0%, 100% { box-shadow: 0 0 0 1px var(--border-glow), 0 8px 24px rgba(31,219,255,.12); }
+  50%      { box-shadow: 0 0 0 1px var(--border-glow), 0 8px 30px rgba(31,219,255,.22); }
+}
+.mqc-gate-secondary-actions {
+  display: flex; justify-content: center; gap: 1.3rem;
+  margin-top: .9rem;
+}
+.mqc-gate-secondary-actions button {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--font-body); font-size: .82rem;
+  color: var(--text-secondary);
+  padding: .3rem .2rem;
+  border-bottom: 1px solid transparent;
+  transition: var(--transition-fast);
+}
+.mqc-gate-secondary-actions button:hover { color: var(--cyan); border-bottom-color: var(--cyan); }
+
+/* ---- Selector de avatar (aparece SOLO al crear perfil, no de forma permanente) ---- */
+.mqc-avatar-btn {
+  font-size: 1.35rem;
+  width: 42px; height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.mqc-avatar-btn:hover {
+  transform: translateY(-2px) scale(1.06);
+  border-color: var(--cyan);
+  box-shadow: 0 0 12px var(--cyan-glow);
+}
+.mqc-avatar-btn.active {
+  background: radial-gradient(circle, rgba(31,219,255,.22), var(--bg-elevated) 75%);
+  border-color: var(--cyan);
+  box-shadow: 0 0 14px var(--cyan-glow);
+}
+/* El formulario de creación también "emerge", coherente con el panel */
+.mqc-gate-create-panel {
+  animation: mqcConsoleShell 0.4s ease both;
+}
