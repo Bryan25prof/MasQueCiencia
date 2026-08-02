@@ -25,7 +25,13 @@ window.MQCProfilesUI = (function () {
     if (ov) ov.remove();
     ov = document.createElement('div');
     ov.id = id;
-    ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(4,10,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:pageIn .25s ease';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(4,10,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:pageIn .25s ease;overflow-y:auto';
+    /* HOTFIX-07: respaldo real de scroll — si en algún dispositivo móvil
+       el contenido interno (ej. el panel del Portal) resulta más alto
+       que el espacio visible real (la barra de direcciones del
+       navegador reduce ese espacio de forma dinámica), este contenedor
+       también puede desplazarse, para que el usuario nunca quede sin
+       forma de ver el resto del formulario. */
     document.body.appendChild(ov);
     return ov;
   }
