@@ -58,13 +58,30 @@ window.GRADE11_UNIDADES_DATA = [
     description: 'Representación y cálculo cuantitativo de disoluciones.',
     color: '#7B2FFF',
     icon: '⚗️',
-    status: 'development',
-    theory: null,
-    simulators: null,
-    game: null,
-    exam: null,
-    mqcExperience: null,
-    pneBank: null
+    status: 'active',
+    /* IMP-11-U02: estructura real, ya no placeholder. 7 temas
+       (indicadores 1-3 del planeamiento oficial), 3 simuladores
+       (reutilizan MQCChem para todos los cálculos), 1 juego de
+       rondas, examen de banco 40/intento 20, aprobación 70% (mismo
+       criterio central de toda la plataforma). */
+    topics: [
+      '¿Qué significa concentración?',
+      'Porcentaje masa/masa (% m/m)',
+      'Porcentaje masa/volumen (% m/v)',
+      'Porcentaje volumen/volumen (% v/v)',
+      'Molaridad',
+      'Partes por millón (ppm)',
+      'Del resultado a la decisión'
+    ],
+    simulators: [
+      { id: 'sim-g11u2-01', name: 'Constructor de Concentraciones', status: 'active' },
+      { id: 'sim-g11u2-02', name: 'Laboratorio de Molaridad', status: 'active' },
+      { id: 'sim-g11u2-03', name: 'Analista de Agua en ppm', status: 'active' }
+    ],
+    game: { name: 'Código de la Muestra', levels: 0 },
+    exam: { id: 'exam-g11-u02', questions: 40, perExam: 20, time: 30, pass: 70 },
+    mqcExperience: 'Informe cuantitativo de la muestra',
+    pneBank: 'BANCO_PNE_G11_U02'
   },
   {
     id: 'g11-u03',

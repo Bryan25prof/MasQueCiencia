@@ -719,7 +719,9 @@
         <label style="font-size:.8rem;color:var(--text-muted)">Si tuvieras que predecir si se dispersará por toda la cuenca o quedará en un punto, ¿qué dirías?</label>
         <textarea id="g11u1-mision-2" rows="2" style="width:100%;margin:.3rem 0 .8rem;background:var(--bg-deep);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:.5rem;font-family:inherit"></textarea>
         <label style="font-size:.8rem;color:var(--text-muted)">¿Qué le dirías a la comunidad cercana al río sobre este hallazgo?</label>
-        <textarea id="g11u1-mision-3" rows="2" style="width:100%;margin:.3rem 0 1rem;background:var(--bg-deep);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:.5rem;font-family:inherit"></textarea>
+        <textarea id="g11u1-mision-3" rows="2" style="width:100%;margin:.3rem 0 .8rem;background:var(--bg-deep);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:.5rem;font-family:inherit"></textarea>
+        <label style="font-size:.8rem;color:var(--text-muted)">¿Qué información faltaría para determinar la concentración de la sustancia?</label>
+        <textarea id="g11u1-mision-4" rows="2" style="width:100%;margin:.3rem 0 1rem;background:var(--bg-deep);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:.5rem;font-family:inherit"></textarea>
         <button class="btn btn-primary" id="g11u1-mision-send" style="width:100%">${done ? 'Actualizar informe' : 'Entregar informe'}</button>
         <div id="g11u1-mision-fb" style="margin-top:.8rem"></div>
       </div>`;
@@ -733,6 +735,8 @@
       const t1 = document.getElementById('g11u1-mision-1').value.trim();
       const t2 = document.getElementById('g11u1-mision-2').value.trim();
       const t3 = document.getElementById('g11u1-mision-3').value.trim();
+      const t4El = document.getElementById('g11u1-mision-4');
+      const t4 = t4El ? t4El.value.trim() : '';
       if ((t1 + t2 + t3).length < 20) {
         document.getElementById('g11u1-mision-fb').innerHTML = `<p style="color:var(--gold);font-size:.84rem">Escribí un poco más en tus respuestas antes de entregar.</p>`;
         btn.disabled = false;
@@ -743,7 +747,7 @@
          dibujar la pantalla. */
       const fresh = loadUnitData();
       const alreadyAwarded = !!fresh.missionDone;
-      const texto = `1) ${t1}\n2) ${t2}\n3) ${t3}`;
+      const texto = `1) ${t1}\n2) ${t2}\n3) ${t3}${t4 ? `\n4) ${t4}` : ''}`;
       patchUnit({ missionDone: true, missionText: texto });
       if (typeof MQCProfiles !== 'undefined' && MQCProfiles.activeId && MQCProfiles.saveReflection) {
         const id = MQCProfiles.activeId();

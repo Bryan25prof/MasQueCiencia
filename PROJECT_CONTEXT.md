@@ -4,9 +4,9 @@
 
 ---
 
-## 🔒 Estado del proyecto: IMP-11-U01 — Química 11.º tiene su primera unidad real (El Agua)
+## 🔒 Estado del proyecto: IMP-11-U02 — Química 11.º tiene 2 de sus 4 unidades reales (El Agua, Cálculo de Concentraciones)
 
-**El núcleo de Química 10.º sigue congelado y sin regresiones.** Química 11.º dejó de ser solo infraestructura: la Unidad I — El Agua está completamente funcional (6 temas, 3 simuladores, juego, examen de 30 preguntas, banco PNE adaptado, misión de cierre, insignia "Primera Gota"), construida sobre la Arquitectura Pedagógica Oficial aprobada. Las Unidades II, III y IV siguen "En desarrollo" — la Unidad I es el patrón oficial a replicar para ellas. Ver `IMP_11_U01_REPORT.md` para el detalle completo, y `docs/multigrado/` para la arquitectura general 10.º↔11.º.
+**El núcleo de Química 10.º sigue congelado y sin regresiones.** Química 11.º avanza unidad por unidad, siguiendo el patrón oficial establecido en IMP-11-U01: la Unidad I (El Agua) y la Unidad II (Cálculo de Concentraciones) están completamente funcionales. Las Unidades III y IV siguen "En desarrollo". `MQCChem` (motor de cálculo compartido) se amplió con `percentVolumeVolume()` y `ppm()`, reutilizadas por la Unidad II sin duplicar ninguna fórmula. Ver `IMP_11_U02_REPORT.md` para el detalle completo.
 
 ## Qué es este proyecto
 

@@ -2343,6 +2343,17 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
      navegadores que no lo soportan simplemente ignoran esta línea y
      siguen usando el "vh" de arriba, no se rompe nada en ninguno. */
   max-height: 94dvh;
+  /* HOTFIX-09: la pieza que realmente faltaba. En iOS Safari, un
+     contenedor con overflow-y:auto ANIDADO dentro de un elemento
+     position:fixed (como .mqc-gate-atmosphere, el overlay de toda la
+     pantalla) puede no responder al gesto de deslizar el dedo en
+     absoluto, aunque el scroll SÍ funcione con mouse/trackpad — por
+     eso "modo escritorio" lo ocultaba: no porque arregle nada, sino
+     porque ahí no hace falta el gesto táctil. -webkit-overflow-
+     scrolling:touch es la propiedad específica de iOS que habilita el
+     scroll táctil con inercia en este tipo de contenedor anidado. */
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
   padding: 1rem 0;
 }
 .mqc-gate-headline {
@@ -2368,6 +2379,21 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   max-width: 40ch;
   line-height: 1.7;
   margin: 0 0 2.2rem;
+}
+
+/* HOTFIX-09: segunda capa de seguridad — en pantallas de POCA ALTURA
+   real (celulares en vertical, con la barra de direcciones visible),
+   se reduce el espacio decorativo para que el formulario completo
+   quepa sin necesitar desplazarse en la mayoría de los casos. Esto
+   NO reemplaza el arreglo de scroll táctil de arriba — es un
+   respaldo adicional para que haga falta desplazarse lo menos
+   posible, no una alternativa a que el scroll funcione. */
+@media (max-height: 700px) {
+  .mqc-gate-headline { font-size: clamp(1.25rem, 4vw, 1.7rem); margin-bottom: .4rem; }
+  .mqc-gate-subheadline { margin-bottom: 1rem; font-size: .85rem; }
+}
+@media (max-height: 580px) {
+  .mqc-gate-subheadline { display: none; }
 }
 
 /* ---- El panel: despierta como una consola científica, en secuencia ----

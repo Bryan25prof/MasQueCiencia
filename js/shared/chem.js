@@ -227,6 +227,14 @@ window.MQCChem = (function () {
   function percentMassVolume(gSolute, mLSolution) { return mLSolution ? _round(gSolute / mLSolution * 100) : null; }
   /* Dilución: C1·V1 = C2·V2 → volumen final V2 */
   function dilutionV2(C1, V1, C2) { return C2 ? _round(C1 * V1 / C2) : null; }
+  /* IMP-11-U02: % volumen/volumen y partes por millón — mismas
+     magnitudes de concentración, faltaban en esta familia de
+     funciones aditivas de disoluciones (percentMassMass/
+     percentMassVolume ya existían). ppm(mg, L) asume aproximación
+     estándar para disoluciones acuosas diluidas (1 L ≈ 1 kg), la
+     misma simplificación que ya usa el planeamiento de 11.º. */
+  function percentVolumeVolume(mLSolute, mLSolution) { return mLSolution ? _round(mLSolute / mLSolution * 100) : null; }
+  function ppm(mgSolute, litersSolution) { return litersSolution ? _round(mgSolute / litersSolution) : null; }
   /* Solutos comunes para ejercicios (reutiliza COMPOUNDS por su fórmula/nombre) */
   const SOLUTES = COMPOUNDS.filter(c => ['NaCl','NaOH','CaCO3','C6H12O6','CaO','MgO'].indexOf(c.f) !== -1);
 
@@ -326,7 +334,7 @@ window.MQCChem = (function () {
     COMPOUNDS, EQUATIONS,
     /* disoluciones (aditivo — MQC Experience 07) */
     molarity, molesFromMolarity, massForSolution,
-    percentMassMass, percentMassVolume, dilutionV2, SOLUTES,
+    percentMassMass, percentMassVolume, percentVolumeVolume, ppm, dilutionV2, SOLUTES,
     /* ácidos y bases (aditivo — MQC Experience 08) */
     KW, pH, pOH, phFromPoh, pohFromPh, hFromPH, ohFromPOH,
     classifyPH, esAcido, esBase, INDICADORES,

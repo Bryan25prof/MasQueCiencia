@@ -224,6 +224,12 @@ const Gamification = (() => {
       name: 'Primera Gota',
       icon: '💧',
       desc: 'Completaste realmente la Unidad I de Química 11.º — El Agua'
+    },
+    {
+      id:   'precision-quimica',
+      name: 'Precisión Química',
+      icon: '⚗️',
+      desc: 'Completaste realmente la Unidad II de Química 11.º — Cálculo de Concentraciones'
     }
   ];
 
@@ -515,6 +521,24 @@ const Gamification = (() => {
         const missionDone = !!u.missionDone;
         if (allTopics && allSims && gamePlayed && examPassed && missionDone) {
           newBadges.push('primera-gota');
+        }
+      }
+    }
+
+    /* IMP-11-U02 — 'precision-quimica': mismo principio anti-farming
+       exacto que 'primera-gota' — exige finalización real de las 5
+       partes de la Unidad II. */
+    if (typeof GRADE11_UNIDADES_DATA !== 'undefined' && data.grade11 && !data.badges.includes('precision-quimica')) {
+      const u2 = data.grade11['g11-u02'];
+      const meta2 = GRADE11_UNIDADES_DATA.find(x => x.id === 'g11-u02');
+      if (u2 && meta2) {
+        const allTopics2 = (u2.topicsRead || []).length >= (meta2.topics || []).length;
+        const allSims2 = (u2.simsDone || []).length >= (meta2.simulators || []).length;
+        const gamePlayed2 = (u2.gameScore || 0) > 0;
+        const examPassed2 = (u2.examBest || 0) >= (meta2.exam && meta2.exam.pass || 70);
+        const missionDone2 = !!u2.missionDone;
+        if (allTopics2 && allSims2 && gamePlayed2 && examPassed2 && missionDone2) {
+          newBadges.push('precision-quimica');
         }
       }
     }

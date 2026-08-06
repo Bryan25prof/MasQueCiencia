@@ -25,7 +25,7 @@ window.MQCProfilesUI = (function () {
     if (ov) ov.remove();
     ov = document.createElement('div');
     ov.id = id;
-    ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(4,10,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:pageIn .25s ease;overflow-y:auto';
+    ov.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(4,10,14,.82);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;padding:1rem;animation:pageIn .25s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain';
     /* HOTFIX-07: respaldo real de scroll — si en algún dispositivo móvil
        el contenido interno (ej. el panel del Portal) resulta más alto
        que el espacio visible real (la barra de direcciones del
@@ -36,7 +36,7 @@ window.MQCProfilesUI = (function () {
     return ov;
   }
   function _panel(html, maxw){
-    return `<div style="background:var(--bg-card,#143843);border:1px solid var(--border,#1e1e4a);border-radius:var(--radius-lg,16px);max-width:${maxw||520}px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)">${html}</div>`;
+    return `<div style="background:var(--bg-card,#143843);border:1px solid var(--border,#1e1e4a);border-radius:var(--radius-lg,16px);max-width:${maxw||520}px;width:100%;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;box-shadow:0 20px 60px rgba(0,0,0,.5)">${html}</div>`;
   }
   function _accent(){ return 'var(--cyan,#1FDBFF)'; }
 
@@ -439,7 +439,7 @@ window.MQCProfilesUI = (function () {
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.8rem"><h2 style="margin:0;color:var(--text-primary,#E8E8FF);font-size:1.15rem">🕒 Vista cronológica</h2><button id="mqc-tl-close" style="background:none;border:none;color:var(--text-muted,#8484D6);font-size:1.4rem;cursor:pointer">×</button></div>
       <p style="font-size:.8rem;color:var(--text-muted,#8484D6);margin:0 0 .6rem">Tu historia de aprendizaje, del evento más reciente al más antiguo.</p>
       <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.7rem">${filterBtns}</div>
-      <div id="mqc-tl-items" style="max-height:60vh;overflow-y:auto">${_renderItems('all')}</div></div>`,480);
+      <div id="mqc-tl-items" style="max-height:60vh;overflow-y:auto;-webkit-overflow-scrolling:touch">${_renderItems('all')}</div></div>`,480);
     ov.querySelector('#mqc-tl-close').addEventListener('click',()=>ov.remove());
     ov.querySelectorAll('.mqc-tl-filter').forEach(btn=>{
       btn.addEventListener('click',()=>{
@@ -470,7 +470,7 @@ window.MQCProfilesUI = (function () {
     ov.innerHTML=_panel(`<div style="padding:1.3rem 1.4rem">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem"><h2 style="margin:0;color:var(--text-primary,#E8E8FF);font-size:1.15rem">💭 Mis Reflexiones</h2><button id="mqc-rf-close" style="background:none;border:none;color:var(--text-muted,#8484D6);font-size:1.4rem;cursor:pointer">×</button></div>
       <p style="font-size:.8rem;color:var(--text-secondary,#9898CC);margin:0 0 .9rem">Responder es voluntario y no afecta tu progreso. ${mentorLine}</p>
-      <div style="max-height:55vh;overflow-y:auto">${rows}</div>
+      <div style="max-height:55vh;overflow-y:auto;-webkit-overflow-scrolling:touch">${rows}</div>
       <button id="mqc-rf-save" class="btn btn-primary btn-sm" style="width:100%;margin-top:.6rem">Guardar reflexiones</button>
     </div>`,520);
     ov.querySelector('#mqc-rf-close').addEventListener('click',()=>ov.remove());
