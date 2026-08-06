@@ -36,9 +36,16 @@ window.GlobalSearch = (function () {
 
   const TYPE_ICON = { tema: '📖', simulador: '⚗️', juego: '🎮', examen: '📝', glosario: '📘' };
   const UNIT_LABEL = id => {
-    if (typeof UNIDADES_DATA === 'undefined') return id;
-    const u = UNIDADES_DATA.find(x => x.id === id);
-    return u ? u.name : id;
+    if (typeof UNIDADES_DATA !== 'undefined') {
+      const u = UNIDADES_DATA.find(x => x.id === id);
+      if (u) return u.name;
+    }
+    /* IMP-11-U01: respaldo aditivo para unidades de 11.º */
+    if (typeof GRADE11_UNIDADES_DATA !== 'undefined') {
+      const u11 = GRADE11_UNIDADES_DATA.find(x => x.id === id);
+      if (u11) return u11.title;
+    }
+    return id;
   };
 
   function _resultRow(it) {

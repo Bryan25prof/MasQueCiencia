@@ -406,3 +406,44 @@ Bug reportado por el usuario con capturas reales de un teléfono: en móvil real
 - Se revisó `.mqc-gate-card` (`overflow:hidden`) como sospechoso alternativo — se confirmó que es solo para recortar la animación decorativa de la línea superior, no limita altura; no se tocó.
 - **Limitación honesta:** este entorno no tiene un navegador móvil real disponible para confirmar visualmente la corrección exactamente como se ve en las capturas del usuario — el arreglo se basa en la causa documentada y ampliamente conocida de este comportamiento, y es puramente aditivo (no puede empeorar nada en navegadores que ya funcionaban bien).
 - Archivos modificados: `css/main.css`, `js/shared/profiles-ui.js`. `node --check` limpio en 63/63 archivos.
+
+### MEJORA — Identidad Multigrado del sidebar
+La cabecera del sidebar mostraba "QUÍMICA 10°" como si fuera la marca principal, incluso estando en Química 11.º o en la pantalla de selección de ruta.
+
+- **Nueva jerarquía visual (4 líneas):** MÁSQUECIENCIA (marca permanente) → "Explora · Comprende · Aplica" (lema, siempre igual) → ruta académica dinámica (cambia según el grado activo) → Lic. Bryan Chavarría C. (autor, sin cambios).
+- **Actualización automática, no manual:** la ruta dinámica se engancha en `_setActive()` de `router.js` — el mismo punto que YA se ejecuta en cada `Router.navigate()` — así que nunca puede desincronizarse de la sección real que el estudiante está viendo, sin necesitar tocar ningún módulo individual.
+- **3 estados de la ruta:** "QUÍMICA 10.º" (cualquier sección de décimo), "QUÍMICA 11.º" (sección `grade11`), "Química Interactiva 10.º y 11.º" (pantalla de selección de ruta, sin grado activo todavía).
+- La topbar móvil se actualiza en sincronía exacta con el sidebar (mismo mecanismo, un id adicional).
+- No se modificó el logotipo, colores, tipografía base ni la estructura general del sidebar — solo se reutilizaron los tokens y la jerarquía tipográfica ya existentes.
+- Archivos modificados: `index.html`, `css/main.css`, `js/core/router.js`. Verificado con 6/6 pruebas (incluyendo que volver de 11.º a 10.º restaura el texto correcto). `node --check` limpio en 63/63 archivos.
+
+### IMP-11-U01 — Química 11.º, Unidad I: El Agua (primera unidad real de 11.º)
+Primera unidad completamente funcional de Química 11.º, construida sobre la Arquitectura Pedagógica Oficial ya aprobada — patrón oficial para las 3 unidades restantes.
+
+- **Auditoría previa real:** se estudió `unit-02.js` (Química 10.º) antes de escribir código, replicando su patrón exacto (`UNIT_PLUGINS`, registro de plugins, ciclo MQC) con un namespace paralelo (`data.grade11`, `GRADE11_UNIDADES_DATA`, `Storage.updateGrade11Unit()`) — nunca se tocó ni se reorganizó nada de Química 10.º.
+- **Hallazgo real al retomar el sprint:** gran parte del contenido (el archivo completo de la unidad, los 2 bancos de preguntas, las funciones paralelas de Storage, la insignia) ya existía, pero `js/modules/grade11.js` seguía sin poder mostrar ninguna unidad activa — el contenido existía pero era inalcanzable. Se reescribió ese módulo para soportar el camino real de pestañas, y se registraron los 3 scripts que faltaban en `index.html`.
+- **Contenido:** 6 temas de teoría, 3 simuladores interactivos reales (ninguno automático), 1 juego con rondas aleatorias, examen de 30 preguntas (20 por intento, balanceado por categoría, todas superando el mínimo exigido), banco PNE adaptado con cobertura 30/30, y una misión de cierre corta con la misma protección anti-farming de HOTFIX-06.
+- **Insignia "Primera Gota"**, con condición de finalización real (verificado explícitamente que no se otorga con una sola parte completa).
+- Progreso de Química 11.º separado de Química 10.º; perfiles antiguos (sin `data.grade11`) reciben la estructura automáticamente vía el mismo mecanismo de *merge* ya usado en toda la Fase Multigrado.
+- Auditoría: `node --check` limpio en 65/65 archivos; 18/18 pruebas en PASS. El primer intento de la batería de pruebas falló por una limitación real del arnés de prueba (no del producto) — corregida antes de confiar en los resultados, documentada con transparencia en `IMP_11_U01_REPORT.md`.
+- **"Unidad I — El Agua integrada, validada y lista para publicación gradual en MásQueCiencia."**
+
+### HOTFIX-08 — Sesgo predecible en el examen de Química 11.º Unidad I + recordatorio en la misión
+Reportado por el usuario tras probar la unidad real: la mayoría de las respuestas del examen caían en la opción A.
+
+- **Causa confirmada con datos:** 29 de las 30 preguntas del banco (`preguntas-g11-u01.js`, y su espejo adaptado `banco-pne-g11-u01.js`) tienen la respuesta correcta almacenada en el índice 0 — un sesgo real en los datos. El examen nunca mezclaba el ORDEN de las opciones (solo mezclaba qué preguntas se seleccionaban), así que ese sesgo llegaba intacto a la pantalla.
+- **Corrección de raíz:** cada pregunta seleccionada para un intento ahora mezcla el orden de sus opciones una única vez, al construir el examen (`startExam()`) — no en cada render, para que la opción que el estudiante ya marcó siga correspondiendo a la misma opción. Se remapea `correcta` y `explicacion_incorrectas` al nuevo orden, mismo patrón ya probado en el Desafío Final PNE de décimo.
+- **Verificado con una muestra estadística real:** se mezclaron las 30 preguntas 200 veces y se confirmó una distribución casi perfectamente uniforme entre las 4 posiciones (24.7% / 24.6% / 25.0% / 25.7%) — el sesgo original desaparece por completo sin alterar cuál respuesta es la correcta.
+- **Mejora adicional solicitada:** la misión "Informe de la primera muestra" ahora incluye un recordatorio rápido y colapsable (composición de H₂O, polaridad, enlace vs. fuerza intermolecular, regla de solubilidad) para que el estudiante no tenga que salir de la unidad ni volver a un tema de Química 10.º mientras escribe su informe — colapsado por defecto, para no distraer ni alargar la pantalla.
+- Archivo modificado: `js/units/grade11/g11-u01.js` únicamente. `node --check` limpio en 65/65 archivos.
+
+### UI-REFINEMENT — Pantalla de carga con identidad multigrado oficial
+La pantalla de carga inicial todavía mostraba "QUÍMICA INTERACTIVA 10°" y "Tu laboratorio te espera" — textos exclusivos de décimo, ya no representativos de la plataforma multigrado.
+
+- **Nueva jerarquía:** MÁSQUECIENCIA (marca principal) → Química Interactiva (descriptor) → 10.º • 11.º (alcance multigrado) → "Construyendo tu espacio de aprendizaje..." (mensaje dinámico, frase oficial exacta, sin variantes).
+- Cambio puramente visual/textual — cero cambios de lógica: se verificó que ninguna función JS dependiera del texto o las clases anteriores antes de tocar nada.
+- Se agrupó la jerarquía de marca en un bloque compacto propio, para no alterar el espaciado general ya aprobado de la pantalla (`#loading-screen` sigue teniendo exactamente 3 "huecos" de espaciado: átomo → bloque de marca → mensaje, igual que antes con átomo → marca → subtítulo).
+- **Agregado (pedido explícito del ticket, antes ausente):** respaldo real de `env(safe-area-inset-*)` en los 4 lados de la pantalla de carga, para respetar el notch y el indicador de inicio de iPhone.
+- `prefers-reduced-motion` ya estaba cubierto por una regla global (`*, *::before, *::after`) que aplica automáticamente a cualquier texto nuevo — no se necesitó ninguna regla adicional.
+- Verificado visualmente con `wkhtmltoimage` en 3 anchos (1200px, 768px, 340px — este último más angosto que la mayoría de teléfonos reales): el mensaje de carga se envuelve a 2 líneas de forma natural en anchos extremos, sin desbordamiento horizontal ni texto cortado.
+- Archivos modificados: `index.html`, `css/main.css`. `node --check` limpio en 65/65 archivos.

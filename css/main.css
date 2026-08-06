@@ -248,6 +248,15 @@ code, .formula {
   justify-content: center;
   gap: 1.5rem;
   transition: opacity 0.5s ease, visibility 0.5s ease;
+  /* UI-REFINEMENT: respeto real del notch/home-indicator en iPhone —
+     env() cae a 0 sin efecto en navegadores que no lo soportan, así
+     que es seguro agregarlo directamente sin @supports. */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  box-sizing: border-box;
+  text-align: center;
 }
 
 #loading-screen.fade-out {
@@ -305,11 +314,40 @@ code, .formula {
   text-shadow: 0 0 20px var(--cyan);
 }
 
+/* UI-REFINEMENT: bloque de marca compacto — MÁSQUECIENCIA (marca
+   principal) + descriptor + alcance de grado, agrupados con
+   espaciado propio, ajeno al "gap" general de #loading-screen. */
+.loading-brand-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  max-width: 90vw;
+  padding: 0 1rem;
+}
+.loading-descriptor {
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.loading-scope {
+  font-family: var(--font-code);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin: 0;
+}
+
 .loading-sub {
   font-size: 0.85rem;
   color: var(--text-muted);
   letter-spacing: 0.05em;
   margin: 0;
+  max-width: 90vw;
+  padding: 0 1rem;
   animation: blink 1.5s ease-in-out infinite;
 }
 
@@ -528,6 +566,26 @@ code, .formula {
 
 .brand-icon { font-size: 1.8rem; line-height: 1; }
 
+/* Identidad Multigrado: marca permanente + lema, siempre iguales
+   sin importar el grado activo — ver .brand-name para la ruta
+   académica dinámica (10.º / 11.º), que sí cambia. */
+.brand-mqc {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+}
+.brand-tagline {
+  display: block;
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  letter-spacing: 0.03em;
+  margin-top: 0.05rem;
+}
+
 .brand-name {
   display: block;
   font-family: var(--font-display);
@@ -535,6 +593,7 @@ code, .formula {
   font-weight: 700;
   color: var(--cyan);
   letter-spacing: 0.08em;
+  margin-top: 0.2rem;
 }
 
 .brand-author {

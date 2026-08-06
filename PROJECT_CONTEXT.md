@@ -4,9 +4,9 @@
 
 ---
 
-## 🔒 Estado del proyecto: MULTIGRADO FASE 1 — infraestructura 10.º→11.º integrada y migrada
+## 🔒 Estado del proyecto: IMP-11-U01 — Química 11.º tiene su primera unidad real (El Agua)
 
-**El núcleo de Química 10.º sigue congelado y sin regresiones.** A partir de esta fase, el proyecto es multigrado: existe infraestructura real (identidad, migración, desbloqueo, navegación, 4 unidades "en desarrollo") para Química 11.º, aunque su contenido académico todavía no se desarrolló — eso es la próxima fase real pendiente. Ver `docs/multigrado/MQC_MULTIGRADO_ARCHITECTURE.md` para el detalle completo.
+**El núcleo de Química 10.º sigue congelado y sin regresiones.** Química 11.º dejó de ser solo infraestructura: la Unidad I — El Agua está completamente funcional (6 temas, 3 simuladores, juego, examen de 30 preguntas, banco PNE adaptado, misión de cierre, insignia "Primera Gota"), construida sobre la Arquitectura Pedagógica Oficial aprobada. Las Unidades II, III y IV siguen "En desarrollo" — la Unidad I es el patrón oficial a replicar para ellas. Ver `IMP_11_U01_REPORT.md` para el detalle completo, y `docs/multigrado/` para la arquitectura general 10.º↔11.º.
 
 ## Qué es este proyecto
 

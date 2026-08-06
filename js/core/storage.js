@@ -483,6 +483,66 @@ const Storage = (() => {
     unit.completed = unit.completed || _computePct(unit, unitId) === 100;
   }
 
+  /* ================================================================
+     IMP-11-U01 — Progreso de Química 11.º (paralelo, no reemplaza)
+     ================================================================
+     Mismo patrón exacto que updateUnit/markTopicRead/getUnitProgress/
+     _computePct/_refreshCompleted de arriba, pero apuntando a
+     data.grade11 y GRADE11_UNIDADES_DATA en vez de data.units y
+     UNIDADES_DATA. Se duplican en vez de generalizar las funciones
+     existentes para no arriesgar ningún comportamiento ya probado de
+     Química 10.º — "no reorganices Química 10.º" es una regla
+     explícita de este sprint. */
+  function _computePctG11(unit, unitId) {
+    let meta = null;
+    if (typeof GRADE11_UNIDADES_DATA !== 'undefined') {
+      meta = GRADE11_UNIDADES_DATA.find(u => u.id === unitId);
+    }
+    const totalTopics = (meta && meta.topics) ? meta.topics.length : 0;
+    const totalSims   = (meta && meta.simulators) ? meta.simulators.length : 0;
+    const totalLevels = (meta && meta.game && meta.game.levels) ? meta.game.levels : 0;
+    const pass        = (meta && meta.exam && meta.exam.pass) ? meta.exam.pass : 70;
+
+    function ratio(done, total) { return total > 0 ? Math.min(1, done / total) : 0; }
+
+    const rTeoria = ratio((unit.topicsRead || []).length, totalTopics);
+    const rSims   = ratio((unit.simsDone || []).length, totalSims);
+    const rJuego  = totalLevels > 0
+      ? ratio((unit.gameLevels || []).length, totalLevels)
+      : ((unit.gameScore || 0) > 0 ? 1 : 0);
+    const rExamen = (unit.examBest || 0) > 0 ? Math.min(1, unit.examBest / pass) : 0;
+
+    const pct = Math.round(25 * (rTeoria + rSims + rJuego + rExamen));
+    return Math.max(0, Math.min(100, pct));
+  }
+  function _refreshCompletedG11(unit, unitId) {
+    if (!unit) return;
+    unit.completed = unit.completed || _computePctG11(unit, unitId) === 100;
+  }
+  function updateGrade11Unit(unitId, update) {
+    const data = load();
+    if (!data.grade11[unitId]) data.grade11[unitId] = _emptyUnit();
+    data.grade11[unitId] = Object.assign({}, data.grade11[unitId], update);
+    data.grade11[unitId].started = true;
+    _refreshCompletedG11(data.grade11[unitId], unitId);
+    save(data);
+  }
+  function markGrade11TopicRead(unitId, topicId) {
+    const data = load();
+    if (!data.grade11[unitId]) data.grade11[unitId] = _emptyUnit();
+    const unit = data.grade11[unitId];
+    if (!unit.topicsRead.includes(topicId)) unit.topicsRead.push(topicId);
+    unit.started = true;
+    _refreshCompletedG11(unit, unitId);
+    save(data);
+  }
+  function getGrade11UnitProgress(unitId) {
+    const data = load();
+    const unit = data.grade11[unitId];
+    if (!unit || !unit.started) return 0;
+    return _computePctG11(unit, unitId);
+  }
+
   /**
    * Borra TODOS los datos del estudiante (reset total).
    * ⚠️ Irreversible. Mostrar confirmación antes de llamar.
@@ -528,6 +588,9 @@ const Storage = (() => {
     updateUnit,
     markTopicRead,
     getUnitProgress,
+    updateGrade11Unit,
+    markGrade11TopicRead,
+    getGrade11UnitProgress,
     hasUser,
     reset,
     /* Perfiles Locales MQC (EOP-008) */

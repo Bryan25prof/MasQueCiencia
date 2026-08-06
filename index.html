@@ -60,8 +60,12 @@
       <div class="orbit orbit-2"><div class="electron"></div></div>
       <div class="orbit orbit-3"><div class="electron"></div></div>
     </div>
-    <p class="loading-text">QUÍMICA INTERACTIVA 10°</p>
-    <p class="loading-sub">Tu laboratorio te espera.</p>
+    <div class="loading-brand-block">
+      <p class="loading-text">MÁSQUECIENCIA</p>
+      <p class="loading-descriptor">Química Interactiva</p>
+      <p class="loading-scope">10.º • 11.º</p>
+    </div>
+    <p class="loading-sub">Construyendo tu espacio de aprendizaje...</p>
   </div>
 
   <!-- ── MODAL DE BIENVENIDA (primera visita) ─────────────── -->
@@ -103,7 +107,7 @@
       <button id="menu-toggle" class="menu-toggle" aria-label="Abrir menú" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
-      <span class="topbar-title">QUÍMICA 10°</span>
+      <span class="topbar-title" id="topbar-route-label">QUÍMICA 10°</span>
       <div class="topbar-info">
         <span class="topbar-badge" id="topbar-level-badge">⚛️ Nv.1</span>
         <span class="topbar-xp" id="topbar-xp">0 XP</span>
@@ -120,7 +124,9 @@
       <div class="sidebar-brand">
         <div class="brand-icon"><svg width="30" height="30" viewBox="0 0 34 34"><use href="#mqc-atom-logo"/></svg></div>
         <div class="brand-text">
-          <span class="brand-name">QUÍMICA 10°</span>
+          <span class="brand-mqc">MÁSQUECIENCIA</span>
+          <span class="brand-tagline">Explora · Comprende · Aplica</span>
+          <span class="brand-name" id="sidebar-route-label">QUÍMICA 10°</span>
           <span class="brand-author">Lic. Bryan Chavarría C.</span>
         </div>
       </div>
@@ -285,6 +291,8 @@
 <!-- BUG-02 CORREGIDO: fuente única de datos de unidades (reemplaza UNITS y UNITS_META) -->
 <script src="js/data/unidades.js"></script>
 <script src="js/data/unidades-grade11.js"></script>
+<script src="js/data/grade11/preguntas-g11-u01.js"></script>
+<script src="js/data/grade11/banco-pne-g11-u01.js"></script>
 <!-- FASE 1A: banco de preguntas de la Unidad I (30 preguntas) -->
 <script src="js/data/preguntas-u01.js"></script>
 <script src="js/data/banco-pne-u01.js"></script>
@@ -363,6 +371,9 @@
 <script src="js/units/unit-07.js"></script>
 <script src="js/units/unit-08.js"></script>
 <script src="js/units/unit-09.js"></script>
+
+<!-- IMP-11-U01: primera unidad real de Química 11.º — mismas dependencias que las 9 de arriba -->
+<script src="js/units/grade11/g11-u01.js"></script>
 
 <!-- HOTFIX-02: Desafío Final PNE — depende de las 9 unidades y sus bancos ya cargados -->
 <script src="js/modules/pne-final.js"></script>

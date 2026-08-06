@@ -122,6 +122,31 @@ const Router = (() => {
       if (isActive) el.setAttribute('aria-current', 'page');
       else el.removeAttribute('aria-current');
     });
+    _updateBrandRoute(section);
+  }
+
+  /* Identidad Multigrado del sidebar/topbar: la marca "MÁSQUECIENCIA"
+     es permanente (vive fija en el HTML, nunca se toca desde acá) —
+     lo único que cambia según la sección activa es la línea de ruta
+     académica. Se actualiza en el mismo punto donde ya se marca la
+     navegación activa, así que nunca puede desincronizarse: cualquier
+     Router.navigate() la mantiene al día automáticamente. */
+  function _updateBrandRoute(section) {
+    let label;
+    if (section === 'grade-select') {
+      label = 'Química Interactiva 10.º y 11.º';
+    } else if (section === 'grade11') {
+      label = 'QUÍMICA 11.º';
+    } else {
+      /* Todo lo demás (home, units, progress, integrador, pne-final,
+         periodic-table, etc.) pertenece hoy a Química 10.º — no existe
+         todavía ninguna otra sección propia de 11.º más que 'grade11'. */
+      label = 'QUÍMICA 10.º';
+    }
+    const sidebarLabel = document.getElementById('sidebar-route-label');
+    const topbarLabel = document.getElementById('topbar-route-label');
+    if (sidebarLabel) sidebarLabel.textContent = label;
+    if (topbarLabel) topbarLabel.textContent = label;
   }
 
   /** Muestra una página placeholder para secciones no implementadas aún */

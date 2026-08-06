@@ -23,14 +23,31 @@ window.GRADE11_UNIDADES_DATA = [
     description: 'Propiedades, comportamiento e importancia química del agua.',
     color: '#1FDBFF',
     icon: '💧',
-    status: 'development',
-    /* Estructura futura — vacía a propósito, no se inventa contenido */
-    theory: null,
-    simulators: null,
-    game: null,
-    exam: null,
-    mqcExperience: null,
-    pneBank: null
+    status: 'active',
+    /* IMP-11-U01: estructura real, ya no placeholder.
+       6 temas (indicadores de evaluación 1-4 del planeamiento oficial),
+       3 simuladores, 1 juego de rondas (sin niveles discretos — el
+       cálculo de progreso usa el respaldo "gameScore>0" ya existente
+       en _computePct/_computePctG11, igual que otras unidades sin
+       niveles), examen de banco 30/intento 20, aprobación 70% (mismo
+       criterio central que toda la plataforma, sin regla paralela). */
+    topics: [
+      'El agua y la vida',
+      'Así está construida H₂O',
+      'Por qué el agua es polar',
+      'Enlace químico vs. fuerza intermolecular',
+      '¿Qué se disuelve en agua?',
+      'Cuando el agua transporta contaminación'
+    ],
+    simulators: [
+      { id: 'sim-g11u1-01', name: 'Arquitectura de H₂O', status: 'active' },
+      { id: 'sim-g11u1-02', name: 'Dentro y entre moléculas', status: 'active' },
+      { id: 'sim-g11u1-03', name: 'Laboratorio de solubilidad', status: 'active' }
+    ],
+    game: { name: 'Guardianes de la Cuenca', levels: 0 },
+    exam: { id: 'exam-g11-u01', questions: 30, perExam: 20, time: 25, pass: 70 },
+    mqcExperience: 'Informe de la primera muestra',
+    pneBank: 'BANCO_PNE_G11_U01'
   },
   {
     id: 'g11-u02',

@@ -90,10 +90,13 @@ window.QI = (function () {
     if (manifest.pne && typeof PNEBank !== 'undefined') {
       PNEBank.register(unitId, manifest.pne);
     }
-    /* Búsqueda: índice explícito + derivado de los temas de UNIDADES_DATA */
+    /* Búsqueda: índice explícito + derivado de los temas de UNIDADES_DATA
+       (o GRADE11_UNIDADES_DATA como respaldo — IMP-11-U01, aditivo,
+       nunca reemplaza la búsqueda de unidades de décimo). */
     const items = [];
     let meta = null;
     if (typeof UNIDADES_DATA !== 'undefined') meta = UNIDADES_DATA.find(u => u.id === unitId);
+    if (!meta && typeof GRADE11_UNIDADES_DATA !== 'undefined') meta = GRADE11_UNIDADES_DATA.find(u => u.id === unitId);
     if (meta && Array.isArray(meta.topics)) {
       meta.topics.forEach((t, i) => {
         const title = (typeof t === 'string') ? t : (t.titulo || ('Tema ' + (i + 1)));

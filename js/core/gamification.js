@@ -81,6 +81,14 @@ const Gamification = (() => {
     'pne-first-pass':     150,   // primera vez que aprueba el Desafío Final PNE
     'pne-improved':        50,   // mejora su mejor resultado histórico en PNE
 
+    /* Misión de cierre de una unidad de Química 11.º (IMP-11-U01) —
+       clave genérica reutilizable por las 4 unidades futuras, no
+       específica de "g11-u01": la protección anti-farming (una sola
+       recompensa por unidad) vive en cada archivo de unidad, mismo
+       patrón que _submitInformeOnce() del Proyecto Integrador
+       (HOTFIX-06), no acá. */
+    'grade11-mission-done': 100,  // entrega de la misión de cierre de una unidad de 11.º, una sola vez
+
     /* Periódica */
     'element-explored':     5,   // abrir ficha de un elemento
 
@@ -210,6 +218,12 @@ const Gamification = (() => {
       name: 'Ruta de Undécimo Desbloqueada',
       icon: '🎓',
       desc: 'Desbloqueaste el acceso a Química 11.º'
+    },
+    {
+      id:   'primera-gota',
+      name: 'Primera Gota',
+      icon: '💧',
+      desc: 'Completaste realmente la Unidad I de Química 11.º — El Agua'
     }
   ];
 
@@ -485,6 +499,25 @@ const Gamification = (() => {
     }
 
     if (_multigradoChanged) Storage.save(data);
+
+    /* IMP-11-U01 — 'primera-gota': exige finalización REAL de las 5
+       partes (no basta con "visitar" la unidad, mismo principio anti-
+       farming ya aplicado en HOTFIX-06). La misión de cierre se marca
+       aparte, en data.grade11['g11-u01'].missionDone (ver g11-u01.js). */
+    if (typeof GRADE11_UNIDADES_DATA !== 'undefined' && data.grade11 && !data.badges.includes('primera-gota')) {
+      const u = data.grade11['g11-u01'];
+      const meta = GRADE11_UNIDADES_DATA.find(x => x.id === 'g11-u01');
+      if (u && meta) {
+        const allTopics = (u.topicsRead || []).length >= (meta.topics || []).length;
+        const allSims = (u.simsDone || []).length >= (meta.simulators || []).length;
+        const gamePlayed = (u.gameScore || 0) > 0;
+        const examPassed = (u.examBest || 0) >= (meta.exam && meta.exam.pass || 70);
+        const missionDone = !!u.missionDone;
+        if (allTopics && allSims && gamePlayed && examPassed && missionDone) {
+          newBadges.push('primera-gota');
+        }
+      }
+    }
 
     /*
       ╔══════════════════════════════════════════════════════╗
