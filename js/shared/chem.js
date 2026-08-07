@@ -324,6 +324,40 @@ window.MQCChem = (function () {
   function esOxidante(noxAntes, noxDespues) { return noxDespues < noxAntes; } /* se reduce → es el oxidante */
   function esReductor(noxAntes, noxDespues) { return noxDespues > noxAntes; } /* se oxida → es el reductor */
 
+  /* ================================================================
+     IMP-11-U03 — Química Orgánica I: alcanos, alquenos, alquinos
+     ================================================================
+     Verificado dos veces contra valores de referencia conocidos
+     (metano CH4, etano C2H6, eteno C2H4, etino C2H2, etc.) antes de
+     usarse en el banco de preguntas. Prefijos oficiales met-/et-/
+     prop-/but-/pent-/hex-/hept-/oct-/non-/dec- para 1 a 10 carbonos. */
+  const ORGANIC_PREFIXES = ['met','et','prop','but','pent','hex','hept','oct','non','dec'];
+  function organicPrefix(n) { return (n >= 1 && n <= 10) ? ORGANIC_PREFIXES[n - 1] : null; }
+  /* Alcano: CnH(2n+2), enlaces simples únicamente, n>=1 */
+  function alkaneFormula(n) {
+    if (!(n >= 1 && n <= 10)) return null;
+    const h = 2 * n + 2;
+    return { c: n, h, formula: (n === 1 ? 'CH' : `C${n}H`) + h, name: organicPrefix(n) + 'ano', family: 'alcano' };
+  }
+  /* Alqueno: CnH(2n), un enlace doble, n>=2 (no existe alqueno de 1 carbono) */
+  function alkeneFormula(n) {
+    if (!(n >= 2 && n <= 10)) return null;
+    const h = 2 * n;
+    return { c: n, h, formula: `C${n}H${h}`, name: organicPrefix(n) + 'eno', family: 'alqueno' };
+  }
+  /* Alquino: CnH(2n-2), un enlace triple, n>=2 (no existe alquino de 1 carbono) */
+  function alkyneFormula(n) {
+    if (!(n >= 2 && n <= 10)) return null;
+    const h = 2 * n - 2;
+    return { c: n, h, formula: `C${n}H${h}`, name: organicPrefix(n) + 'ino', family: 'alquino' };
+  }
+  function organicFormula(n, family) {
+    if (family === 'alcano') return alkaneFormula(n);
+    if (family === 'alqueno') return alkeneFormula(n);
+    if (family === 'alquino') return alkyneFormula(n);
+    return null;
+  }
+
   return {
     MAIN, els, elBySym, elByZ, categoryOf, valence, octetTarget,
     ionChargeOf, predictBond, polarity,
@@ -339,6 +373,8 @@ window.MQCChem = (function () {
     KW, pH, pOH, phFromPoh, pohFromPh, hFromPH, ohFromPOH,
     classifyPH, esAcido, esBase, INDICADORES,
     /* oxidación-reducción (aditivo — MQC Experience 09) */
-    NOX_FIJO, oxidationState, POTENCIALES, galvanicCell, esOxidante, esReductor
+    NOX_FIJO, oxidationState, POTENCIALES, galvanicCell, esOxidante, esReductor,
+    /* química orgánica básica (aditivo — IMP-11-U03) */
+    ORGANIC_PREFIXES, organicPrefix, alkaneFormula, alkeneFormula, alkyneFormula, organicFormula
   };
 })();

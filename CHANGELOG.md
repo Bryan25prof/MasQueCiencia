@@ -468,3 +468,14 @@ El usuario reportó, con capturas de un iPhone real, que el Portal seguía sin p
 - **Segunda capa de seguridad agregada:** en pantallas de poca altura real (`max-height:700px` / `580px`), se reduce el espacio decorativo del titular y subtítulo, para que en la mayoría de los celulares el formulario quepa sin necesitar desplazarse en absoluto. Se verificó explícitamente que esta reducción por sí sola NO alcanza — confirma que el arreglo del scroll táctil es la pieza realmente necesaria, no un extra cosmético.
 - **Limitación honesta:** este entorno no tiene un iPhone real para confirmar que el gesto de deslizar ya funciona — la corrección se basa en la causa documentada y estándar de este comportamiento en iOS Safari. Se pide confirmación del usuario en su dispositivo real antes de dar esto por cerrado.
 - Archivos modificados: `css/main.css`, `js/shared/profiles-ui.js`. `node --check` limpio.
+
+### IMP-11-U03 — Química 11.º, Unidad III: Química Orgánica I (Hidrocarburos y Nomenclatura)
+Tercera unidad real de Química 11.º, sobre el mismo patrón oficial de las 2 anteriores.
+
+- **Motor de nomenclatura orgánica nuevo en MQCChem:** `alkaneFormula()`, `alkeneFormula()`, `alkyneFormula()` — no existía antes de este sprint, agregado como ampliación aditiva (mismo patrón que % v/v y ppm en la Unidad II).
+- **Validación exhaustiva de nomenclatura**, tal como exigía explícitamente el ticket: las 28 combinaciones posibles dentro del alcance (10 alcanos, 9 alquenos, 9 alquinos — no existen alqueno/alquino de 1 carbono) se verificaron dos veces, contra la tabla de referencia conocida, más una verificación cruzada adicional (cada familia tiene exactamente 2 hidrógenos menos que la anterior, para el mismo número de carbonos).
+- **Contenido:** 7 temas, 3 simuladores (Constructor Molecular, Laboratorio de Enlaces, Detector Orgánico — los 3 usan el motor real, ninguno calcula a mano), juego "Misión Carbono" contra reloj, examen de 40 preguntas (mezcla de opciones incorporada desde el diseño, verificada con 300 repeticiones dando distribución pareja), banco PNE con cobertura 40/40, misión de cierre que conecta con la Unidad IV.
+- **Insignia "Cadena de Carbono"**, mismo patrón de finalización real que las 2 unidades anteriores.
+- Se confirmó explícitamente que las Unidades I y II siguen funcionando sin cambios tras agregar esta unidad.
+- Auditoría: `node --check` limpio; 27/27 pruebas funcionales en PASS.
+- **"Unidad III integrada, validada y lista para pruebas."**

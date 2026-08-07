@@ -230,6 +230,12 @@ const Gamification = (() => {
       name: 'Precisión Química',
       icon: '⚗️',
       desc: 'Completaste realmente la Unidad II de Química 11.º — Cálculo de Concentraciones'
+    },
+    {
+      id:   'cadena-carbono',
+      name: 'Cadena de Carbono',
+      icon: '⬡',
+      desc: 'Completaste realmente la Unidad III de Química 11.º — Química Orgánica I'
     }
   ];
 
@@ -539,6 +545,24 @@ const Gamification = (() => {
         const missionDone2 = !!u2.missionDone;
         if (allTopics2 && allSims2 && gamePlayed2 && examPassed2 && missionDone2) {
           newBadges.push('precision-quimica');
+        }
+      }
+    }
+
+    /* IMP-11-U03 — 'cadena-carbono': mismo principio anti-farming
+       exacto que las 2 unidades anteriores — exige finalización real
+       de las 5 partes de la Unidad III. */
+    if (typeof GRADE11_UNIDADES_DATA !== 'undefined' && data.grade11 && !data.badges.includes('cadena-carbono')) {
+      const u3 = data.grade11['g11-u03'];
+      const meta3 = GRADE11_UNIDADES_DATA.find(x => x.id === 'g11-u03');
+      if (u3 && meta3) {
+        const allTopics3 = (u3.topicsRead || []).length >= (meta3.topics || []).length;
+        const allSims3 = (u3.simsDone || []).length >= (meta3.simulators || []).length;
+        const gamePlayed3 = (u3.gameScore || 0) > 0;
+        const examPassed3 = (u3.examBest || 0) >= (meta3.exam && meta3.exam.pass || 70);
+        const missionDone3 = !!u3.missionDone;
+        if (allTopics3 && allSims3 && gamePlayed3 && examPassed3 && missionDone3) {
+          newBadges.push('cadena-carbono');
         }
       }
     }

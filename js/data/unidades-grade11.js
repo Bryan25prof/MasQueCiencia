@@ -93,15 +93,28 @@ window.GRADE11_UNIDADES_DATA = [
     description: 'Introducción a los compuestos orgánicos y nomenclatura básica de alcanos.',
     color: '#5CF2A8',
     icon: '⬡',
-    status: 'development',
-    /* El contenido posterior usará material propio aportado por el
-       autor — no se inventa contenido académico en esta fase. */
-    theory: null,
-    simulators: null,
-    game: null,
-    exam: null,
-    mqcExperience: null,
-    pneBank: null
+    status: 'active',
+    /* IMP-11-U03: estructura real, ya no placeholder. 7 temas, 3
+       simuladores (reutilizan MQCChem.alkaneFormula/alkeneFormula/
+       alkyneFormula), examen de banco 40/intento 20, aprobación 70%. */
+    topics: [
+      '¿Por qué existe la Química Orgánica?',
+      'El carbono',
+      'Alcanos',
+      'Alquenos',
+      'Alquinos',
+      'Cómo nombrar alcanos',
+      'Identificando un contaminante'
+    ],
+    simulators: [
+      { id: 'sim-g11u3-01', name: 'Constructor Molecular', status: 'active' },
+      { id: 'sim-g11u3-02', name: 'Laboratorio de Enlaces', status: 'active' },
+      { id: 'sim-g11u3-03', name: 'Detector Orgánico', status: 'active' }
+    ],
+    game: { name: 'Misión Carbono', levels: 0 },
+    exam: { id: 'exam-g11-u03', questions: 40, perExam: 20, time: 30, pass: 70 },
+    mqcExperience: 'Identificando el contaminante',
+    pneBank: 'BANCO_PNE_G11_U03'
   },
   {
     id: 'g11-u04',

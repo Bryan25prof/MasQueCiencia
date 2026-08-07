@@ -4,9 +4,9 @@
 
 ---
 
-## 🔒 Estado del proyecto: IMP-11-U02 — Química 11.º tiene 2 de sus 4 unidades reales (El Agua, Cálculo de Concentraciones)
+## 🔒 Estado del proyecto: IMP-11-U03 — Química 11.º tiene 3 de sus 4 unidades reales (El Agua, Cálculo de Concentraciones, Química Orgánica I)
 
-**El núcleo de Química 10.º sigue congelado y sin regresiones.** Química 11.º avanza unidad por unidad, siguiendo el patrón oficial establecido en IMP-11-U01: la Unidad I (El Agua) y la Unidad II (Cálculo de Concentraciones) están completamente funcionales. Las Unidades III y IV siguen "En desarrollo". `MQCChem` (motor de cálculo compartido) se amplió con `percentVolumeVolume()` y `ppm()`, reutilizadas por la Unidad II sin duplicar ninguna fórmula. Ver `IMP_11_U02_REPORT.md` para el detalle completo.
+**El núcleo de Química 10.º sigue congelado y sin regresiones.** Química 11.º avanza unidad por unidad: la Unidad I (El Agua), la Unidad II (Cálculo de Concentraciones) y la Unidad III (Química Orgánica I) están completamente funcionales. Solo falta la Unidad IV (Grupos Funcionales y Biomoléculas). `MQCChem` se amplió con un motor de nomenclatura orgánica básica (alcanos/alquenos/alquinos), reutilizado por la Unidad III sin duplicar ninguna fórmula. Ver `IMP_11_U03_REPORT.md` para el detalle completo.
 
 ## Qué es este proyecto
 
