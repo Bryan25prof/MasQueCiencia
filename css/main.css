@@ -603,38 +603,56 @@ code, .formula {
   margin-top: 0.1rem;
 }
 
-/* User card */
+/* User card — HOTFIX-12: compactada a una sola fila (antes 4 líneas
+   apiladas: avatar, nombre, nivel, XP). Ahora: avatar + nombre + XP
+   a la izquierda, nivel + XP numérico a la derecha. Libera ~110px
+   verticales que se le devuelven a la navegación scrollable. */
 .sidebar-user-card {
-  padding: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 1rem;
   border-bottom: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.02);
 }
 
 .user-avatar {
-  font-size: 1.6rem;
-  margin-bottom: 0.5rem;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
 }
 
 .user-name {
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   color: var(--text-primary);
-  margin-bottom: 0.1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.25rem;
+}
+
+.user-level-block {
+  flex-shrink: 0;
+  text-align: right;
 }
 
 .user-level {
-  font-size: 0.72rem;
+  font-size: 0.66rem;
   color: var(--xp-gold);
   font-weight: 600;
-  margin-bottom: 0.6rem;
+  white-space: nowrap;
 }
 
 .xp-bar-wrap {
-  height: 5px;
+  height: 4px;
   background: var(--bg-elevated);
   border-radius: var(--radius-full);
   overflow: hidden;
-  margin-bottom: 0.25rem;
 }
 
 .xp-bar-fill {
@@ -645,9 +663,10 @@ code, .formula {
 }
 
 .xp-text {
-  font-size: 0.68rem;
+  font-size: 0.6rem;
   color: var(--text-muted);
-  text-align: right;
+  white-space: nowrap;
+  margin-top: 0.15rem;
 }
 
 /* Navigation */
@@ -1895,6 +1914,20 @@ code, .formula {
   animation: float 3s ease-in-out infinite;
 }
 
+/* HOTFIX-11: glow cian/violeta pulsante — solo para el ícono de
+   "Acerca de la Plataforma" (meta.iconGlow), coherente con la
+   identidad Cosmos MQC. El resto de páginas placeholder conserva el
+   mismo <span class="placeholder-icon"> de siempre, sin cambios. */
+.placeholder-icon-glow {
+  filter: drop-shadow(0 0 12px rgba(31, 219, 255, 0.55)) drop-shadow(0 0 24px rgba(123, 47, 255, 0.35));
+  animation: float 3s ease-in-out infinite, iconGlowPulse 2.6s ease-in-out infinite;
+}
+
+@keyframes iconGlowPulse {
+  0%, 100% { filter: drop-shadow(0 0 12px rgba(31, 219, 255, 0.55)) drop-shadow(0 0 24px rgba(123, 47, 255, 0.35)); }
+  50%      { filter: drop-shadow(0 0 20px rgba(31, 219, 255, 0.8)) drop-shadow(0 0 34px rgba(123, 47, 255, 0.55)); }
+}
+
 .placeholder-title {
   margin-bottom: 0.75rem;
 }
@@ -2286,7 +2319,11 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 
 /* ---- Accesos rápidos en el sidebar (EOP-023) ----
    Antes flotaban sobre la interfaz (#qi-launcher); ahora viven de
-   forma permanente dentro de la navegación lateral. */
+   forma permanente dentro de la navegación lateral.
+   HOTFIX-12: de 3 filas con nombre+descripción a 3 chips compactos
+   (ícono + una palabra) en una sola fila — misma función, mismos
+   IDs, solo bajan de ~130px a ~62px de alto. La descripción completa
+   sigue disponible como title="" (tooltip) al pasar el mouse. */
 .mqc-quick-access {
   margin: 1rem .9rem 0;
   padding-top: .9rem;
@@ -2301,33 +2338,38 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   margin-bottom: .5rem;
   padding: 0 .3rem;
 }
-.mqc-quick-access-item {
-  display: flex; align-items: center; gap: .65rem;
-  width: 100%; text-align: left;
+.mqc-quick-access-row {
+  display: flex;
+  gap: .4rem;
+}
+.mqc-quick-access-chip {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .3rem;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: .6rem .7rem;
-  margin-bottom: .4rem;
+  padding: .55rem .3rem;
   cursor: pointer;
-  color: var(--text-primary);
+  color: var(--text-secondary);
   transition: var(--transition-fast);
 }
-.mqc-quick-access-item:hover, .mqc-quick-access-item:focus-visible {
+.mqc-quick-access-chip svg { flex-shrink: 0; }
+.mqc-quick-access-chip span {
+  font-size: .62rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.mqc-quick-access-chip:hover, .mqc-quick-access-chip:focus-visible {
   border-color: var(--cyan);
+  color: var(--text-primary);
   box-shadow: 0 0 10px var(--cyan-glow);
-  transform: translateX(2px);
 }
-.mqc-qa-icon {
-  font-size: 1.15rem;
-  width: 32px; height: 32px;
-  display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(circle, rgba(31,219,255,.14), transparent 70%);
-  border-radius: 50%;
-  flex-shrink: 0;
-}
-.mqc-qa-name { display: block; font-size: .82rem; font-weight: 700; }
-.mqc-qa-desc { display: block; font-size: .68rem; color: var(--text-muted); }
 
 /* ---- Columna central: mensaje → submensaje → panel → acciones ---- */
 .mqc-gate-stage {

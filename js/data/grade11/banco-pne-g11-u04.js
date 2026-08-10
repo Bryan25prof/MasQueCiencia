@@ -109,5 +109,23 @@ window.BANCO_PNE_G11_U04 = {
   'q-g11u4-607': { pregunta:'Etanol (–OH) vs. ácido acético (–COOH), casi el mismo esqueleto. ¿Qué cambia todo?', opciones:['El ácido tiene el –COOH completo; el etanol solo –OH','El ácido no tiene oxígeno','El etanol tiene más carbonos','No hay diferencia real'], correcta:0,
     explicacion_correcta:'–COOH completo vs. solo –OH — esa es la diferencia clave.', explicacion_incorrectas:['','Sí tiene oxígeno.','Tienen el mismo número de carbonos.','Sí hay diferencia real.'] },
   'q-g11u4-608': { pregunta:'Éter (–O–) vs. éster (–COO–), ambos conectan 2 cadenas con oxígeno. ¿Cuál es la diferencia?', opciones:['El éster agrega un carbonilo junto al oxígeno; el éter usa solo oxígeno','Son el mismo grupo con otro nombre','El éter siempre tiene nitrógeno','No hay diferencia'], correcta:0,
-    explicacion_correcta:'Éster=carbonilo+oxígeno; éter=solo oxígeno puente.', explicacion_incorrectas:['','Son grupos distintos.','Ninguno tiene nitrógeno.','Sí hay diferencia real.'] }
+    explicacion_correcta:'Éster=carbonilo+oxígeno; éter=solo oxígeno puente.', explicacion_incorrectas:['','Son grupos distintos.','Ninguno tiene nitrógeno.','Sí hay diferencia real.'] },
+
+  /* ============ RAZONAMIENTO TIPO PNE (SPRINT PRE-PNE) ============ */
+  'q-g11u4-701': { pregunta:'¿Cuál compuesto contiene simultáneamente ácido carboxílico Y éster?', opciones:['Aspirina','Cafeína','Etanol','Acetona'], correcta:0,
+    explicacion_correcta:'La aspirina combina –COOH y –O–CO–CH3.', explicacion_incorrectas:['','Cafeína=amida+amina.','Etanol=solo alcohol.','Acetona=solo cetona.'] },
+  'q-g11u4-702': { pregunta:'¿Cuál compuesto contiene simultáneamente amina Y amida?', opciones:['Cafeína','Alanina','Ibuprofeno','Glucosa'], correcta:0,
+    explicacion_correcta:'La cafeína tiene amida y amina en su estructura.', explicacion_incorrectas:['','Alanina=amina+ácido carboxílico.','Ibuprofeno=ácido carboxílico+alcano.','Glucosa=aldehído+alcohol.'] },
+  'q-g11u4-703': { pregunta:'¿Cuál compuesto contiene simultáneamente ácido carboxílico Y amina?', opciones:['Alanina','Aspirina','Acetaminofén','Ácido acético'], correcta:0,
+    explicacion_correcta:'La alanina combina –NH2 y –COOH — la definición de aminoácido.', explicacion_incorrectas:['','Aspirina=ácido carboxílico+éster.','Acetaminofén=alcohol+amida.','Ácido acético=solo ácido carboxílico.'] },
+  'q-g11u4-704': { pregunta:'¿Cuántos grupos funcionales distintos tiene la aspirina?', opciones:['1','2','3','4'], correcta:1,
+    explicacion_correcta:'2: ácido carboxílico y éster.', explicacion_incorrectas:['Tiene más de 1.','','No son 3.','No son 4.'] },
+  'q-g11u4-705': { pregunta:'¿Cuántos grupos funcionales distintos tiene la glucosa (cadena abierta)?', opciones:['1','2','3','4'], correcta:1,
+    explicacion_correcta:'2: aldehído y alcohol.', explicacion_incorrectas:['Tiene más de 1.','','No son 3.','No son 4.'] },
+  'q-g11u4-706': { pregunta:'Entre aspirina (ácido carboxílico, éster) y cafeína (amida, amina), ¿cuál NO aparece en ninguna?', opciones:['Alcohol','Ácido carboxílico','Éster','Amida'], correcta:0,
+    explicacion_correcta:'Ninguna de las dos tiene alcohol.', explicacion_incorrectas:['','Sí aparece, en aspirina.','Sí aparece, en aspirina.','Sí aparece, en cafeína.'] },
+  'q-g11u4-707': { pregunta:'Entre acetaminofén (alcohol, amida) e ibuprofeno (ácido carboxílico, alcano), ¿cuál NO aparece en ninguno?', opciones:['Éster','Alcohol','Amida','Ácido carboxílico'], correcta:0,
+    explicacion_correcta:'Ninguno de los dos tiene éster.', explicacion_incorrectas:['','Sí aparece, en acetaminofén.','Sí aparece, en acetaminofén.','Sí aparece, en ibuprofeno.'] },
+  'q-g11u4-708': { pregunta:'¿Cuáles grupos están presentes en la alanina?', opciones:['Amina y ácido carboxílico','Alcohol y cetona','Éster y amida','Aldehído y alcohol'], correcta:0,
+    explicacion_correcta:'Amina y ácido carboxílico, exactamente.', explicacion_incorrectas:['','No tiene ni alcohol ni cetona.','No tiene ni éster ni amida.','Eso es glucosa, no alanina.'] }
 };

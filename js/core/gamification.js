@@ -236,6 +236,12 @@ const Gamification = (() => {
       name: 'Cadena de Carbono',
       icon: '⬡',
       desc: 'Completaste realmente la Unidad III de Química 11.º — Química Orgánica I'
+    },
+    {
+      id:   'arquitecto-vida',
+      name: 'Arquitecto de la Vida',
+      icon: '🧬',
+      desc: 'Completaste realmente la Unidad IV de Química 11.º — Grupos Funcionales y Biomoléculas'
     }
   ];
 
@@ -563,6 +569,25 @@ const Gamification = (() => {
         const missionDone3 = !!u3.missionDone;
         if (allTopics3 && allSims3 && gamePlayed3 && examPassed3 && missionDone3) {
           newBadges.push('cadena-carbono');
+        }
+      }
+    }
+
+    /* IMP-11-U04 — 'arquitecto-vida': mismo principio anti-farming
+       exacto que las 3 unidades anteriores — exige finalización real
+       de las 5 partes de la Unidad IV. Última insignia de unidad de
+       Química 11.º. */
+    if (typeof GRADE11_UNIDADES_DATA !== 'undefined' && data.grade11 && !data.badges.includes('arquitecto-vida')) {
+      const u4 = data.grade11['g11-u04'];
+      const meta4 = GRADE11_UNIDADES_DATA.find(x => x.id === 'g11-u04');
+      if (u4 && meta4) {
+        const allTopics4 = (u4.topicsRead || []).length >= (meta4.topics || []).length;
+        const allSims4 = (u4.simsDone || []).length >= (meta4.simulators || []).length;
+        const gamePlayed4 = (u4.gameScore || 0) > 0;
+        const examPassed4 = (u4.examBest || 0) >= (meta4.exam && meta4.exam.pass || 70);
+        const missionDone4 = !!u4.missionDone;
+        if (allTopics4 && allSims4 && gamePlayed4 && examPassed4 && missionDone4) {
+          newBadges.push('arquitecto-vida');
         }
       }
     }

@@ -1,0 +1,185 @@
+/* ================================================================
+   MÁSQUECIENCIA — css/intro.css
+   INTRO CINEMATOGRÁFICA DE INGRESO (HOTFIX-11)
+   ================================================================
+   Integra la "Variante D" (Lluvia Periódica + Escáner) del
+   prototipo aislado, aprobada por el docente tras comparar 4
+   variantes independientes. Vive en su propio archivo y solo se
+   activa mediante js/shared/intro.js — no modifica el loading
+   screen existente, el Router, el sistema de perfiles ni el
+   componente oficial de Photon (su aparición en esta intro es una
+   representación provisional propia, ver la nota de arquitectura en
+   js/shared/intro.js sobre por qué no se usa el componente real).
+
+   Usa exclusivamente las variables del Design System real
+   (--cyan, --violet, --void, --text-primary, --font-display,
+   --font-code, etc. — definidas en css/main.css) para que, si la
+   paleta de marca cambia алgún día, esta intro se actualice sola.
+
+   Se muestra una única vez por navegador (ver intro.js — localStorage
+   'mqc_intro_seen_v1'). Si el estudiante ya la vio, este archivo no
+   tiene ningún efecto visual: el overlay permanece con display:none.
+================================================================ */
+
+#mqc-intro{
+  position:fixed; inset:0; z-index:10000;
+  overflow:hidden; background:var(--void);
+  font-family:var(--font-display);
+  color:var(--text-primary);
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+  padding-left:env(safe-area-inset-left);
+  padding-right:env(safe-area-inset-right);
+  transition:opacity .6s ease, visibility .6s ease;
+}
+#mqc-intro.mqc-intro-hidden{ opacity:0; visibility:hidden; pointer-events:none; }
+
+/* ===================== fondo Cosmos MQC (persistente desde la fase 3) ===================== */
+#mqc-intro-cosmos{
+  position:absolute; inset:0; opacity:0; transition:opacity 1.4s ease;
+  background:
+    radial-gradient(ellipse at 20% 15%, rgba(123,47,255,.16), transparent 55%),
+    radial-gradient(ellipse at 82% 70%, var(--cyan-glow, rgba(31,219,255,.24)), transparent 50%),
+    var(--bg-deep);
+}
+#mqc-intro-cosmos.on{ opacity:1; }
+#mqc-intro-cosmos svg{ position:absolute; inset:0; width:100%; height:100%; opacity:.55; }
+.mqc-intro-bond{ stroke:var(--cyan-glow, rgba(31,219,255,.28)); stroke-width:1; }
+.mqc-intro-atom{ fill:var(--cyan); opacity:.5; }
+.mqc-intro-atom.v{ fill:var(--violet); }
+.mqc-intro-atom.g{ fill:var(--green); }
+.mqc-intro-molgroup{ animation:mqcIntroDrift 24s ease-in-out infinite; transform-origin:center; }
+.mqc-intro-molgroup.slow{ animation-duration:36s; }
+.mqc-intro-molgroup.rev{ animation-direction:reverse; }
+@keyframes mqcIntroDrift{ 0%,100%{ transform:translate(0,0) rotate(0deg); } 50%{ transform:translate(-14px,10px) rotate(3deg); } }
+#mqc-intro-particles{ position:absolute; inset:0; }
+.mqc-intro-particle{ position:absolute; width:2px; height:2px; border-radius:50%; background:var(--cyan); opacity:.5; animation:mqcIntroRise linear infinite; }
+@keyframes mqcIntroRise{ from{ transform:translateY(0); opacity:0; } 10%{ opacity:.55; } 90%{ opacity:.35; } to{ transform:translateY(-100vh); opacity:0; } }
+
+/* ===================== capas comunes ===================== */
+.mqc-intro-layer{
+  position:absolute; inset:0; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center; gap:.6rem;
+  opacity:0; visibility:hidden; pointer-events:none; transition:opacity .6s ease; padding:1.5rem;
+}
+.mqc-intro-layer.show{ opacity:1; visibility:visible; pointer-events:auto; }
+
+/* ===================== fase 1 — consola de arranque ===================== */
+#mqc-intro-console{ align-items:flex-start; justify-content:center; padding-left:8vw; }
+#mqc-intro-console-lines{
+  font-family:var(--font-code); font-size:clamp(.72rem,2.1vw,.95rem); color:var(--cyan);
+  text-align:left; line-height:1.9; letter-spacing:.02em;
+}
+#mqc-intro-console-lines div{ opacity:0; transform:translateX(-8px); animation:mqcIntroLineIn .35s ease forwards; white-space:pre; }
+@keyframes mqcIntroLineIn{ to{ opacity:1; transform:translateX(0); } }
+.mqc-intro-ok{ color:var(--green); }
+
+/* ===================== fase 2 — lluvia periódica + escáner ===================== */
+#mqc-intro-matrix{ overflow:hidden; }
+#mqc-intro-rain{ position:absolute; inset:0; }
+.mqc-intro-tile{
+  position:absolute; top:0; left:0; width:34px; height:34px; border-radius:5px;
+  border:1px solid var(--cyan-glow, rgba(31,219,255,.55)); background:rgba(7,7,20,.4);
+  display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-code); font-weight:700; font-size:.82rem; color:var(--cyan);
+  box-shadow:0 0 10px var(--cyan-glow, rgba(31,219,255,.22)); will-change:transform;
+}
+.mqc-intro-tile.v{ color:var(--violet); border-color:rgba(123,47,255,.5); box-shadow:0 0 10px rgba(123,47,255,.22); }
+.mqc-intro-tile.dim{ opacity:.4; }
+.mqc-intro-tile.frozen{ box-shadow:0 0 16px 2px rgba(232,232,255,.4); border-color:rgba(232,232,255,.65); transition:box-shadow .35s ease, border-color .35s ease; }
+/* las 3 fichas sembradas (M·Q·C) — mientras caen se ven como
+   cualquier otra, solo al congelarse revelan la letra y este
+   realce violeta distinto del blanco genérico */
+.mqc-intro-tile.msg{ color:var(--violet); font-weight:900; border-color:var(--violet); box-shadow:0 0 20px 4px rgba(123,47,255,.55); }
+#mqc-intro-scanline{
+  position:absolute; top:0; bottom:0; width:3px; left:-8px; z-index:3;
+  background:linear-gradient(180deg, transparent, var(--cyan), var(--violet), transparent);
+  box-shadow:0 0 26px 5px var(--cyan-glow, rgba(31,219,255,.75));
+  transition:left var(--mqc-scandur,900ms) linear; opacity:0;
+}
+#mqc-intro-scanline.show{ opacity:1; }
+#mqc-intro-freeze-flash{ position:absolute; inset:0; background:radial-gradient(circle at 50% 50%, rgba(232,232,255,.6), transparent 60%); opacity:0; pointer-events:none; }
+#mqc-intro-freeze-flash.go{ animation:mqcIntroFlash .6s ease-out; }
+@keyframes mqcIntroFlash{ 0%{ opacity:0; } 25%{ opacity:1; } 100%{ opacity:0; } }
+#mqc-intro-shock{ position:absolute; top:50%; left:50%; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; border:2px solid var(--text-primary); opacity:0; pointer-events:none; }
+#mqc-intro-shock.go{ animation:mqcIntroShockOut .9s cubic-bezier(.2,.7,.3,1) forwards; }
+@keyframes mqcIntroShockOut{ 0%{ opacity:.9; transform:scale(1); } 100%{ opacity:0; transform:scale(70); } }
+#mqc-intro-matrix-label{
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-code); font-size:clamp(1.1rem,4.2vw,1.9rem); letter-spacing:.13em; color:var(--green);
+  text-shadow:0 0 22px rgba(0,255,136,.55); opacity:0; transition:opacity .35s ease; pointer-events:none; text-align:center;
+}
+#mqc-intro-matrix-label.show{ opacity:1; }
+
+/* ===================== fase 3 — laboratorio + Photon (representación provisional) =====================
+   Ticket original: "usar una representación provisional coherente con
+   el Photon actual. NO rediseñar el personaje oficial." Se mantiene
+   así también en la integración real — el componente oficial
+   (js/shared/photon.js) es una instancia única por diseño de
+   arquitectura, y app.js puede montarla en el sidebar en cualquier
+   momento del arranque (incluso mientras la intro todavía está en
+   pantalla, si el estudiante ya tiene un perfil activo). Usar el
+   componente real acá competiría por esa única instancia y podría
+   dejar al Photon del sidebar sin aparecer. Esta forma provisional
+   nunca puede chocar con nada. */
+#mqc-intro-photon-wrap{ position:relative; width:130px; height:130px; margin:0 auto; opacity:0; transform:scale(.6); transition:opacity .9s ease, transform .9s cubic-bezier(.2,1.3,.3,1); }
+#mqc-intro-photon-wrap.in{ opacity:1; transform:scale(1); }
+#mqc-intro-photon-core{ position:absolute; inset:38px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #fff, var(--cyan) 45%, var(--violet) 100%);
+  box-shadow:0 0 40px 10px rgba(123,47,255,.5), 0 0 70px 20px var(--cyan-glow, rgba(31,219,255,.25));
+  animation:mqcIntroCorePulse 2.6s ease-in-out infinite; }
+@keyframes mqcIntroCorePulse{ 0%,100%{ filter:brightness(1); } 50%{ filter:brightness(1.25); } }
+.mqc-intro-orbit{ position:absolute; inset:0; border:1px solid var(--cyan-glow, rgba(31,219,255,.35)); border-radius:50%; }
+.mqc-intro-orbit::after{ content:''; position:absolute; width:6px; height:6px; border-radius:50%; background:var(--cyan);
+  box-shadow:0 0 8px 2px var(--cyan); top:-3px; left:50%; margin-left:-3px; }
+.mqc-intro-orbit.o1{ animation:mqcIntroSpin 5s linear infinite; }
+.mqc-intro-orbit.o2{ inset:14px; border-color:rgba(123,47,255,.3); animation:mqcIntroSpin 7.5s linear infinite reverse; }
+.mqc-intro-orbit.o2::after{ background:var(--violet); box-shadow:0 0 8px 2px var(--violet); }
+.mqc-intro-orbit.o3{ inset:28px; border-color:rgba(0,255,136,.25); animation:mqcIntroSpin 10s linear infinite; }
+.mqc-intro-orbit.o3::after{ background:var(--green); box-shadow:0 0 8px 2px var(--green); }
+@keyframes mqcIntroSpin{ to{ transform:rotate(360deg); } }
+#mqc-intro-msg{ font-family:var(--font-code); font-size:clamp(.95rem,3vw,1.3rem); color:var(--text-primary); min-height:1.6em; letter-spacing:.03em; margin-top:1rem; }
+
+/* ===================== fase 4 — identidad de marca ===================== */
+#mqc-intro-credit{ font-family:var(--font-code); font-size:.68rem; letter-spacing:.14em; color:var(--text-muted); text-transform:uppercase; margin-bottom:.15rem; }
+#mqc-intro-eyebrow{ font-family:var(--font-code); font-size:.72rem; letter-spacing:.35em; color:var(--cyan); text-transform:uppercase; }
+#mqc-intro-brand{
+  font-size:clamp(2rem,8vw,3.6rem); font-weight:700; letter-spacing:.01em;
+  background:linear-gradient(90deg,#fff,var(--cyan) 55%,var(--violet));
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+#mqc-intro-route{ font-size:clamp(.95rem,3vw,1.2rem); color:var(--text-secondary); font-weight:500; letter-spacing:.03em; }
+#mqc-intro-tagline{ margin-top:.6rem; max-width:34ch; font-size:clamp(.85rem,2.6vw,1rem); color:var(--text-primary); line-height:1.6; font-weight:500; }
+#mqc-intro-enter{
+  margin-top:1.6rem; font-family:var(--font-display); font-weight:600; font-size:.9rem; letter-spacing:.1em;
+  color:var(--text-on-accent, #070714); background:linear-gradient(90deg,var(--cyan),var(--violet));
+  border:none; padding:.95rem 2.1rem; border-radius:var(--radius-full); cursor:pointer;
+  box-shadow:0 0 0 1px rgba(255,255,255,.08), 0 10px 30px -8px var(--cyan-glow, rgba(31,219,255,.5));
+  transition:transform .2s ease, box-shadow .2s ease; text-transform:uppercase;
+}
+#mqc-intro-enter:hover{ transform:translateY(-2px); box-shadow:0 0 0 1px rgba(255,255,255,.12), 0 14px 36px -6px rgba(123,47,255,.6); }
+#mqc-intro-enter:active{ transform:translateY(0); }
+
+/* ===================== controles (parte de la experiencia final) ===================== */
+#mqc-intro-sound{
+  position:fixed; top:calc(env(safe-area-inset-top) + 14px); right:calc(env(safe-area-inset-right) + 14px);
+  z-index:10001; font-family:var(--font-code); font-size:.68rem; letter-spacing:.06em; color:var(--text-secondary);
+  background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:var(--radius-full);
+  padding:.45rem .8rem; cursor:pointer; backdrop-filter:blur(6px); transition:color .2s, border-color .2s;
+}
+#mqc-intro-sound:hover, #mqc-intro-sound.active{ color:var(--cyan); border-color:var(--cyan); }
+
+#mqc-intro-skip{
+  position:fixed; bottom:calc(env(safe-area-inset-bottom) + 16px); right:calc(env(safe-area-inset-right) + 16px);
+  z-index:10001; font-family:var(--font-code); font-size:.68rem; letter-spacing:.06em; color:var(--text-secondary);
+  background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:var(--radius-full);
+  padding:.45rem .8rem; cursor:pointer; backdrop-filter:blur(6px); transition:color .2s, border-color .2s;
+}
+#mqc-intro-skip:hover{ color:var(--text-primary); border-color:var(--cyan); }
+
+@media (max-width:480px){
+  #mqc-intro-sound, #mqc-intro-skip{ font-size:.62rem; padding:.4rem .7rem; }
+}
+@media (prefers-reduced-motion: reduce){
+  #mqc-intro *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
+}

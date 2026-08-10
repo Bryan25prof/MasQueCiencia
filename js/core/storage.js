@@ -228,6 +228,13 @@ const Storage = (() => {
       'g11-u03': _emptyUnit(),
       'g11-u04': _emptyUnit()
     },
+    /* IMP-11-U04 — Atlas Químico MQC: registro persistente de qué
+       grupos funcionales y biomoléculas ya identificó el estudiante.
+       No otorga XP (registro de evidencia de aprendizaje, no un
+       sistema de recompensa paralelo) — ver AtlasQuimico.markDiscovered(). */
+    atlasQuimico: {
+      discovered: []   /* array de ids, ej. ['alcohol','carbohidratos'] */
+    },
     /* HOTFIX-06 — Proyecto Integrador: antes vivía implícito (sin
        entrada en el esquema, creado ad-hoc por integrador.js vía
        Storage.get/set con campos sueltos: informe/completado/fecha).

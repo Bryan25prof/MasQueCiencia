@@ -272,5 +272,53 @@ window.PREGUNTAS_G11_U04 = [
     pregunta:'Un éter (R–O–R\') y un éster (R–COO–R\') conectan 2 cadenas de carbono usando oxígeno. ¿Cuál es la diferencia estructural exacta entre ambos?',
     opciones:['El éter usa solo un oxígeno puente; el éster agrega además un carbonilo (C=O) junto a ese oxígeno','Son exactamente el mismo grupo funcional con dos nombres distintos','El éter siempre tiene nitrógeno y el éster nunca','No existe ninguna diferencia real entre ambos'],
     correcta:0, explicacion_correcta:'El éter conecta 2 cadenas con un solo oxígeno (–O–); el éster conecta 2 cadenas con un carbonilo Y un oxígeno juntos (–COO–) — un grupo funcional distinto, no una simple variación del mismo.',
-    explicacion_incorrectas:['','Son grupos funcionales distintos, con estructuras y comportamientos distintos.','Ninguno de los 2 grupos contiene nitrógeno en su definición.','Sí existe una diferencia estructural real y verificable.'] }
+    explicacion_incorrectas:['','Son grupos funcionales distintos, con estructuras y comportamientos distintos.','Ninguno de los 2 grupos contiene nitrógeno en su definición.','Sí existe una diferencia estructural real y verificable.'] },
+
+  /* ============ RAZONAMIENTO TIPO PNE (8) — SPRINT PRE-PNE Parte VI ============
+     4 variantes nuevas exigidas por el ticket: "¿cuál grupo NO
+     aparece?", "¿cuántos grupos aparecen?", "seleccione todos los
+     presentes" y "¿cuál compuesto contiene simultáneamente...?".
+     Todas usan datos reales de MOLECULAS_REALES (mismos que el
+     Escáner Molecular) — nunca se inventa una molécula nueva, para
+     que el examen y el simulador jamás se contradigan. */
+  { id:'q-g11u4-701', unidad:'g11-u04', categoria:'razonamiento-pne', tema:'Razonamiento PNE',
+    pregunta:'¿Cuál compuesto de los ya trabajados contiene simultáneamente ácido carboxílico Y éster?',
+    opciones:['Aspirina','Cafeína','Etanol','Acetona'],
+    correcta:0, explicacion_correcta:'La aspirina combina –COOH (ácido carboxílico) y –O–CO–CH3 (éster) en la misma molécula — por eso aparece en 2 fichas distintas del Atlas.',
+    explicacion_incorrectas:['','La cafeína tiene amida y amina, no ácido carboxílico ni éster.','El etanol tiene solo alcohol.','La acetona tiene solo cetona.'] },
+  { id:'q-g11u4-702', unidad:'g11-u04', categoria:'razonamiento-pne', tema:'Razonamiento PNE',
+    pregunta:'¿Cuál compuesto de los ya trabajados contiene simultáneamente amina Y amida?',
+    opciones:['Cafeína','Alanina','Ibuprofeno','Glucosa'],
+    correcta:0, explicacion_correcta:'La cafeína tiene grupos amida (–CO–N–) y también nitrógenos de tipo amina en su estructura de anillos.',
+    explicacion_incorrectas:['','La alanina tiene amina y ácido carboxílico, no amida.','El ibuprofeno tiene ácido carboxílico y alcano.','La glucosa tiene aldehído y alcohol.'] },
+  { id:'q-g11u4-703', unidad:'g11-u04', categoria:'razonamiento-pne', tema:'Razonamiento PNE',
+    pregunta:'¿Cuál compuesto de los ya trabajados contiene simultáneamente ácido carboxílico Y amina?',
+    opciones:['Alanina','Aspirina','Acetaminofén','Ácido acético'],
+    correcta:0, explicacion_correcta:'La alanina (un aminoácido) combina –NH2 (amina) y –COOH (ácido carboxílico) — exactamente la combinación que define a todo aminoácido.',
+    explicacion_incorrectas:['','La aspirina tiene ácido carboxílico y éster, no amina.','El acetaminofén tiene alcohol y amida.','El ácido acético tiene solo ácido carboxílico.'] },
+  { id:'q-g11u4-704', unidad:'g11-u04', categoria:'razonamiento-pne', tema:'Razonamiento PNE',
+    pregunta:'¿Cuántos grupos funcionales distintos aparecen en la aspirina (ácido acetilsalicílico)?',
+    opciones:['1','2','3','4'],
+    correcta:1, explicacion_correcta:'Exactamente 2: ácido carboxílico (–COOH) y éster (–O–CO–CH3).',
+    explicacion_incorrectas:['Tiene más de un grupo funcional.','','Solo tiene 2, no 3.','Solo tiene 2, no 4.'] },
+  { id:'q-g11u4-705', unidad:'g11-u04', categoria:'razonamiento-pne', tema:'Razonamiento PNE',
+    pregunta:'¿Cuántos grupos funcionales distintos aparecen en la glucosa (forma de cadena abierta)?',
+    opciones:['1','2','3','4'],
+    correcta:1, explicacion_correcta:'Exactamente 2: aldehído (–CHO, en el extremo) y alcohol (–OH, varios a lo largo de la cadena).',
+    explicacion_incorrectas:['Tiene más de un grupo funcional.','','Solo tiene 2, no 3.','Solo tiene 2, no 4.'] },
+  { id:'q-g11u4-706', unidad:'g11-u04', categoria:'razonamiento-pne', tema:'Razonamiento PNE',
+    pregunta:'Entre la aspirina (ácido carboxílico, éster) y la cafeína (amida, amina), ¿cuál de estos 4 grupos NO aparece en NINGUNA de las dos?',
+    opciones:['Alcohol','Ácido carboxílico','Éster','Amida'],
+    correcta:0, explicacion_correcta:'Ni la aspirina ni la cafeína tienen un grupo –OH de alcohol — la aspirina tiene ácido carboxílico y éster; la cafeína, amida y amina.',
+    explicacion_incorrectas:['','El ácido carboxílico sí aparece, en la aspirina.','El éster sí aparece, en la aspirina.','La amida sí aparece, en la cafeína.'] },
+  { id:'q-g11u4-707', unidad:'g11-u04', categoria:'razonamiento-pne', tema:'Razonamiento PNE',
+    pregunta:'Entre el acetaminofén (alcohol, amida) y el ibuprofeno (ácido carboxílico, alcano), ¿cuál de estos 4 grupos NO aparece en NINGUNO de los dos?',
+    opciones:['Éster','Alcohol','Amida','Ácido carboxílico'],
+    correcta:0, explicacion_correcta:'Ninguno de los dos tiene un grupo éster (–COO–) — el acetaminofén tiene alcohol y amida; el ibuprofeno, ácido carboxílico y alcano.',
+    explicacion_incorrectas:['','El alcohol sí aparece, en el acetaminofén.','La amida sí aparece, en el acetaminofén.','El ácido carboxílico sí aparece, en el ibuprofeno.'] },
+  { id:'q-g11u4-708', unidad:'g11-u04', categoria:'razonamiento-pne', tema:'Razonamiento PNE',
+    pregunta:'Seleccioná la opción que identifica correctamente TODOS los grupos funcionales presentes en la alanina.',
+    opciones:['Amina y ácido carboxílico','Alcohol y cetona','Éster y amida','Aldehído y alcohol'],
+    correcta:0, explicacion_correcta:'La alanina tiene exactamente 2 grupos: amina (–NH2) y ácido carboxílico (–COOH) — ni más, ni menos, ni otra combinación.',
+    explicacion_incorrectas:['','La alanina no tiene ni alcohol ni cetona.','La alanina no tiene ni éster ni amida.','La alanina no tiene ni aldehído ni alcohol (eso es glucosa).'] }
 ];

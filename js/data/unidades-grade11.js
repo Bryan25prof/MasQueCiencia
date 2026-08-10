@@ -125,12 +125,28 @@ window.GRADE11_UNIDADES_DATA = [
     description: 'Reconocimiento de grupos funcionales y relación entre química orgánica y sistemas biológicos.',
     color: '#FFA94D',
     icon: '🧬',
-    status: 'development',
-    theory: null,
-    simulators: null,
-    game: null,
-    exam: null,
-    mqcExperience: null,
-    pneBank: null
+    status: 'active',
+    /* IMP-11-U04: estructura real, ya no placeholder. 7 temas, 3
+       simuladores (conectados al Atlas Químico MQC), examen de banco
+       40/intento 20, aprobación 70%. Última unidad de contenido de
+       Química 11.º — solo queda pendiente el PNE de 11.º. */
+    topics: [
+      '¿Por qué pequeños cambios producen grandes diferencias?',
+      'Reconociendo grupos funcionales',
+      'Alcoholes, aldehídos y cetonas',
+      'Ácidos carboxílicos, ésteres y aminas',
+      'Biomoléculas',
+      'Relación entre estructura y función',
+      'Aplicaciones ambientales y biológicas'
+    ],
+    simulators: [
+      { id: 'sim-g11u4-01', name: 'Constructor de Grupos Funcionales', status: 'active' },
+      { id: 'sim-g11u4-02', name: 'Clasificador de Biomoléculas', status: 'active' },
+      { id: 'sim-g11u4-03', name: 'Impacto Biológico', status: 'active' }
+    ],
+    game: { name: 'Detective Molecular', levels: 0 },
+    exam: { id: 'exam-g11-u04', questions: 40, perExam: 20, time: 30, pass: 70 },
+    mqcExperience: 'Cierre de la investigación',
+    pneBank: 'BANCO_PNE_G11_U04'
   }
 ];

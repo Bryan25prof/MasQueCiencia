@@ -125,24 +125,18 @@ const Router = (() => {
     _updateBrandRoute(section);
   }
 
-  /* Identidad Multigrado del sidebar/topbar: la marca "MÁSQUECIENCIA"
-     es permanente (vive fija en el HTML, nunca se toca desde acá) —
-     lo único que cambia según la sección activa es la línea de ruta
-     académica. Se actualiza en el mismo punto donde ya se marca la
-     navegación activa, así que nunca puede desincronizarse: cualquier
-     Router.navigate() la mantiene al día automáticamente. */
+  /* HOTFIX-11: por pedido explícito del docente, esta línea de marca
+     deja de cambiar según el grado activo (antes: "QUÍMICA 10.º" en
+     secciones de Décimo, "QUÍMICA 11.º" en 'grade11') y pasa a ser
+     un rótulo fijo — la plataforma ya cubre ambos grados, así que la
+     identidad de marca siempre lo refleja, sin importar en qué
+     sección esté navegando el estudiante. Se conserva el mecanismo
+     (se sigue actualizando desde el mismo punto donde se marca la
+     navegación activa) por si en el futuro se decide revertir este
+     comportamiento — solo cambiaría la línea de abajo. */
+  const BRAND_ROUTE_LABEL = 'QUÍMICA INTERACTIVA 10.º Y 11.º';
   function _updateBrandRoute(section) {
-    let label;
-    if (section === 'grade-select') {
-      label = 'Química Interactiva 10.º y 11.º';
-    } else if (section === 'grade11') {
-      label = 'QUÍMICA 11.º';
-    } else {
-      /* Todo lo demás (home, units, progress, integrador, pne-final,
-         periodic-table, etc.) pertenece hoy a Química 10.º — no existe
-         todavía ninguna otra sección propia de 11.º más que 'grade11'. */
-      label = 'QUÍMICA 10.º';
-    }
+    const label = BRAND_ROUTE_LABEL;
     const sidebarLabel = document.getElementById('sidebar-route-label');
     const topbarLabel = document.getElementById('topbar-route-label');
     if (sidebarLabel) sidebarLabel.textContent = label;
@@ -155,10 +149,11 @@ const Router = (() => {
     if (!content) return;
 
     const meta = _placeholderMeta(section);
+    const iconClass = 'placeholder-icon' + (meta.iconGlow ? ' placeholder-icon-glow' : '');
 
     content.innerHTML = `
       <div class="placeholder-page">
-        <span class="placeholder-icon">${meta.icon}</span>
+        <span class="${iconClass}">${meta.icon}</span>
         <h2 class="placeholder-title">${meta.title}</h2>
         <p class="placeholder-desc">${meta.desc}</p>
         <span class="placeholder-coming-soon">🚧 En Construcción — Próximas Fases</span>
@@ -175,9 +170,15 @@ const Router = (() => {
   function _placeholderMeta(section) {
     const map = {
       'about': {
-        icon: 'ℹ️',
+        /* HOTFIX-11: el ícono ℹ️ genérico se reemplaza por un átomo,
+           coherente con la identidad química de la marca (el propio
+           logo de MQC ya es un átomo — ver #mqc-atom-logo), con un
+           glow cian/violeta exclusivo de esta sección (iconGlow),
+           que no afecta a ninguna otra página placeholder. */
+        icon: '⚛️',
+        iconGlow: true,
         title: 'Acerca de la Plataforma',
-        desc: 'Química Interactiva 10° — Desarrollado para los estudiantes de Décimo Año del sistema educativo costarricense (MEP). Lic. Bryan Chavarría C.'
+        desc: 'Química Interactiva 10.º y 11.º surge como un plan novedoso para incentivar la enseñanza de la Química y brindar más que una plataforma: una experiencia nueva para aprender ciencia, pensada para estudiantes de secundaria del sistema educativo de Costa Rica. Lic. Bryan Chavarría C.'
       }
     };
     return map[section] || {

@@ -4,9 +4,9 @@
 
 ---
 
-## 🔒 Estado del proyecto: IMP-11-U03 — Química 11.º tiene 3 de sus 4 unidades reales (El Agua, Cálculo de Concentraciones, Química Orgánica I)
+## 🔒 Estado del proyecto: IMP-11-U04 — Química 11.º tiene sus 4 unidades de contenido completas
 
-**El núcleo de Química 10.º sigue congelado y sin regresiones.** Química 11.º avanza unidad por unidad: la Unidad I (El Agua), la Unidad II (Cálculo de Concentraciones) y la Unidad III (Química Orgánica I) están completamente funcionales. Solo falta la Unidad IV (Grupos Funcionales y Biomoléculas). `MQCChem` se amplió con un motor de nomenclatura orgánica básica (alcanos/alquenos/alquinos), reutilizado por la Unidad III sin duplicar ninguna fórmula. Ver `IMP_11_U03_REPORT.md` para el detalle completo.
+**El núcleo de Química 10.º sigue congelado y sin regresiones.** Química 11.º está completa en contenido: Unidad I (El Agua), Unidad II (Cálculo de Concentraciones), Unidad III (Química Orgánica I) y Unidad IV (Grupos Funcionales y Biomoléculas) — todas funcionales, todas con su insignia de finalización real. Se agregó además el **Atlas Químico MQC**, una función permanente nueva que registra qué grupos funcionales y biomoléculas identificó cada estudiante. **Lo único que falta de todo Química 11.º es el PNE de 11.º** (el desafío final combinado de las 4 unidades, mismo patrón que ya existe para décimo). Ver `IMP_11_U04_REPORT.md` para el detalle completo.
 
 ## Qué es este proyecto
 
