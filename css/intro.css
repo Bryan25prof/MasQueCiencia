@@ -180,6 +180,18 @@
 @media (max-width:480px){
   #mqc-intro-sound, #mqc-intro-skip{ font-size:.62rem; padding:.4rem .7rem; }
 }
+#mqc-intro-startgate{
+  position:absolute; inset:0; z-index:10005; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:.6rem; cursor:pointer;
+  background:var(--void); animation:mqcIntroGateFade .3s ease;
+}
+#mqc-intro-startgate.hide{ opacity:0; pointer-events:none; transition:opacity .35s ease; }
+@keyframes mqcIntroGateFade{ from{ opacity:0; } to{ opacity:1; } }
+#mqc-intro-startgate-icon{ font-size:2.6rem; animation:mqcIntroGatePulse 1.8s ease-in-out infinite; }
+@keyframes mqcIntroGatePulse{ 0%,100%{ transform:scale(1); opacity:.85; } 50%{ transform:scale(1.12); opacity:1; } }
+#mqc-intro-startgate-text{ font-family:var(--font-display); font-weight:700; font-size:1.1rem; color:var(--text-primary); letter-spacing:.02em; }
+#mqc-intro-startgate-sub{ font-family:var(--font-code); font-size:.72rem; color:var(--cyan); letter-spacing:.08em; text-transform:uppercase; }
+
 @media (prefers-reduced-motion: reduce){
   #mqc-intro *{ animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; }
 }

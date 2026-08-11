@@ -2259,7 +2259,24 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
     radial-gradient(900px 900px at 8% 50%, rgba(0, 255, 136, 0.03) 0%, transparent 60%),
     var(--void);
   animation: fadeIn 0.6s ease;
-  overflow: hidden;
+  /* HOTFIX-13: antes "overflow:hidden" acá Y "overflow-y:auto" en
+     .mqc-gate-stage (más abajo) — 2 contenedores con scroll anidados,
+     el mismo patrón que causaba el bug en profiles-ui.js (ver esa
+     nota). Confirmado por el docente en un iPhone real: el contenido
+     que no entraba en la primera pantalla (el grid de insignias, el
+     botón de crear perfil) quedaba completamente inalcanzable — ni
+     un intento de deslizar el dedo lo revelaba — mientras que en
+     Android se veía perfecto. HOTFIX-07 y HOTFIX-09 ya habían
+     intentado resolver esto ajustando propiedades táctiles en el
+     contenedor interno, sin éxito total; la causa real era la
+     anidación en sí. Ahora ESTE contenedor es el único que
+     desplaza — overflow-x se mantiene oculto para que la
+     "sangría" decorativa de las moléculas de fondo (que a propósito
+     se salen del borde, ver .mqc-gate-molecule) no genere una barra
+     de scroll horizontal. */
+  overflow-y: auto; overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 /* Nebulosa azul muy tenue, deriva casi imperceptible */
 .mqc-gate-atmosphere::before {
@@ -2376,26 +2393,12 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   position: relative; z-index: 2;
   display: flex; flex-direction: column; align-items: center;
   width: 100%; max-width: 560px;
-  max-height: 94vh; overflow-y: auto;
-  /* HOTFIX-07: en navegadores móviles reales, "vh" se calcula contra el
-     viewport SIN la barra de direcciones (más alto de lo visible en
-     realidad), así que "94vh" podía exceder el espacio verdadero
-     disponible. "dvh" (dynamic viewport height) sí se ajusta a la
-     barra de direcciones real — se declara DESPUÉS a propósito: los
-     navegadores que no lo soportan simplemente ignoran esta línea y
-     siguen usando el "vh" de arriba, no se rompe nada en ninguno. */
-  max-height: 94dvh;
-  /* HOTFIX-09: la pieza que realmente faltaba. En iOS Safari, un
-     contenedor con overflow-y:auto ANIDADO dentro de un elemento
-     position:fixed (como .mqc-gate-atmosphere, el overlay de toda la
-     pantalla) puede no responder al gesto de deslizar el dedo en
-     absoluto, aunque el scroll SÍ funcione con mouse/trackpad — por
-     eso "modo escritorio" lo ocultaba: no porque arregle nada, sino
-     porque ahí no hace falta el gesto táctil. -webkit-overflow-
-     scrolling:touch es la propiedad específica de iOS que habilita el
-     scroll táctil con inercia en este tipo de contenedor anidado. */
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior: contain;
+  /* HOTFIX-13: ya no tiene su propio max-height/overflow-y — ver la
+     nota completa en .mqc-gate-atmosphere. Este elemento ahora crece
+     a su altura natural sin límite propio; el contenedor exterior es
+     el único que se desplaza. margin:auto en vertical (heredado del
+     padding del padre) sigue centrando el contenido cuando SÍ entra
+     completo en pantalla. */
   padding: 1rem 0;
 }
 .mqc-gate-headline {

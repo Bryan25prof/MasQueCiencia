@@ -43,8 +43,22 @@
   function markIntroSeen() {
     try { localStorage.setItem(SEEN_KEY, '1'); } catch (e) { /* silencioso */ }
   }
+  /* HOTFIX-13 — reportado por el docente: si un estudiante ve la
+     intro, llega al botón "Entrar al laboratorio" (que ya marcaba
+     'visto'), pero NUNCA termina de crear su perfil (cierra la
+     pestaña, recarga antes de terminar, etc.), antes volvía a caer
+     directo en la pantalla de perfiles SIN la intro — porque el
+     flag ya estaba puesto por el simple clic del botón. Ahora la
+     intro se repite mientras el estudiante no tenga ningún perfil
+     real creado en este navegador, sin importar si ya vio la intro
+     antes — y deja de aparecer para siempre en el instante en que
+     complete su primer perfil de verdad. */
+  function hasRealProfile() {
+    if (typeof MQCProfiles === 'undefined' || !MQCProfiles.count) return true; /* si el módulo no cargó, no forzar repetición */
+    try { return MQCProfiles.count() > 0; } catch (e) { return true; }
+  }
 
-  if (hasSeenIntro()) return; /* nada que hacer: overlay ya está oculto vía display:none en el HTML */
+  if (hasSeenIntro() && hasRealProfile()) return; /* nada que hacer: overlay ya está oculto vía display:none en el HTML */
 
   root.style.display = ''; /* revela el overlay (estaba display:none en el HTML) */
 
@@ -338,7 +352,17 @@
     setTimeout(() => { root.style.display = 'none'; }, 650);
   });
 
-  document.addEventListener('click', () => { if (state.sound) ensureAudio(); }, { once: true, capture: true });
-
-  runIntro();
+  /* HOTFIX-13: la secuencia completa (incluido su primer sonido) solo
+     arranca DESPUÉS de este toque — es el gesto real que los
+     navegadores exigen para permitir audio, así que en vez de pelear
+     contra esa política, la usamos a favor: el mismo toque que cierra
+     esta compuerta breve desbloquea el audio para toda la intro. */
+  const startGate = $('#mqc-intro-startgate');
+  function startWithSound() {
+    ensureAudio();
+    startGate.classList.add('hide');
+    setTimeout(() => { startGate.style.display = 'none'; }, 400);
+    runIntro();
+  }
+  startGate.addEventListener('click', startWithSound, { once: true });
 })();

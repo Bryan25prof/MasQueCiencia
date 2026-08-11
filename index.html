@@ -42,6 +42,24 @@
      para el reporte completo de esta actualización.
 ============================================================ -->
 <div id="mqc-intro" style="display:none;" aria-hidden="false">
+  <!-- HOTFIX-13: los navegadores (Chrome, Safari, Firefox, todos)
+       bloquean por política de seguridad cualquier sonido que no
+       venga de un gesto real del usuario (un toque/clic genuino) —
+       ningún código puede saltarse esto, ni siquiera llamando a
+       AudioContext.resume() de antemano. Antes la intro arrancaba
+       sola al cargar, así que sus primeros sonidos (los beeps de la
+       consola) casi siempre sonaban en silencio, y solo el sonido
+       recién se activaba después de que el usuario tocara algo por
+       su cuenta. Esta compuerta breve resuelve eso de raíz: el mismo
+       toque que la cierra ES el gesto real que desbloquea el audio,
+       así que la secuencia completa —incluido su primer sonido—
+       arranca recién después, con el audio ya activo desde el
+       principio. Ver js/shared/intro.js. -->
+  <div id="mqc-intro-startgate">
+    <div id="mqc-intro-startgate-icon">⚛️</div>
+    <div id="mqc-intro-startgate-text">Toca para comenzar</div>
+    <div id="mqc-intro-startgate-sub">con sonido activado</div>
+  </div>
   <div id="mqc-intro-cosmos">
     <svg viewBox="0 0 800 600" preserveAspectRatio="xMidYMid slice">
       <g class="mqc-intro-molgroup" transform="translate(90,120)">
