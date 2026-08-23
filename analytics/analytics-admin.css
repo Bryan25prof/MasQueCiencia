@@ -61,6 +61,8 @@ h1, h2, h3 { font-family: var(--font-display); margin: 0; }
 .an-btn-sm { padding: .4rem .8rem; font-size: .8rem; }
 .an-error { color: var(--red); font-size: .8rem; min-height: 1.1em; margin: .4rem 0; }
 .an-hint { color: var(--text-muted); font-size: .74rem; margin-top: 1rem; line-height: 1.5; }
+.an-hint a { color: var(--cyan); text-decoration: none; }
+.an-hint a:hover { text-decoration: underline; }
 
 /* ── Shell del panel una vez autenticado ── */
 .an-shell { max-width: 1180px; margin: 0 auto; padding: 1.2rem; }
