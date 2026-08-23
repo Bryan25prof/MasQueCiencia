@@ -15,6 +15,25 @@ window.MQCProfilesUI = (function () {
   'use strict';
 
   const AVATARS = ['🧪','🔬','⚗️','🧬','⚛️','🌡️','💧','🔥','🧲','💡','🌱','⭐'];
+
+  /* MQC Analytics v1.0 (Sección 4 del ticket): antes "grupo/sección" era
+     texto completamente libre (máx. 16 caracteres). Se convierte a un
+     selector configurable — ajustá esta lista según las secciones reales
+     del centro educativo. Los perfiles que ya tenían un valor de texto
+     libre previo (de antes de esta versión) conservan ese valor tal cual
+     y se agrega como opción extra automáticamente si no calza con la
+     lista, para no perder nunca un dato ya guardado. */
+  const GRUPOS_DISPONIBLES = ['10-1','10-2','10-3','11-1','11-2','11-3'];
+
+  function _renderSelectorGrupo(idHtml, valorActual) {
+    const val = (valorActual || '').trim();
+    const opciones = GRUPOS_DISPONIBLES.slice();
+    if (val && opciones.indexOf(val) === -1) opciones.push(val); // conservar valor legado no listado
+    const optsHtml = ['<option value="">Sin asignar (Grupo pendiente)</option>']
+      .concat(opciones.map(g => `<option value="${esc(g)}"${g === val ? ' selected' : ''}>${esc(g)}</option>`))
+      .join('');
+    return `<select id="${idHtml}" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">${optsHtml}</select>`;
+  }
   function P(){ return (typeof MQCProfiles !== 'undefined') ? MQCProfiles : null; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function fecha(ts){ try { return new Date(ts).toLocaleDateString('es-CR',{day:'2-digit',month:'short',year:'numeric'}); } catch(e){ return '—'; } }
@@ -36,7 +55,17 @@ window.MQCProfilesUI = (function () {
     return ov;
   }
   function _panel(html, maxw){
-    return `<div style="background:var(--bg-card,#143843);border:1px solid var(--border,#1e1e4a);border-radius:var(--radius-lg,16px);max-width:${maxw||520}px;width:100%;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain;box-shadow:0 20px 60px rgba(0,0,0,.5)">${html}</div>`;
+    /* HOTFIX-13: antes este panel tenía su PROPIO overflow-y:auto
+       además del que ya tiene el overlay exterior (_overlay, arriba)
+       — 2 contenedores con scroll anidados. En iOS Safari, combinado
+       con el backdrop-filter:blur del overlay, esa combinación es un
+       bug conocido de WebKit: el scroll interno deja de responder al
+       tacto, dejando cortado todo lo que no entra en el primer
+       vistazo (confirmado: se veía perfecto en Android, cortado en
+       iPhone — mismo código, mismo dispositivo lógico, solo cambiaba
+       el motor de renderizado). Ahora el panel crece a su altura
+       natural y el ÚNICO scroll real es el del overlay exterior. */
+    return `<div style="background:var(--bg-card,#143843);border:1px solid var(--border,#1e1e4a);border-radius:var(--radius-lg,16px);max-width:${maxw||520}px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5);padding-bottom:env(safe-area-inset-bottom,0)">${html}</div>`;
   }
   function _accent(){ return 'var(--cyan,#1FDBFF)'; }
 
@@ -209,7 +238,7 @@ window.MQCProfilesUI = (function () {
         <div style="display:flex;align-items:center;gap:.7rem">
           <span style="font-size:1.7rem">${esc(pr.avatar)}</span>
           <div style="flex:1"><div style="font-weight:700;color:var(--text-primary,#E8E8FF)">${esc(pr.alias)} ${pr.active?'<span style="font-size:.7rem;color:'+_accent()+'">● activo</span>':''}</div>
-            <div style="font-size:.74rem;color:var(--text-muted,#8484D6)">${pr.group?esc(pr.group)+' · ':''}${pr.xp} XP · Nivel ${pr.level} · ${pr.completed} ✓ · últ. ${fecha(pr.lastAccess)}</div></div>
+            <div style="font-size:.74rem;color:var(--text-muted,#8484D6)">${pr.group?esc(pr.group):'<span style="color:var(--gold,#FFD700)">Grupo pendiente</span>'} · ${pr.xp} XP · Nivel ${pr.level} · ${pr.completed} ✓ · últ. ${fecha(pr.lastAccess)}</div></div>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.55rem">
           ${pr.active?'':`<button data-act="select" data-id="${pr.id}" class="btn btn-primary btn-sm">Seleccionar</button>`}
@@ -265,7 +294,7 @@ window.MQCProfilesUI = (function () {
     ov.innerHTML=_panel(`<div style="padding:1.3rem 1.4rem">
       <h3 style="margin:0 0 .8rem;color:var(--text-primary,#E8E8FF)">Editar perfil</h3>
       <input id="mqc-ed-alias" value="${esc(meta.alias)}" maxlength="24" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
-      <input id="mqc-ed-group" value="${esc(meta.group||'')}" placeholder="Grupo (opcional)" maxlength="16" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
+      ${_renderSelectorGrupo('mqc-ed-group', meta.group)}
       <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.7rem">${AVATARS.map(a=>`<button data-av="${a}" style="font-size:1.3rem;background:${a===meta.avatar?_accent():'var(--bg-elevated,#1e1e4a)'};border:none;border-radius:8px;padding:.2rem .4rem;cursor:pointer">${a}</button>`).join('')}</div>
       <div style="display:flex;gap:.5rem"><button id="mqc-ed-save" class="btn btn-primary btn-sm" style="flex:1">Guardar</button><button id="mqc-ed-cancel" class="btn btn-ghost btn-sm" style="flex:1">Cancelar</button></div>
     </div>`,420);
@@ -284,7 +313,7 @@ window.MQCProfilesUI = (function () {
     const host = ov.querySelector('#mqc-mgr-create');
     host.innerHTML = `<div style="background:var(--bg-deep,#0d0d24);border-radius:var(--radius-md,12px);padding:.9rem;margin:.5rem 0">
       <input id="mqc-cf-alias" placeholder="Alias" maxlength="24" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
-      <input id="mqc-cf-group" placeholder="Grupo (opcional)" maxlength="16" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
+      ${_renderSelectorGrupo('mqc-cf-group', '')}
       <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.6rem">${AVATARS.map((a,i)=>`<button data-av="${a}" style="font-size:1.3rem;background:${i===0?_accent():'var(--bg-elevated,#1e1e4a)'};border:none;border-radius:8px;padding:.2rem .4rem;cursor:pointer">${a}</button>`).join('')}</div>
       <button id="mqc-cf-go" class="btn btn-primary btn-sm" style="width:100%">Crear</button>
       <p id="mqc-cf-err" style="color:var(--red,#FF6B6B);font-size:.8rem;margin:.4rem 0 0"></p></div>`;
