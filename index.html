@@ -557,6 +557,16 @@
 <!-- HOTFIX-06: herramienta de reparación manual para perfiles ya afectados (no se ejecuta sola) -->
 <script src="js/shared/integrador-repair.js"></script>
 
+<!-- MQC Analytics v1.0 — capa aditiva de seguimiento académico (docente).
+     NO registrada en Router, NO visible en el sidebar estudiantil.
+     Con analytics-config.js -> enabled:false (valor de entrega), esta
+     capa queda inactiva por completo: ningún dato sale de este navegador.
+     Debe cargar DESPUÉS de storage.js/profiles.js/simulacro-nacional.js
+     (envuelve sus funciones) y ANTES de app.js. -->
+<script src="js/shared/analytics-config.js"></script>
+<script src="js/shared/analytics-queue.js"></script>
+<script src="js/shared/analytics-hooks.js"></script>
+
 <!-- 4. App init (siempre al final) -->
 <!-- HOTFIX-11: intro cinematográfica de ingreso — Photon aparece en forma provisional (no usa el componente oficial, ver nota en el propio archivo), se ejecuta antes que app.js para superponerse desde el primer frame -->
 <script src="js/shared/intro.js"></script>
