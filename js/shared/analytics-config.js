@@ -19,8 +19,8 @@ window.MQC_ANALYTICS_CONFIG = {
 
   // Pegar aquí los valores reales desde tu Dashboard de Supabase:
   // Project Settings → API → Project URL / anon public key.
-  supabaseUrl: '',
-  supabaseAnonKey: '',
+  supabaseUrl: 'https://ebdyfcgchfdnihutvzuc.supabase.co',
+  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViZHlmY2djaGZkbmlodXR2enVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0MTIwMzgsImV4cCI6MjEwMjk4ODAzOH0.UVCHIkkNQ73WjYGxHD3xxW6mSO1QIHKjDF4DgD2I0Fs',
 
   // Nombre de las tablas remotas (coincide con SUPABASE_SCHEMA.sql).
   tablas: {
