@@ -82,6 +82,83 @@
     return { access_token: body.access_token, user: body.user };
   }
 
+  /* ================================================================
+     RECUPERACIÓN DE CONTRASEÑA (HOTFIX)
+     ================================================================
+     Este panel NO usa el SDK de supabase-js (ver nota de cabecera), así
+     que el flujo conceptual de la documentación de Supabase
+     (supabase.auth.onAuthStateChange + evento PASSWORD_RECOVERY,
+     supabase.auth.updateUser({password})) se traduce a su equivalente
+     en REST directo:
+
+       - "detectar PASSWORD_RECOVERY" → Supabase redirige al enlace del
+         correo agregando un FRAGMENTO en la URL (después del #), tipo
+         "#access_token=...&refresh_token=...&type=recovery". El SDK
+         normalmente lo lee solo — acá lo leemos nosotros mismos con
+         _parseHashParams() al arrancar la página, ANTES de decidir
+         qué pantalla mostrar.
+       - "supabase.auth.updateUser({password})" → PUT /auth/v1/user
+         con el access_token del enlace (NO el de una sesión de login
+         normal) en el header Authorization.
+       - "resetPasswordForEmail(...)" → POST /auth/v1/recover con
+         ?redirect_to=<url> explícito (Sección 8/9 del ticket: no
+         depender únicamente de la Site URL global de Supabase). El
+         redirect_to se calcula dinámicamente a partir de la URL
+         actual del panel (origin+pathname, sin hash ni query), así
+         que apunta correctamente sin importar si se prueba en local
+         o en la URL real de GitHub Pages. */
+
+  function _parseHashParams() {
+    const hash = window.location.hash || '';
+    const limpio = hash.charAt(0) === '#' ? hash.slice(1) : hash;
+    const params = new URLSearchParams(limpio);
+    const obj = {};
+    params.forEach((v, k) => { obj[k] = v; });
+    return obj;
+  }
+
+  function _limpiarHashDeLaUrl() {
+    try { window.history.replaceState(null, '', window.location.pathname + window.location.search); }
+    catch (e) { /* si el navegador no soporta replaceState, el hash queda pero ya no se reutiliza */ }
+  }
+
+  function _urlRedireccion() {
+    // URL del propio panel, sin hash ni query — es la que se le pasa a
+    // Supabase como redirectTo para el enlace de recuperación.
+    return window.location.origin + window.location.pathname;
+  }
+
+  async function _solicitarRecuperacion(email) {
+    const cfg = _cfg();
+    const url = cfg.supabaseUrl.replace(/\/+$/, '') + '/auth/v1/recover?redirect_to=' + encodeURIComponent(_urlRedireccion());
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': cfg.supabaseAnonKey },
+      body: JSON.stringify({ email: email })
+    });
+    if (!resp.ok) {
+      const body = await resp.json().catch(() => ({}));
+      throw new Error(body.msg || body.error_description || 'No se pudo procesar la solicitud.');
+    }
+  }
+
+  async function _actualizarPassword(accessTokenDeRecuperacion, nuevaPassword) {
+    const cfg = _cfg();
+    const url = cfg.supabaseUrl.replace(/\/+$/, '') + '/auth/v1/user';
+    const resp = await fetch(url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': cfg.supabaseAnonKey,
+        'Authorization': 'Bearer ' + accessTokenDeRecuperacion
+      },
+      body: JSON.stringify({ password: nuevaPassword })
+    });
+    const body = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(body.msg || body.error_description || 'No se pudo actualizar la contraseña.');
+    return body;
+  }
+
   async function _verificarEsAdmin() {
     // Gracias a la policy admins_select_self, esta consulta solo puede
     // devolver la propia fila del usuario autenticado (o ninguna).
@@ -118,11 +195,128 @@
           <input type="password" id="an-pass" class="an-input" placeholder="Contraseña" autocomplete="current-password">
           <p class="an-error">${_esc(mensajeError || '')}</p>
           <button id="an-login-btn" class="an-btn an-btn-primary">Iniciar sesión</button>
+          <p class="an-hint" style="margin-top:.9rem"><a href="#" id="an-olvide-link">¿Olvidaste tu contraseña?</a></p>
           ${notaExtra ? `<p class="an-hint">${notaExtra}</p>` : ''}
         </div>
       </div>`;
     document.getElementById('an-login-btn').addEventListener('click', _intentarLogin);
     document.getElementById('an-pass').addEventListener('keydown', e => { if (e.key === 'Enter') _intentarLogin(); });
+    document.getElementById('an-olvide-link').addEventListener('click', (e) => { e.preventDefault(); _renderOlvidoPassword(); });
+  }
+
+  /* ── "¿Olvidaste tu contraseña?" (Sección 9) ── */
+  function _renderOlvidoPassword(mensaje, mensajeError) {
+    root().innerHTML = `
+      <div class="an-gate">
+        <div class="an-gate-card">
+          <div class="an-lock">✉️</div>
+          <h1>Recuperar acceso</h1>
+          <p>Ingresá el correo de tu cuenta de administrador.</p>
+          <input type="email" id="an-recover-email" class="an-input" placeholder="Correo electrónico" autocomplete="username">
+          <p class="an-error">${_esc(mensajeError || '')}</p>
+          ${mensaje ? `<p class="an-hint" style="color:var(--green)">${_esc(mensaje)}</p>` : ''}
+          <button id="an-recover-btn" class="an-btn an-btn-primary">ENVIAR ENLACE DE RECUPERACIÓN</button>
+          <p class="an-hint" style="margin-top:.9rem"><a href="#" id="an-volver-login-link">← Volver a iniciar sesión</a></p>
+        </div>
+      </div>`;
+    document.getElementById('an-volver-login-link').addEventListener('click', (e) => { e.preventDefault(); _renderGate(); });
+    document.getElementById('an-recover-btn').addEventListener('click', async () => {
+      const email = document.getElementById('an-recover-email').value.trim();
+      const btn = document.getElementById('an-recover-btn');
+      if (!email) { _renderOlvidoPassword(null, 'Ingresá un correo.'); return; }
+      btn.textContent = 'Enviando…'; btn.disabled = true;
+      try {
+        await _solicitarRecuperacion(email);
+      } catch (e) {
+        // No se distingue "correo no existe" de otros errores de red/config —
+        // por privacidad, solo se muestra un error genuino de envío (ej. Analytics
+        // sin configurar), nunca "ese correo no existe" (Sección 9: "No confirmar
+        // públicamente si un correo existe o no").
+      }
+      _renderOlvidoPassword('Si el correo corresponde a una cuenta válida, recibirás un enlace para restablecer la contraseña.');
+    });
+  }
+
+  /* ── Pantalla RESTABLECER CONTRASEÑA (llegó desde el enlace del correo) ── */
+  function _renderRestablecer(accessTokenDeRecuperacion) {
+    root().innerHTML = `
+      <div class="an-gate">
+        <div class="an-gate-card">
+          <div class="an-lock">🔑</div>
+          <h1>RESTABLECER CONTRASEÑA</h1>
+          <p>Creá una nueva contraseña para tu acceso privado a MQC Analytics.</p>
+          <input type="password" id="an-new-pass" class="an-input" placeholder="Nueva contraseña" autocomplete="new-password">
+          <input type="password" id="an-new-pass-confirm" class="an-input" placeholder="Confirmar contraseña" autocomplete="new-password">
+          <label style="display:flex;align-items:center;gap:.4rem;font-size:.78rem;color:var(--text-secondary);margin:-.2rem 0 .8rem;cursor:pointer">
+            <input type="checkbox" id="an-toggle-pass"> Mostrar contraseña
+          </label>
+          <p class="an-error" id="an-restablecer-error"></p>
+          <button id="an-restablecer-btn" class="an-btn an-btn-primary">ACTUALIZAR CONTRASEÑA</button>
+        </div>
+      </div>`;
+    document.getElementById('an-toggle-pass').addEventListener('change', (e) => {
+      const tipo = e.target.checked ? 'text' : 'password';
+      document.getElementById('an-new-pass').type = tipo;
+      document.getElementById('an-new-pass-confirm').type = tipo;
+    });
+    document.getElementById('an-restablecer-btn').addEventListener('click', () => _intentarActualizarPassword(accessTokenDeRecuperacion));
+  }
+
+  async function _intentarActualizarPassword(accessTokenDeRecuperacion) {
+    const p1 = document.getElementById('an-new-pass').value;
+    const p2 = document.getElementById('an-new-pass-confirm').value;
+    const err = document.getElementById('an-restablecer-error');
+    if (!p1 || !p2) { err.textContent = 'Completá ambos campos.'; return; }
+    if (p1 !== p2) { err.textContent = 'Las contraseñas no coinciden.'; return; }
+    if (p1.length < 6) { err.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return; }
+    err.textContent = '';
+    const btn = document.getElementById('an-restablecer-btn');
+    btn.disabled = true; btn.textContent = 'Actualizando…';
+    try {
+      await _actualizarPassword(accessTokenDeRecuperacion, p1);
+      _limpiarHashDeLaUrl();
+      _renderExitoRestablecer();
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'ACTUALIZAR CONTRASEÑA';
+      err.textContent = e.message || 'No se pudo actualizar la contraseña.';
+    }
+  }
+
+  function _renderExitoRestablecer() {
+    root().innerHTML = `
+      <div class="an-gate">
+        <div class="an-gate-card">
+          <div class="an-lock">✅</div>
+          <h1 style="font-size:1.1rem">Contraseña actualizada correctamente.</h1>
+          <p>Ya podés iniciar sesión con tu nueva contraseña.</p>
+          <button id="an-volver-login-exito" class="an-btn an-btn-primary">VOLVER A INICIAR SESIÓN</button>
+        </div>
+      </div>`;
+    document.getElementById('an-volver-login-exito').addEventListener('click', () => _renderGate());
+  }
+
+  /* ── Enlace de recuperación expirado/inválido (Sección 8) ── */
+  function _renderEnlaceInvalido() {
+    root().innerHTML = `
+      <div class="an-gate">
+        <div class="an-gate-card">
+          <div class="an-lock">⚠️</div>
+          <h1 style="font-size:1.1rem">El enlace de recuperación ya no es válido o ha expirado.</h1>
+          <input type="email" id="an-recover-email-2" class="an-input" placeholder="Correo electrónico" style="margin-top:.8rem">
+          <p class="an-error" id="an-recover-2-error"></p>
+          <button id="an-recover-btn-2" class="an-btn an-btn-primary">SOLICITAR NUEVO ENLACE</button>
+        </div>
+      </div>`;
+    _limpiarHashDeLaUrl();
+    document.getElementById('an-recover-btn-2').addEventListener('click', async () => {
+      const email = document.getElementById('an-recover-email-2').value.trim();
+      const err = document.getElementById('an-recover-2-error');
+      if (!email) { err.textContent = 'Ingresá un correo.'; return; }
+      const btn = document.getElementById('an-recover-btn-2');
+      btn.textContent = 'Enviando…'; btn.disabled = true;
+      try { await _solicitarRecuperacion(email); } catch (e) { /* ver nota de privacidad arriba */ }
+      _renderOlvidoPassword('Si el correo corresponde a una cuenta válida, recibirás un enlace para restablecer la contraseña.');
+    });
   }
 
   async function _intentarLogin() {
@@ -511,6 +705,21 @@
       _renderGate('MQC Analytics todavía no está configurado en este sitio.', 'Ver README_ANALYTICS_SETUP.md para completar la configuración.');
       return;
     }
+
+    // ¿Esta carga viene de un enlace de recuperación de contraseña? Se
+    // revisa ANTES que cualquier sesión guardada — si alguien tiene una
+    // sesión vieja abierta y hace clic en un enlace de recuperación nuevo,
+    // debe ver SIEMPRE la pantalla de restablecer, nunca el panel directo.
+    const hashParams = _parseHashParams();
+    if (hashParams.type === 'recovery' && hashParams.access_token) {
+      _renderRestablecer(hashParams.access_token);
+      return;
+    }
+    if (hashParams.error || hashParams.error_description) {
+      _renderEnlaceInvalido();
+      return;
+    }
+
     const sesionGuardada = _cargarSesion();
     if (sesionGuardada && sesionGuardada.access_token) {
       _session = sesionGuardada;
