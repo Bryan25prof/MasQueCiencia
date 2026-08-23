@@ -1,0 +1,127 @@
+/* ================================================================
+   MQC Analytics — analytics-admin.css
+   Paleta y tipografía tomadas de css/main.css (MásQueCiencia) para
+   que el panel se sienta parte de la misma familia visual, sin
+   importar la hoja completa (este panel vive deliberadamente
+   aislado del frontend estudiantil).
+================================================================ */
+:root {
+  --bg-deep:      #0d0d24;
+  --bg-card:      #16163a;
+  --bg-elevated:  #1e1e4a;
+  --border:       rgba(130, 140, 220, 0.38);
+  --cyan:         #1FDBFF;
+  --green:        #00FF88;
+  --red:          #FF2266;
+  --gold:         #FFD700;
+  --violet:       #B983FF;
+  --text-primary:   #E8E8FF;
+  --text-secondary: #9898CC;
+  --text-muted:     #8484D6;
+  --font-display: 'Space Grotesk', 'Segoe UI', sans-serif;
+  --font-body:    'Inter', 'Segoe UI', sans-serif;
+  --font-code:    'JetBrains Mono', 'Courier New', monospace;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+h1, h2, h3 { font-family: var(--font-display); margin: 0; }
+.an-loading { padding: 3rem; text-align: center; color: var(--text-muted); font-family: var(--font-code); }
+
+/* ── Pantalla de acceso restringido / login ── */
+.an-gate {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.2rem;
+}
+.an-gate-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+  padding: 2rem; max-width: 380px; width: 100%; text-align: center;
+}
+.an-gate-card .an-lock { font-size: 2.4rem; }
+.an-gate-card h1 { font-size: 1.3rem; margin: .5rem 0 .2rem; }
+.an-gate-card p { color: var(--text-secondary); font-size: .85rem; margin: 0 0 1.2rem; }
+.an-input {
+  width: 100%; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md);
+  color: var(--text-primary); padding: .65rem .8rem; font-size: .9rem; margin-bottom: .6rem; font-family: var(--font-body);
+}
+.an-input:focus { outline: 2px solid var(--cyan); outline-offset: 1px; }
+.an-btn {
+  display: inline-block; border: none; border-radius: var(--radius-md); padding: .65rem 1.1rem;
+  font-size: .88rem; font-weight: 700; cursor: pointer; font-family: var(--font-body);
+}
+.an-btn-primary { background: var(--cyan); color: #04141a; width: 100%; }
+.an-btn-ghost { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); }
+.an-btn-sm { padding: .4rem .8rem; font-size: .8rem; }
+.an-error { color: var(--red); font-size: .8rem; min-height: 1.1em; margin: .4rem 0; }
+.an-hint { color: var(--text-muted); font-size: .74rem; margin-top: 1rem; line-height: 1.5; }
+
+/* ── Shell del panel una vez autenticado ── */
+.an-shell { max-width: 1180px; margin: 0 auto; padding: 1.2rem; }
+.an-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; flex-wrap: wrap; gap: .6rem; }
+.an-topbar h1 { font-size: 1.25rem; }
+.an-topbar .an-sub { color: var(--text-secondary); font-size: .8rem; }
+.an-tabs { display: flex; gap: .4rem; margin-bottom: 1.2rem; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: .6rem; }
+.an-tab {
+  background: transparent; border: 1px solid transparent; color: var(--text-secondary);
+  padding: .5rem .9rem; border-radius: var(--radius-md); cursor: pointer; font-size: .85rem; font-family: var(--font-body);
+}
+.an-tab.active { background: var(--bg-elevated); color: var(--cyan); border-color: var(--border); font-weight: 700; }
+
+/* ── Tarjetas de métricas ── */
+.an-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: .8rem; margin-bottom: 1.4rem; }
+.an-card {
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 1rem;
+}
+.an-card .an-card-label { font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .04em; }
+.an-card .an-card-value { font-family: var(--font-display); font-size: 1.6rem; font-weight: 900; margin-top: .3rem; }
+.an-card .an-card-sub { font-size: .74rem; color: var(--text-secondary); margin-top: .2rem; }
+
+/* ── Filtros ── */
+.an-filters { display: flex; gap: .5rem; flex-wrap: wrap; margin-bottom: 1rem; align-items: center; }
+.an-filters select, .an-filters input {
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius-md);
+  color: var(--text-primary); padding: .45rem .7rem; font-size: .82rem; font-family: var(--font-body);
+}
+
+/* ── Tablas ── */
+.an-table-wrap { overflow-x: auto; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-md); }
+table.an-table { width: 100%; border-collapse: collapse; font-size: .84rem; }
+table.an-table th, table.an-table td { padding: .55rem .7rem; text-align: left; white-space: nowrap; }
+table.an-table th {
+  color: var(--text-muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .03em;
+  border-bottom: 1px solid var(--border); cursor: pointer; user-select: none;
+}
+table.an-table th:hover { color: var(--cyan); }
+table.an-table tbody tr { border-bottom: 1px solid rgba(130,140,220,.12); }
+table.an-table tbody tr:hover { background: var(--bg-elevated); cursor: pointer; }
+.an-pill { display: inline-block; padding: .12rem .55rem; border-radius: 999px; font-size: .72rem; font-weight: 700; }
+.an-pill-green { background: rgba(0,255,136,.15); color: var(--green); }
+.an-pill-red   { background: rgba(255,34,102,.15); color: var(--red); }
+.an-pill-gold  { background: rgba(255,215,0,.15); color: var(--gold); }
+.an-pill-muted { background: rgba(132,132,214,.15); color: var(--text-muted); }
+
+/* ── Gráfica de barras simple (sin librerías) ── */
+.an-barchart { display: flex; flex-direction: column; gap: .5rem; padding: 1rem; }
+.an-bar-row { display: grid; grid-template-columns: 90px 1fr 50px; align-items: center; gap: .6rem; font-size: .8rem; }
+.an-bar-track { background: var(--bg-elevated); border-radius: 6px; height: 14px; overflow: hidden; }
+.an-bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--cyan), var(--violet)); }
+
+.an-section-title { font-size: 1rem; margin: 1.4rem 0 .6rem; color: var(--text-primary); }
+.an-empty { color: var(--text-muted); font-size: .85rem; padding: 1.4rem; text-align: center; }
+.an-note { color: var(--text-muted); font-size: .76rem; margin: .4rem 0 0; }
+
+/* ── Modal de detalle de ítem ── */
+.an-modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.7); display: flex; align-items: center; justify-content: center; padding: 1rem; z-index: 100; }
+.an-modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.4rem; max-width: 520px; width: 100%; max-height: 85vh; overflow-y: auto; }
+
+@media (max-width: 640px) {
+  table.an-table { font-size: .78rem; }
+  .an-cards { grid-template-columns: repeat(2, 1fr); }
+}

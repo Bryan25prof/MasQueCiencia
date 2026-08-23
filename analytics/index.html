@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>MQC Analytics — Panel privado</title>
+<link rel="stylesheet" href="analytics-admin.css">
+</head>
+<body>
+
+<!-- ============================================================
+     Config compartida con el frontend estudiantil: MISMA fuente de
+     verdad para supabaseUrl / supabaseAnonKey (un solo lugar donde
+     configurar, ver README_ANALYTICS_SETUP.md).
+     ============================================================ -->
+<script src="../js/shared/analytics-config.js"></script>
+
+<div id="mqc-an-root">
+  <!-- Se renderiza por completo desde analytics-admin.js -->
+  <div class="an-loading">Cargando MQC Analytics…</div>
+</div>
+
+<script src="analytics-admin.js"></script>
+</body>
+</html>
