@@ -35,6 +35,28 @@
     return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  /* HOTFIX: comparador de orden genérico para tablas — si la columna es
+     "grupo", usa el orden NUMÉRICO del catálogo compartido (10-1, 10-2,
+     ..., 10-9, 10-10, 11-1, ...) en vez del orden alfabético por defecto
+     (que pondría "10-10" antes que "10-2" — Sección 9 del ticket). Para
+     cualquier otra columna, se comporta exactamente igual que antes. */
+  function _compararFilas(campo, asc) {
+    const factor = asc ? 1 : -1;
+    if (campo === 'grupo' && typeof window.MQC_CATALOGO_GRUPOS === 'object' && window.MQC_CATALOGO_GRUPOS.comparar) {
+      return function (a, b) {
+        const va = a[campo], vb = b[campo];
+        if (va == null && vb == null) return 0;
+        if (va == null) return 1; if (vb == null) return -1;
+        return window.MQC_CATALOGO_GRUPOS.comparar(va, vb) * factor;
+      };
+    }
+    return function (a, b) {
+      const va = a[campo], vb = b[campo];
+      if (va == null) return 1; if (vb == null) return -1;
+      return va > vb ? factor : va < vb ? -factor : 0;
+    };
+  }
+
   /* ================================================================
      SESIÓN
      ================================================================ */
@@ -427,9 +449,21 @@
   /* ================================================================
      SECCIÓN: SEGUIMIENTO ACADÉMICO (Secciones 5-6)
      ================================================================ */
+  function _catalogoGrupos() {
+    // HOTFIX: el filtro debe mostrar el catálogo COMPLETO (10-1..10-10,
+    // 11-1..11-10), no solo las secciones que ya tengan datos — una
+    // sección sin estudiantes todavía simplemente va a mostrar "0
+    // registros" al filtrar por ella, en vez de no aparecer en la lista.
+    if (typeof window.MQC_CATALOGO_GRUPOS === 'object' && window.MQC_CATALOGO_GRUPOS.TODOS) {
+      return window.MQC_CATALOGO_GRUPOS.TODOS;
+    }
+    // Fallback defensivo si el catálogo compartido no cargó por algún motivo.
+    const set = new Set(_datos.seguimiento.map(x => x.grupo).filter(Boolean));
+    return [...set].sort();
+  }
+
   function _gruposDisponibles() {
-    const set = new Set(_datos.seguimiento.map(x => x.grupo || 'Grupo pendiente'));
-    return ['todos'].concat([...set].sort());
+    return ['todos', 'Grupo pendiente'].concat(_catalogoGrupos());
   }
 
   function _filasSeguimientoFiltradas() {
@@ -446,12 +480,7 @@
       const q = f.busqueda.toLowerCase();
       filas = filas.filter(x => (x.alias || '').toLowerCase().includes(q));
     }
-    const campo = _ordenSeguimiento.campo, asc = _ordenSeguimiento.asc ? 1 : -1;
-    filas.sort((a, b) => {
-      const va = a[campo], vb = b[campo];
-      if (va == null) return 1; if (vb == null) return -1;
-      return va > vb ? asc : va < vb ? -asc : 0;
-    });
+    filas.sort(_compararFilas(_ordenSeguimiento.campo, _ordenSeguimiento.asc));
     return filas;
   }
 
@@ -560,7 +589,10 @@
   }
 
   function _htmlBarrasCiencia() {
-    const pc = _datos.porCiencia;
+    // HOTFIX Sección 5: mismo criterio que _htmlFilasSeccion() — nunca
+    // mezclar grupos de 10.º en el rendimiento por ciencia de PNE 11.º.
+    const CAT = window.MQC_CATALOGO_GRUPOS;
+    const pc = _datos.porCiencia.filter(g => !(CAT && CAT.esDeDecimo(g.grupo)));
     if (!pc.length) return `<div class="an-empty">Todavía no hay intentos de PNE registrados.</div>`;
     const globalBio = _promedioCol(pc, 'biologia_pct'), globalFis = _promedioCol(pc, 'fisica_pct'), globalQui = _promedioCol(pc, 'quimica_pct');
     let html = `<div class="an-barchart">`;
@@ -568,7 +600,7 @@
     html += _filaBarra('Física (global)', globalFis);
     html += _filaBarra('Química (global)', globalQui);
     html += `</div><p class="an-note">Por grupo:</p><div class="an-barchart">`;
-    pc.forEach(g => {
+    pc.slice().sort((a, b) => (CAT && CAT.comparar) ? CAT.comparar(a.grupo, b.grupo) : 0).forEach(g => {
       html += `<div style="margin-bottom:.4rem"><strong style="font-size:.82rem">${_esc(g.grupo)}</strong></div>`;
       html += _filaBarra('Biología', g.biologia_pct);
       html += _filaBarra('Física', g.fisica_pct);
@@ -586,10 +618,14 @@
   }
 
   function _htmlFilasSeccion() {
-    const filas = _datos.porSeccion.slice();
-    const campo = _ordenSeccion.campo, asc = _ordenSeccion.asc ? 1 : -1;
-    filas.sort((a, b) => { const va = a[campo], vb = b[campo]; if (va == null) return 1; if (vb == null) return -1; return va > vb ? asc : va < vb ? -asc : 0; });
-    if (!filas.length) return `<div class="an-empty">Todavía no hay datos por sección.</div>`;
+    // HOTFIX Sección 5: la tabla "por sección" vive dentro de "PNE 11.º —
+    // Analítica" — nunca debe mezclar grupos de 10.º acá, aunque existan
+    // en v_resultados_por_seccion (esa vista incluye TODOS los grupos
+    // porque también la usa, en teoría, cualquier análisis general).
+    const CAT = window.MQC_CATALOGO_GRUPOS;
+    let filas = _datos.porSeccion.filter(x => !(CAT && CAT.esDeDecimo(x.grupo)));
+    filas = filas.slice().sort(_compararFilas(_ordenSeccion.campo, _ordenSeccion.asc));
+    if (!filas.length) return `<div class="an-empty">Todavía no hay datos por sección de 11.º.</div>`;
     return `
       <div class="an-table-wrap"><table class="an-table" id="an-tabla-seccion">
         <thead><tr>
