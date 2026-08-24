@@ -16,14 +16,16 @@ window.MQCProfilesUI = (function () {
 
   const AVATARS = ['🧪','🔬','⚗️','🧬','⚛️','🌡️','💧','🔥','🧲','💡','🌱','⭐'];
 
-  /* MQC Analytics v1.0 (Sección 4 del ticket): antes "grupo/sección" era
-     texto completamente libre (máx. 16 caracteres). Se convierte a un
-     selector configurable — ajustá esta lista según las secciones reales
-     del centro educativo. Los perfiles que ya tenían un valor de texto
-     libre previo (de antes de esta versión) conservan ese valor tal cual
-     y se agrega como opción extra automáticamente si no calza con la
-     lista, para no perder nunca un dato ya guardado. */
-  const GRUPOS_DISPONIBLES = ['10-1','10-2','10-3','11-1','11-2','11-3'];
+  /* HOTFIX — catálogo completo: la lista real vive en UNA sola fuente,
+     js/shared/mqc-catalogo-grupos.js (compartida también con MQC
+     Analytics, para que nunca se desincronicen entre sí — ver ese
+     archivo y HOTFIX_ANALYTICS_GROUPS_REPORT.md). Acá solo se lee.
+     Fallback defensivo si por algún motivo ese script no cargó (no
+     debería ocurrir en producción, pero evita un selector vacío). */
+  const GRUPOS_DISPONIBLES = (typeof window.MQC_CATALOGO_GRUPOS === 'object' && window.MQC_CATALOGO_GRUPOS.TODOS)
+    ? window.MQC_CATALOGO_GRUPOS.TODOS
+    : ['10-1','10-2','10-3','10-4','10-5','10-6','10-7','10-8','10-9','10-10',
+       '11-1','11-2','11-3','11-4','11-5','11-6','11-7','11-8','11-9','11-10'];
 
   function _renderSelectorGrupo(idHtml, valorActual) {
     const val = (valorActual || '').trim();
