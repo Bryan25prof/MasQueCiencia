@@ -16,6 +16,11 @@
      ============================================================ -->
 <script src="../js/shared/analytics-config.js"></script>
 
+<!-- HOTFIX — catálogo de grupos: MISMA fuente que usa profiles-ui.js
+     del lado del estudiante (ver js/shared/mqc-catalogo-grupos.js) —
+     así el panel docente y el selector de perfil nunca se desincronizan. -->
+<script src="../js/shared/mqc-catalogo-grupos.js"></script>
+
 <div id="mqc-an-root">
   <!-- Se renderiza por completo desde analytics-admin.js -->
   <div class="an-loading">Cargando MQC Analytics…</div>
