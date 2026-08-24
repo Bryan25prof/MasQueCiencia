@@ -15,7 +15,7 @@
    Para activarlo: ver README_ANALYTICS_SETUP.md.
 ================================================================ */
 window.MQC_ANALYTICS_CONFIG = {
-  enabled: false,
+  enabled: true,
 
   // Pegar aquí los valores reales desde tu Dashboard de Supabase:
   // Project Settings → API → Project URL / anon public key.
