@@ -462,7 +462,17 @@ window.MQCProfilesUI = (function () {
           <div style="font-size:.72rem;color:var(--text-muted,#8484D6)">${c.fecha?fecha(c.fecha):''}</div></div>
         </div>`).join('');
     }
-    const FILTERS = [['all','Todo'],[10,'Química 10.º'],['pne','PNE'],[11,'Química 11.º']];
+    /* HOTFIX — nomenclatura: esta etiqueta decía solo "PNE" (ambiguo,
+       sentado justo entre "Química 10.º" y "Química 11.º"). El valor
+       interno del filtro ('pne') NO cambia — sigue coincidiendo
+       exactamente con profiles.js:365 (source.indexOf('pne-')===0),
+       que categoriza aquí ÚNICAMENTE los eventos del Desafío Final de
+       Química 10.º (XP sources 'pne-first-pass'/'pne-improved' — ver
+       gamification.js). El Simulacro PNE 11.º nunca otorga XP, así
+       que jamás podría aparecer bajo este filtro — solo se corrige el
+       texto visible, para que el término "PNE" quede reservado
+       exclusivamente a la evaluación de 11.º, tal como pide el ticket. */
+    const FILTERS = [['all','Todo'],[10,'Química 10.º'],['pne','Examen Final 10.º'],[11,'Química 11.º']];
     const filterBtns = FILTERS.map(([val,label],i)=>
       `<button class="btn btn-ghost btn-sm mqc-tl-filter" data-filter="${val}" style="${i===0?'border-color:var(--cyan,#1FDBFF)':''}">${label}</button>`
     ).join('');
