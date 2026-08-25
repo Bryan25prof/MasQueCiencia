@@ -28,5 +28,6 @@ window.MQC_ANALYTICS_CONFIG = {
     unitExamResults: 'unit_exam_results',
     pneAttempts: 'pne_attempts',
     pneAnswers: 'pne_answers'
+    profileDeletions: 'profile_deletions'
   }
 };
