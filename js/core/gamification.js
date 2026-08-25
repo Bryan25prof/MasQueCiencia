@@ -322,6 +322,15 @@ const Gamification = (() => {
       data.xp.history = data.xp.history.slice(-100);
     }
 
+    // EOP-XPCAP: tope de XP total al nivel máximo definido en LEVELS
+    // (hoy 15000, "Leyenda Química"). Se calcula del propio arreglo de
+    // niveles — nunca un número suelto — para que, si algún día se
+    // agrega un nivel 11, el tope se ajuste solo sin tocar esta línea.
+    // Protege contra cualquier fuente de XP mal calibrada (presente o
+    // futura) sin necesidad de auditar cada punto de otorgamiento.
+    const MAX_XP = LEVELS[LEVELS.length - 1].xp;
+    if (data.xp.total > MAX_XP) data.xp.total = MAX_XP;
+
     const newLvl  = _calcLevel(data.xp.total);
     data.level    = newLvl;
 
