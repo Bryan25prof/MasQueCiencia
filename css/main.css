@@ -2613,3 +2613,165 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .mqc-gate-create-panel {
   animation: mqcConsoleShell 0.4s ease both;
 }
+
+/* ----------------------------------------------------------------
+   23. APOYA MÁSQUECIENCIA — apoyo voluntario (PayPal + SINPE Móvil)
+   Módulo aditivo: js/shared/support.js. Discreto, coherente con la
+   identidad MQC (oscuro + cyan/violeta/naranja/dorado), nunca con
+   apariencia de página comercial ni de publicidad agresiva.
+---------------------------------------------------------------- */
+
+/* Acceso discreto en el sidebar — por debajo de toda la navegación
+   académica, mismo ancho que el pie de página, tipografía pequeña */
+.sidebar-support-link {
+  display: block;
+  width: calc(100% - 2rem);
+  margin: 0.4rem 1rem 0;
+  padding: 0.5rem 0.75rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+.sidebar-support-link:hover,
+.sidebar-support-link:focus-visible {
+  color: var(--orange);
+  border-color: var(--orange);
+  background: rgba(255, 107, 0, 0.08);
+}
+
+/* Tarjeta completa dentro del modal (#global-modal-content) */
+.mqc-support-body { display: flex; flex-direction: column; gap: 1rem; }
+
+.mqc-support-heading {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.mqc-support-msg {
+  font-size: 0.88rem;
+  line-height: 1.7;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.mqc-support-voluntary {
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  font-weight: 700;
+  text-align: center;
+  background: rgba(31, 219, 255, 0.08);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+}
+
+.mqc-support-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.mqc-support-option {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  text-align: center;
+}
+
+.mqc-support-option-label {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--cyan);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.75rem;
+}
+
+.mqc-donate-slot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 44px;
+}
+
+.mqc-support-loading {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.mqc-support-error {
+  font-size: 0.78rem;
+  color: var(--red);
+  margin: 0;
+}
+
+.mqc-sinpe-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.mqc-sinpe-number {
+  font-family: var(--font-code);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.03em;
+}
+
+.mqc-sinpe-copy { width: 100%; max-width: 220px; }
+
+.mqc-support-trust {
+  font-size: 0.72rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+  text-align: center;
+  border-top: 1px solid var(--border);
+  padding-top: 0.85rem;
+}
+
+/* Tarjeta inline embebida en "Acerca de" (router.js placeholder) */
+.mqc-support-inline-about {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* Tarjeta inline embebida al final del resultado del Simulacro PNE 11.º
+   (nunca durante el examen, nunca antes de iniciar) */
+.mqc-support-inline-pne {
+  max-width: 680px;
+  margin: 1.5rem auto 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border-glow);
+  border-radius: var(--radius-lg);
+  padding: 1.1rem 1.3rem;
+  text-align: center;
+}
+.mqc-support-inline-msg {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0 0 0.85rem;
+}
+
+@media (max-width: 480px) {
+  .mqc-sinpe-number { font-size: 1.2rem; }
+}
