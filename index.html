@@ -371,6 +371,13 @@
         </div>
       </div>
 
+      <!-- Apoyo voluntario al proyecto (aditivo, ver js/shared/support.js) —
+           discreto, debajo de toda la navegación académica, nunca por
+           encima de ella. No participa del Router ni de sidebar-nav. -->
+      <button class="sidebar-support-link" id="sidebar-support-link" type="button">
+        ♡ Apoyar
+      </button>
+
       <!-- Pie del sidebar -->
       <div class="sidebar-footer">
         <span>Versión 1.0 — Fase 0</span>
@@ -465,7 +472,6 @@
 <script src="js/core/storage.js"></script>
 <script src="js/core/gamification.js"></script>
 <script src="js/core/router.js"></script>
-<script src="js/shared/mqc-catalogo-grupos.js"></script>
 <script src="js/shared/profiles.js"></script>
 <script src="js/shared/profiles-ui.js"></script>
 
@@ -497,6 +503,12 @@
 <script src="js/shared/photon-sound.js"></script>
 <script src="js/shared/photon.js"></script>
 <script src="js/shared/launcher.js"></script>
+<!-- Apoya MásQueCiencia — sección voluntaria de apoyo (PayPal + SINPE Móvil).
+     100% aditiva: no toca Storage/Gamification/PNE/Analytics. Se ubica aquí
+     (tras los sistemas compartidos, antes de los módulos de página) porque
+     su MutationObserver debe estar activo antes de que Router renderice
+     'about' o el resultado del Simulacro PNE 11.º. -->
+<script src="js/shared/support.js"></script>
 
 <!-- 3. Módulos de página -->
 <script src="js/modules/home.js"></script>
