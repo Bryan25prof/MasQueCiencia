@@ -200,8 +200,15 @@
       btn.addEventListener('click', () => {
         const i = btn.getAttribute('data-read');
         const tid = `${UNIT_ID}-topic-${i}`;
+        // FIX-XP-01: awardXP('topic-read') se disparaba en CADA clic,
+        // incluso releyendo un tema ya marcado — XP infinito con solo
+        // abrir/cerrar y volver a tocar "leído". Storage.markGrade11TopicRead
+        // YA deduplica en su propio array topicsRead (ver storage.js línea
+        // 541); acá solo hace falta consultarlo ANTES de marcar, para saber
+        // si es la primera vez.
+        const yaLeidoAntes = (loadUnitData().topicsRead || []).includes(tid);
         markRead(tid);
-        awardXP('topic-read');
+        if (!yaLeidoAntes) awardXP('topic-read');
         const fresh = loadUnitData();
         container.innerHTML = renderTeoria(unit, fresh);
         bindTeoria(unit, fresh);
@@ -425,8 +432,16 @@
         const uData = loadUnitData();
         const prevBest = uData.gameScore || 0;
         const best = Math.max(prevBest, pct);
-        patchUnit({ gameScore: best });
-        awardXP(pct >= 60 ? 'game-won' : 'game-played');
+        // FIX-XP-02: awardXP('game-won'/'game-played') se otorgaba en
+        // CADA ronda terminada, sin límite — jugar rápido y repetir la
+        // ronda daba XP infinito. Ahora ese XP de participación se
+        // otorga UNA sola vez por unidad (la primera ronda jugada); la
+        // mejora de puntaje (gameXpAwarded no afecta esto) sigue
+        // premiándose cada vez que se supera la marca anterior, como ya
+        // funcionaba correctamente antes.
+        const esPrimeraRonda = !uData.gameXpAwarded;
+        patchUnit({ gameScore: best, gameXpAwarded: true });
+        if (esPrimeraRonda) awardXP(pct >= 60 ? 'game-won' : 'game-played');
         if (pct > prevBest) awardXP('game-highscore');
         host.innerHTML = `
           <div style="text-align:center;padding:1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:520px;margin:0 auto">
@@ -602,8 +617,17 @@
     const uData = loadUnitData();
     const prevBest = uData.examBest || 0;
     const attempts = (uData.examAttempts || 0) + 1;
-    patchUnit({ examBest: Math.max(prevBest, score), examAttempts: attempts });
-    if (passed) awardXP('exam-done');
+    // FIX-XP-03: awardXP('exam-done') se otorgaba en CADA intento
+    // aprobado — repetir el examen (aunque ya estuviera aprobado antes)
+    // volvía a dar el XP completo, sin límite. Ahora solo se otorga la
+    // primera vez que se aprueba esta unidad.
+    const yaOtorgadoAntes = !!uData.examXpAwarded;
+    patchUnit({
+      examBest: Math.max(prevBest, score),
+      examAttempts: attempts,
+      examXpAwarded: uData.examXpAwarded || passed
+    });
+    if (passed && !yaOtorgadoAntes) awardXP('exam-done');
     const review = exam.qs.map((q, i) => {
       const a = exam.answers[i];
       const got = a ? a.ok : false;
