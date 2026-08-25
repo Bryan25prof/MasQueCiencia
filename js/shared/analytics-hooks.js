@@ -353,6 +353,43 @@
         return r;
       };
     }
+
+    /* ── Eliminación de perfil — deja un rastro append-only ──
+       (ver SUPABASE_MIGRATION_profile_deletions.sql). Se lee el
+       profile_id/alias/grupo ANTES de llamar al remove() original
+       (después ya no existen — remove() borra esa clave de
+       localStorage), usando el mismo esquema de claves que ya
+       documenta la cabecera de profiles.js ('mqc_profile_' + id).
+       Nunca interrumpe la eliminación real si algo de esto falla. */
+    const _originalRemove = MQCProfiles.remove;
+    if (typeof _originalRemove === 'function') {
+      MQCProfiles.remove = function (id) {
+        let profileId = null, alias = null, grupo = null;
+        try {
+          const meta = MQCProfiles.get ? MQCProfiles.get(id) : null;
+          alias = (meta && meta.alias) || null;
+          grupo = (meta && meta.group) || null;
+          const raw = localStorage.getItem('mqc_profile_' + id);
+          const d = raw ? JSON.parse(raw) : null;
+          profileId = d && d.profileMeta && d.profileMeta.profileId;
+        } catch (e) { /* si no se puede leer, simplemente no se registra este borrado */ }
+
+        const resultado = _originalRemove.call(MQCProfiles, id); // comportamiento original, sin cambios
+
+        if (resultado && resultado.ok && profileId) {
+          try {
+            window.AnalyticsQueue.push('profileDeletions', {
+              profile_id: profileId,
+              alias: alias,
+              grupo: grupo,
+              deleted_at: new Date().toISOString()
+            });
+          } catch (e) { /* Analytics nunca debe interrumpir la gestión de perfiles */ }
+        }
+
+        return resultado;
+      };
+    }
   }
 
   /* ================================================================
