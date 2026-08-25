@@ -79,7 +79,7 @@ Router.register('simulacro-nacional', (() => {
         <div style="text-align:left;margin-bottom:1rem">
           <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:.3rem">Ruta 1 — Química 11.º ya desbloqueada</div>
           <div class="progress-bar"><div class="progress-fill" style="width:${estado.rutaGrade11Unlocked ? 100 : 0}%;background:var(--green)"></div></div>
-          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem">${estado.rutaGrade11Unlocked ? '✓ Cumplida' : 'Aprobá 6 de 9 exámenes de Química 10.º, o alcanzá 80+ en el Desafío Final de 10.º'}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem">${estado.rutaGrade11Unlocked ? '✓ Cumplida' : 'Aprobá 6 de 9 exámenes de Química 10.º, o alcanzá 80+ en el Examen Final de 10.º'}</div>
         </div>
 
         <div style="text-align:left;margin-bottom:1.2rem">

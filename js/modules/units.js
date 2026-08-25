@@ -95,9 +95,9 @@ Router.register('units', (() => {
         <div class="unit-badge" style="color:${pneUnlocked ? 'var(--xp-gold, #F9FF4D)' : 'var(--text-muted)'};border-color:${pneUnlocked ? 'rgba(249,255,77,.3)' : 'var(--border)'}">
           ${pneUnlocked ? '🔓 Desbloqueado' : '🔒 Bloqueado'}
         </div>
-        <div class="unit-number">PNE</div>
+        <div class="unit-number">FINAL</div>
         <div class="unit-symbol">${pneUnlocked ? '🏆' : '🔒'}</div>
-        <div class="unit-name">Desafío Final PNE<br><span style="font-weight:400;color:var(--text-muted);font-size:.85em">Prueba Nacional Estandarizada</span></div>
+        <div class="unit-name">Examen Final<br><span style="font-weight:400;color:var(--text-muted);font-size:.85em">Química 10.º</span></div>
         <div class="unit-meta">
           ${pneUnlocked
             ? `<span class="unit-meta-item">🎯 ${pneData.attempts || 0} intento${(pneData.attempts||0)!==1?'s':''} · mejor: ${pneData.bestScore || 0}/100</span>`

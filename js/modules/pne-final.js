@@ -103,11 +103,11 @@ Router.register('pne-final', (() => {
 
   function _renderLocked(status) {
     return `
-      <div class="section-header"><p class="section-title">Desafío Final</p><h2 class="section-heading">PNE — Prueba Nacional Estandarizada</h2></div>
+      <div class="section-header"><p class="section-title">Examen Final</p><h2 class="section-heading">Examen Final · Química 10.º</h2></div>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;text-align:center;max-width:520px;margin:0 auto">
         <div style="font-size:2.4rem">🔒</div>
         <h3 style="margin:.5rem 0">Todavía no está desbloqueado</h3>
-        <p style="color:var(--text-secondary);font-size:.9rem">Aprueba los exámenes de al menos ${MIN_UNITS_REQUIRED} de las 9 unidades para desbloquear el Desafío PNE.</p>
+        <p style="color:var(--text-secondary);font-size:.9rem">Aprueba los exámenes de al menos ${MIN_UNITS_REQUIRED} de las 9 unidades para desbloquear el Examen Final.</p>
         <div class="progress-bar" style="margin:1rem 0"><div class="progress-fill progress-fill-cyan" style="width:${Math.round((status.passed/status.total)*100)}%"></div></div>
         <p style="font-family:var(--font-code);color:var(--text-muted)">${status.passed}/${status.total} unidades aprobadas</p>
         <button class="btn btn-ghost" id="pne-back">← Volver a Unidades</button>
@@ -119,7 +119,7 @@ Router.register('pne-final', (() => {
     const pne = data.pne || {};
     const isGuest = (typeof MQCProfiles !== 'undefined' && MQCProfiles.isGuest && MQCProfiles.isGuest());
     return `
-      <div class="section-header"><p class="section-title">Desafío Final</p><h2 class="section-heading">🏆 PNE — Prueba Nacional Estandarizada</h2></div>
+      <div class="section-header"><p class="section-title">Examen Final</p><h2 class="section-heading">🏆 Examen Final · Química 10.º</h2></div>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem;max-width:600px;margin:0 auto;text-align:center">
         <p style="color:var(--text-secondary);font-size:.92rem;line-height:1.6">
           Este es el desafío final: <strong>${TOTAL_QUESTIONS} preguntas</strong> tomadas de las <strong>9 unidades</strong>
@@ -138,7 +138,7 @@ Router.register('pne-final', (() => {
               <div style="font-family:var(--font-display);font-size:1.3rem;font-weight:900">${pne.attempts}</div>
             </div>
           </div>
-          <button class="btn btn-ghost btn-sm" id="pne-view-stats">📊 Ver estadísticas PNE</button><br><br>
+          <button class="btn btn-ghost btn-sm" id="pne-view-stats">📊 Ver estadísticas del Desafío</button><br><br>
         ` : ''}
         <button class="btn btn-primary" id="pne-start">▶ Comenzar desafío</button>
         <br><button class="btn btn-ghost btn-sm" id="pne-back" style="margin-top:.6rem">← Volver a Unidades</button>
@@ -157,7 +157,7 @@ Router.register('pne-final', (() => {
     }, 350);
     const root = document.getElementById('content');
     if (root) {
-      root.innerHTML = `<div style="text-align:center;padding:3rem"><div style="font-size:2rem">🧪</div><p style="color:var(--text-secondary)">Preparando tu Desafío Final…</p></div>`;
+      root.innerHTML = `<div style="text-align:center;padding:3rem"><div style="font-size:2rem">🧪</div><p style="color:var(--text-secondary)">Preparando tu Examen Final…</p></div>`;
     }
   }
 
@@ -372,7 +372,7 @@ Router.register('pne-final', (() => {
         ${strengths.length ? `<p style="font-size:.82rem;color:var(--green)">💪 Fortaleza: ${strengths.map(s=>s.name).join(', ')}</p>` : ''}
         ${weaknesses.length ? `<p style="font-size:.82rem;color:var(--gold)">📌 Áreas de refuerzo: ${weaknesses.map(s=>s.name).join(', ')}</p>` : ''}
         <button class="btn btn-primary btn-sm" id="pne-retry">↻ Intentar nuevamente</button>
-        <button class="btn btn-ghost btn-sm" id="pne-stats-btn">📊 Estadísticas PNE</button>
+        <button class="btn btn-ghost btn-sm" id="pne-stats-btn">📊 Estadísticas del Desafío</button>
         <button class="btn btn-ghost btn-sm" id="pne-back">← Volver a Unidades</button>
       </div>`;
 
@@ -399,7 +399,7 @@ Router.register('pne-final', (() => {
       ? Math.round(pne.scoreHistory.reduce((a, h) => a + h.score, 0) / pne.scoreHistory.length) : 0;
 
     root.innerHTML = `
-      <div class="section-header"><p class="section-title">Desafío Final</p><h2 class="section-heading">📊 Estadísticas PNE</h2></div>
+      <div class="section-header"><p class="section-title">Examen Final</p><h2 class="section-heading">📊 Estadísticas del Examen Final 10.º</h2></div>
       <div style="max-width:640px;margin:0 auto">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.7rem;margin-bottom:1.2rem">
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:.8rem;text-align:center">

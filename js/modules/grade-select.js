@@ -28,7 +28,7 @@ Router.register('grade-select', (() => {
     const levelInfo = (typeof Gamification !== 'undefined') ? Gamification.getLevelInfo() : { percent: 0 };
 
     const g10ExamsLabel = `${examsPassed}/9 exámenes aprobados`;
-    const g10PneLabel = pne.bestScore > 0 ? `Mejor PNE: ${pne.bestScore}/100` : 'Aún sin intentos de PNE';
+    const g10PneLabel = pne.bestScore > 0 ? `Mejor Examen Final 10.º: ${pne.bestScore}/100` : 'Aún sin intentos del Examen Final';
 
     let g11Body;
     if (g11.unlocked) {
@@ -44,7 +44,7 @@ Router.register('grade-select', (() => {
         <p style="color:var(--text-secondary);font-size:.82rem;margin:.6rem 0 .4rem">Se desbloquea cumpliendo <strong>cualquiera</strong> de estas dos rutas:</p>
         <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.3rem">Ruta A — ${examsPassed} de 6 exámenes requeridos</div>
         <div class="progress-bar" style="margin-bottom:.6rem"><div class="progress-fill progress-fill-cyan" style="width:${routeAPct}%"></div></div>
-        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.3rem">Ruta B — Mejor resultado PNE: ${pne.bestScore}/100 (necesitás 80)</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.3rem">Ruta B — Mejor resultado del Examen Final 10.º: ${pne.bestScore}/100 (necesitás 80)</div>
         <div class="progress-bar" style="margin-bottom:.6rem"><div class="progress-fill progress-fill-cyan" style="width:${routeBPct}%"></div></div>
         <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">Química 11.º bloqueada</button>`;
     }

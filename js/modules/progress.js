@@ -117,15 +117,15 @@ Router.register('progress', (() => {
     const g10Block = `
       <div style="${cardStyle}">
         <h3 style="margin:0 0 .6rem;font-size:.95rem">🧪 Química 10.º</h3>
-        <div style="font-size:.85rem;color:var(--text-secondary)">${examsPassed}/9 exámenes aprobados · Mejor PNE: ${pne.bestScore || 0}/100</div>
+        <div style="font-size:.85rem;color:var(--text-secondary)">${examsPassed}/9 exámenes aprobados · Mejor Examen Final 10.º: ${pne.bestScore || 0}/100</div>
       </div>`;
 
     const g11Block = `
       <div style="${cardStyle}">
         <h3 style="margin:0 0 .6rem;font-size:.95rem">🎓 Acceso a Química 11.º</h3>
         ${g11.unlocked
-          ? `<div style="font-size:.85rem;color:var(--green)">🔓 Desbloqueada — ${g11.method === 'six-exams' ? 'vía 6 exámenes aprobados' : 'vía PNE ≥80'}, el ${new Date(g11.unlockedAt).toLocaleDateString('es-CR')}</div>`
-          : `<div style="font-size:.85rem;color:var(--text-muted)">🔒 Bloqueada — ${examsPassed}/6 exámenes o PNE ${pne.bestScore || 0}/80</div>`}
+          ? `<div style="font-size:.85rem;color:var(--green)">🔓 Desbloqueada — ${g11.method === 'six-exams' ? 'vía 6 exámenes aprobados' : 'vía Examen Final 10.º ≥80'}, el ${new Date(g11.unlockedAt).toLocaleDateString('es-CR')}</div>`
+          : `<div style="font-size:.85rem;color:var(--text-muted)">🔒 Bloqueada — ${examsPassed}/6 exámenes o Examen Final 10.º ${pne.bestScore || 0}/80</div>`}
       </div>`;
 
     return identityBlock + g10Block + g11Block;
