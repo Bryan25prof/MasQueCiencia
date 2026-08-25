@@ -171,7 +171,7 @@ window.MQCProfilesUI = (function () {
     const host = ov.querySelector('#mqc-gate-create');
     host.innerHTML = `<div class="mqc-gate-create-panel" style="background:var(--bg-deep,#0d0d24);border-radius:var(--radius-md,12px);padding:1rem;margin:.3rem 0 .8rem;border:1px solid var(--border)">
       <input id="mqc-nf-alias" placeholder="Alias (ej. Bryan)" maxlength="24" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
-      <input id="mqc-nf-group" placeholder="Grupo/sección (opcional)" maxlength="16" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
+      ${_renderSelectorGrupo('mqc-nf-group', '')}
       <p style="font-size:.72rem;color:var(--text-muted);margin:0 0 .4rem">Elige tu insignia:</p>
       <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem" id="mqc-nf-avatars">${AVATARS.map((a,i)=>`<button data-av="${a}" class="mqc-avatar-btn${i===0?' active':''}">${a}</button>`).join('')}</div>
       <button id="mqc-nf-go" class="btn btn-primary btn-sm" style="width:100%">Crear y entrar</button>
@@ -286,7 +286,7 @@ window.MQCProfilesUI = (function () {
     if (act==='select'){ p.select(id); location.reload(); }
     else if (act==='export'){ const r=p.exportProfile(id); if(r.ok)_download(r.filename,r.json); }
     else if (act==='reset'){ if(confirm('¿Reiniciar TODO el progreso de este perfil? Esta acción no se puede deshacer.')){ p.resetProgress(id); location.reload(); } }
-    else if (act==='delete'){ if(confirm('¿Eliminar este perfil y su progreso de este equipo? Esta acción no se puede deshacer.')){ p.remove(id); location.reload(); } }
+    else if (act==='delete'){ if(confirm('¿Eliminar este perfil y su progreso de este equipo? Esta acción no se puede deshacer.')){ p.remove(id); setTimeout(()=>location.reload(), 400); } }
     else if (act==='edit'){ _mgrEdit(id); }
   }
 
