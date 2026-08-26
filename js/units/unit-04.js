@@ -152,7 +152,9 @@
     cont.querySelectorAll('[data-read]').forEach(btn=>{
       btn.addEventListener('click',()=>{
         const i=btn.getAttribute('data-read');
-        markRead(`${UNIT_ID}-topic-${i}`); awardXP('topic-read');
+        const tid=`${UNIT_ID}-topic-${i}`;
+        const yaLeidoAntes=(loadUnitData().topicsRead||[]).includes(tid); // FIX-XP-01
+        markRead(tid); if(!yaLeidoAntes) awardXP('topic-read');
         const fresh=loadUnitData();
         cont.innerHTML=renderTeoria(unit,fresh); bindTeoria(unit,fresh);
         const b=cont.querySelector(`[data-acc-body="${i}"]`); if(b)b.style.display='block';
@@ -379,7 +381,7 @@
   }
   function bindJuego(unit,uData){const c=document.getElementById('tab-content');if(!c)return;if(typeof Mentor!=='undefined')Mentor.bind(c);c.querySelectorAll('[data-play]').forEach(b=>b.addEventListener('click',()=>startLevel(+b.getAttribute('data-play'))));}
   function backLevels(){const c=document.getElementById('tab-content');if(!c)return;const f=loadUnitData();c.innerHTML=renderJuego(null,f);bindJuego(null,f);}
-  function startLevel(idx){const lv=GAME_LEVELS[idx];if(!lv)return;game={idx,lv,round:0,score:0,correct:0,answered:false,caso:null};awardXP('game-played');nextRound();}
+  function startLevel(idx){const lv=GAME_LEVELS[idx];if(!lv)return;game={idx,lv,round:0,score:0,correct:0,answered:false,caso:null};/*FIX-XP-02: sin XP por solo iniciar*/nextRound();}
   function nextRound(){game.caso=makeCase(game.idx);game.answered=false;drawRound();}
   function drawRound(){
     const c=document.getElementById('tab-content');if(!c||!game)return;const caso=game.caso;
@@ -403,9 +405,12 @@
   }
   function finishLevel(){
     if(!game)return;const passed=game.correct>=GAME_PASS,perfect=game.correct===GAME_ROUNDS,score=game.score;
-    const stt=gameState();const done=stt.done.slice();if(passed&&!done.includes(game.lv.id))done.push(game.lv.id);
-    patchUnit({gameScore:Math.max(stt.best,score),gameLevels:done});
-    if(passed)awardXP('game-won');if(score>stt.best)awardXP('game-highscore');
+    const stt=gameState();const done=stt.done.slice();const yaAprobadoAntes=done.includes(game.lv.id);if(passed&&!yaAprobadoAntes)done.push(game.lv.id);
+    const jugadosAntes=Array.isArray(loadUnitData().gameLevelsPlayed)?loadUnitData().gameLevelsPlayed.slice():[];const yaJugadoAntes=jugadosAntes.includes(game.lv.id);const jugados=jugadosAntes.slice();if(!yaJugadoAntes)jugados.push(game.lv.id);
+    patchUnit({gameScore:Math.max(stt.best,score),gameLevels:done,gameLevelsPlayed:jugados});
+    // FIX-XP-02b: game-won/game-played UNA sola vez por nivel, no por intento
+    if(passed&&!yaAprobadoAntes)awardXP('game-won');else if(!passed&&!yaJugadoAntes)awardXP('game-played');
+    if(score>stt.best)awardXP('game-highscore');
     const c=document.getElementById('tab-content');const nx=game.idx+1,hay=nx<GAME_LEVELS.length,unlk=passed&&hay;
     c.innerHTML=`<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;animation:pageIn .4s ease">
       <div style="font-size:2.8rem">${perfect?'🏆':passed?'🎉':'🔍'}</div><h3 style="margin:.4rem 0">${perfect?'¡Nivel perfecto!':passed?'¡Nivel superado!':'Sigue practicando'}</h3>
@@ -466,8 +471,8 @@
   }
   function finishExam(){
     if(!exam)return;clearInterval(exam.timerId);const correct=exam.answers.filter(a=>a.ok).length,total=exam.qs.length,score=Math.round((correct/total)*100),passed=score>=EXAM_CFG.pass;
-    const u=loadUnitData();patchUnit({examBest:Math.max(u.examBest||0,score),examAttempts:(u.examAttempts||0)+1});
-    if(passed)awardXP('exam-done');
+    const u=loadUnitData();const yaOtorgadoAntes=!!u.examXpAwarded;patchUnit({examBest:Math.max(u.examBest||0,score),examAttempts:(u.examAttempts||0)+1,examXpAwarded:u.examXpAwarded||passed});
+    if(passed&&!yaOtorgadoAntes)awardXP('exam-done');
     const review=exam.qs.map((q,i)=>{const a=exam.answers[i];return `<div style="display:flex;gap:.5rem;padding:.5rem .6rem;border-bottom:1px solid var(--border);font-size:.82rem"><span>${a&&a.ok?'✅':'❌'}</span><span style="flex:1;color:var(--text-secondary)">${i+1}. ${present(q).pregunta}</span></div>`;}).join('');
     const root=document.getElementById('u4-exam-root');
     root.innerHTML=`<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;animation:pageIn .4s ease">

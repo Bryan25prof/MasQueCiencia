@@ -119,7 +119,9 @@
     cont.querySelectorAll('[data-read]').forEach(btn=>{
       btn.addEventListener('click',()=>{
         const i=btn.getAttribute('data-read');
-        markRead(`${UNIT_ID}-topic-${i}`); awardXP('topic-read');
+        const tid=`${UNIT_ID}-topic-${i}`;
+        const yaLeidoAntes=(loadUnitData().topicsRead||[]).includes(tid); // FIX-XP-01
+        markRead(tid); if(!yaLeidoAntes) awardXP('topic-read');
         const fresh=loadUnitData();
         cont.innerHTML=renderTeoria(unit,fresh); bindTeoria(unit,fresh);
         const b=cont.querySelector(`[data-acc-body="${i}"]`); if(b)b.style.display='block';
@@ -378,10 +380,12 @@
   function finishLevel(){
     const c=document.getElementById('u9g-stage'); if(!c||!game)return;
     const lv=GAME_LEVELS[game.idx]; const passed=game.correct>=GAME_PASS; const perfect=game.correct===GAME_ROUNDS;
-    const stt=levelState(); let done=stt.done.slice(); if(passed&&!done.includes(lv.id))done.push(lv.id);
+    const stt=levelState(); let done=stt.done.slice(); const yaAprobadoAntes=done.includes(lv.id); if(passed&&!yaAprobadoAntes)done.push(lv.id);
     const best=Math.max(stt.best,game.score);
-    patchUnit({gameScore:best,gameLevels:done});
-    if(passed)awardXP(perfect?'game-highscore':'game-won'); else awardXP('game-played');
+    const jugadosAntes=Array.isArray(loadUnitData().gameLevelsPlayed)?loadUnitData().gameLevelsPlayed.slice():[];const yaJugadoAntes=jugadosAntes.includes(lv.id);const jugados=jugadosAntes.slice();if(!yaJugadoAntes)jugados.push(lv.id);
+    patchUnit({gameScore:best,gameLevels:done,gameLevelsPlayed:jugados});
+    // FIX-XP-02: game-won/game-highscore/game-played UNA sola vez por nivel, no por intento
+    if(passed&&!yaAprobadoAntes)awardXP(perfect?'game-highscore':'game-won'); else if(!passed&&!yaJugadoAntes)awardXP('game-played');
     const nx=game.idx+1; const unlk=passed && game.idx<GAME_LEVELS.length-1;
     c.innerHTML=`<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.4rem;text-align:center;animation:pageIn .4s ease">
       <div style="font-size:2.8rem">${perfect?'🏆':passed?'🎉':'🔍'}</div><h3 style="margin:.4rem 0">${perfect?'¡Nivel perfecto!':passed?'¡Nivel superado!':'Sigue practicando'}</h3>
@@ -443,8 +447,8 @@
   }
   function finishExam(){
     if(!exam)return;clearInterval(exam.timerId);const correct=exam.answers.filter(a=>a.ok).length,total=exam.qs.length,score=Math.round((correct/total)*100),passed=score>=EXAM_CFG.pass;
-    const u=loadUnitData();patchUnit({examBest:Math.max(u.examBest||0,score),examAttempts:(u.examAttempts||0)+1});
-    if(passed)awardXP('exam-done');
+    const u=loadUnitData();const yaOtorgadoAntes=!!u.examXpAwarded;patchUnit({examBest:Math.max(u.examBest||0,score),examAttempts:(u.examAttempts||0)+1,examXpAwarded:u.examXpAwarded||passed});
+    if(passed&&!yaOtorgadoAntes)awardXP('exam-done');
     const review=exam.qs.map((q,i)=>{const a=exam.answers[i];return `<div style="display:flex;gap:.5rem;padding:.5rem .6rem;border-bottom:1px solid var(--border);font-size:.82rem"><span>${a&&a.ok?'✅':'❌'}</span><span style="flex:1;color:var(--text-secondary)">${i+1}. ${present(q).pregunta}</span></div>`;}).join('');
     const root=document.getElementById('u9-exam-root');
     root.innerHTML=`<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;animation:pageIn .4s ease">

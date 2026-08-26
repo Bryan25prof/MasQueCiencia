@@ -120,7 +120,9 @@
     cont.querySelectorAll('[data-read]').forEach(btn=>{
       btn.addEventListener('click',()=>{
         const i=btn.getAttribute('data-read');
-        markRead(`${UNIT_ID}-topic-${i}`); awardXP('topic-read');
+        const tid=`${UNIT_ID}-topic-${i}`;
+        const yaLeidoAntes=(loadUnitData().topicsRead||[]).includes(tid); // FIX-XP-01
+        markRead(tid); if(!yaLeidoAntes) awardXP('topic-read');
         const fresh=loadUnitData();
         cont.innerHTML=renderTeoria(unit,fresh); bindTeoria(unit,fresh);
         const b=cont.querySelector(`[data-acc-body="${i}"]`); if(b)b.style.display='block';
@@ -210,14 +212,14 @@
     function makeItem(){
       const comp=chem.COMPOUNDS[Math.floor(Math.random()*chem.COMPOUNDS.length)];
       const mm=chem.molarMass(comp.f);
-      if(lvIdx===0){ const mol=[1,2,3,0.5][Math.floor(Math.random()*4)]; const g=chem.massFromMoles(mol,mm);
-        const right=mol; const opts=shuffle([right,Math.round(g*10)/10,mm,mol*2]).slice(0,4);
+      if(lvIdx===0){ const mol=pickMolValue(); const g=chem.massFromMoles(mol,mm);
+        const right=mol; const opts=qtyDistractors(right).map(String);
         return {ask:`Tienes <strong>${g} g</strong> de ${comp.name} (${sub(comp.f)}, ${mm} g/mol). ¿Cuántos <strong>moles</strong> son?`,right,opts,unit:'mol',explica:`mol = ${g} ÷ ${mm} = ${right}`}; }
-      if(lvIdx===1){ const mol=[1,2,3][Math.floor(Math.random()*3)]; const g=chem.massFromMoles(mol,mm);
-        const right=g; const opts=shuffle([right,mol,mm,Math.round(g/2*10)/10]).slice(0,4);
+      if(lvIdx===1){ const mol=pickMolValue(); const g=chem.massFromMoles(mol,mm);
+        const right=g; const opts=qtyDistractors(right).map(String);
         return {ask:`Tienes <strong>${mol} mol</strong> de ${comp.name} (${mm} g/mol). ¿Cuántos <strong>gramos</strong> son?`,right,opts,unit:'g',explica:`masa = ${mol} × ${mm} = ${right}`}; }
-      const mol=[1,2,3][Math.floor(Math.random()*3)];
-      const right=(mol*6.022).toFixed(3)+' × 10²³'; const opts=shuffle([right,'6.022 × 10²³',mol+' × 10²³','6.022 × 10²²']).slice(0,4);
+      const mol=pickMolValue();
+      const right=fmtParticles(mol); const opts=shuffle(particleDistractors(mol,right));
       return {ask:`¿Cuántas partículas hay en <strong>${mol} mol</strong>?`,right,opts,unit:'',explica:`${mol} × 6.022×10²³ = ${right}`};
     }
     function startLv(){ state={n:0,correct:0,items:Array.from({length:5},makeItem),answered:false}; draw(); }
@@ -263,17 +265,22 @@
     function balanced(){ const r=counts('r'),p=counts('p'); const keys=new Set([...Object.keys(r),...Object.keys(p)]); for(const k of keys){ if((r[k]||0)!==(p[k]||0))return false; } return true; }
     function draw(){
       const eq=chem.EQUATIONS[eqIdx]; if(!coeffs)coeffs=eq.terms.map(()=>1);
-      const termHTML=eq.terms.map((t,i)=>`<span style="display:inline-flex;align-items:center;gap:.2rem">
-        <select data-ci="${i}" class="qi-overlay-input" style="margin:0;padding:.2rem .3rem;width:3.2rem">${[1,2,3,4].map(n=>`<option value="${n}" ${n===coeffs[i]?'selected':''}>${n}</option>`).join('')}</select>
-        <span style="font-family:var(--font-code);font-size:1.05rem;color:var(--text-primary)">${sub(t)}</span></span>`);
-      const left=termHTML.slice(0,eq.r).join(' <span style="color:var(--text-muted)">+</span> ');
-      const right=termHTML.slice(eq.r).join(' <span style="color:var(--text-muted)">+</span> ');
+      /* SPRINT PRE-PNE — Parte IV: solo presentación (flecha más
+         grande, coeficientes destacados, más separación visual entre
+         términos) — la lógica de balanceo (counts/balanced) no se
+         tocó ni una línea. */
+      const termHTML=eq.terms.map((t,i)=>`<span style="display:inline-flex;align-items:center;gap:.35rem">
+        <select data-ci="${i}" class="qi-overlay-input" style="margin:0;padding:.25rem .4rem;width:3.4rem;font-family:var(--font-code);font-weight:800;font-size:1.05rem;color:${C};border-color:${C}55">${[1,2,3,4].map(n=>`<option value="${n}" ${n===coeffs[i]?'selected':''}>${n}</option>`).join('')}</select>
+        <span style="font-family:var(--font-code);font-size:1.35rem;font-weight:600;color:var(--text-primary);letter-spacing:.02em">${sub(t)}</span></span>`);
+      const plus='<span style="color:var(--text-muted);font-weight:400;margin:0 .3rem;font-size:1.1rem">+</span>';
+      const left=termHTML.slice(0,eq.r).join(plus);
+      const right=termHTML.slice(eq.r).join(plus);
       const ok=balanced();
       const r=counts('r'),p=counts('p'); const keys=[...new Set([...Object.keys(r),...Object.keys(p)])];
       const tabla=keys.map(k=>`<span style="font-size:.76rem;color:${(r[k]||0)===(p[k]||0)?'var(--green)':'var(--red)'}">${k}: ${r[k]||0} vs ${p[k]||0}</span>`).join('  ·  ');
       st.innerHTML=`<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.1rem">
         <div style="text-align:center;margin-bottom:.4rem"><select id="u6bal-eq" class="qi-overlay-input" style="margin:0">${chem.EQUATIONS.map((e,k)=>`<option value="${k}" ${k===eqIdx?'selected':''}>${e.name}</option>`).join('')}</select></div>
-        <div style="text-align:center;line-height:2.2;margin:.6rem 0">${left} <span style="color:${C};font-weight:700">→</span> ${right}</div>
+        <div style="text-align:center;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-md);padding:1.1rem .8rem;margin:.8rem 0;line-height:2.6;overflow-x:auto;white-space:nowrap">${left} <span style="color:${C};font-weight:900;font-size:1.6rem;margin:0 .55rem;vertical-align:-.08em">⟶</span> ${right}</div>
         <div style="text-align:center;margin:.4rem 0">${tabla}</div>
         <div style="text-align:center;margin-top:.6rem">${ok?'<span style="color:var(--green);font-weight:700">✓ ¡Ecuación balanceada!</span>':'<span style="color:var(--text-muted);font-size:.84rem">Ajusta los coeficientes hasta igualar cada elemento.</span>'}</div>
       </div>`;
@@ -295,23 +302,121 @@
   let game=null;
   function gameState(){const u=loadUnitData();return {best:u.gameScore||0,done:Array.isArray(u.gameLevels)?u.gameLevels.slice():[]};}
   function isUnlocked(idx,done){return idx===0||done.includes(GAME_LEVELS[idx-1].id);}
+  /* ============================================================
+     SPRINT DE AFINAMIENTO PRE-PNE — Parte II y III
+     Generador de ejercicios de conversión ampliado para "Maestro del
+     Mol". Antes: predominaba masa→mol y mol→masa con un pool de solo
+     3-4 valores enteros (1,2,3), lo que permitía que 2 o 3 rondas
+     seguidas mostraran exactamente la misma cantidad. Ahora: pool de
+     11 valores variados (incluye decimales realistas), con una
+     "memoria" de la última cantidad usada para garantizar que nunca
+     se repita en la ronda inmediatamente siguiente; 8 tipos de
+     conversión distintos (antes 2); y distractores conceptuales
+     reales (error de exponente, de unidad, de magnitud) en vez de
+     solo números cercanos al azar. No cambia MQCChem ni la lógica
+     matemática — solo compone las funciones ya existentes
+     (massFromMoles, molesFromMass, particlesFromMoles,
+     molesFromParticles) de formas nuevas.
+  ============================================================ */
+  const MOL_VALUES = [0.25, 0.5, 1, 1.2, 2, 2.8, 3, 5, 7, 10, 12];
+  let _lastMolValue = null;
+  function pickMolValue() {
+    let v;
+    do { v = MOL_VALUES[Math.floor(Math.random() * MOL_VALUES.length)]; } while (v === _lastMolValue);
+    _lastMolValue = v;
+    return v;
+  }
+  function fmtParticles(mol) { return (Math.round(mol * 6.022 * 1000) / 1000) + ' × 10²³'; }
+  /* distractores conceptuales para partículas: exponente equivocado
+     (×10²²/×10²⁴, el error más común al escribir notación científica)
+     y coeficiente redondeado distinto (6.02 en vez de 6.022) — obliga
+     a leer el exponente Y el coeficiente, no solo reconocer la forma. */
+  function particleDistractors(mol, rightText) {
+    const coef = Math.round(mol * 6.022 * 1000) / 1000;
+    const coef2 = Math.round(mol * 6.02 * 1000) / 1000;
+    const pool = [rightText, coef + ' × 10²²', coef + ' × 10²⁴', coef2 + ' × 10²³'];
+    const uniq = [...new Set(pool)];
+    /* HOTFIX: faltaba mezclar el orden — sin esto la respuesta
+       correcta (rightText) quedaba SIEMPRE en la primera posición,
+       porque venía primera en `pool` y Set conserva el orden de
+       inserción. Se detectó auditando el propio código, no en un
+       reporte externo. */
+    return shuffle(uniq.length >= 4 ? uniq : [...uniq, coef + ' × 10²³ (aprox.)']);
+  }
+  /* distractores conceptuales para masa/mol: error de magnitud (×10,
+     ÷10 — como confundir g con kg o mover mal el punto decimal) y de
+     "mitad/doble" (típico error de copiar mal un coeficiente). */
+  function qtyDistractors(right) {
+    const pool = new Set([
+      right,
+      Math.round(right * 10 * 1000) / 1000,
+      Math.round(right / 10 * 1000) / 1000,
+      Math.round(right * 2 * 1000) / 1000
+    ]);
+    pool.delete(right);
+    const extra = [...pool].filter(v => v !== right);
+    return shuffle([right, ...shuffle(extra).slice(0, 3)]);
+  }
+  const CONV_TYPES = ['masa-mol', 'mol-masa', 'mol-part', 'part-mol', 'masa-part', 'part-masa', 'cadena-mp', 'cadena-pm'];
+  function makeConversion(chem, forcedType) {
+    const comp = chem.COMPOUNDS[Math.floor(Math.random() * chem.COMPOUNDS.length)];
+    const mm = chem.molarMass(comp.f);
+    const mol = pickMolValue();
+    const g = chem.massFromMoles(mol, mm);
+    const partText = fmtParticles(mol);
+    const type = forcedType || CONV_TYPES[Math.floor(Math.random() * CONV_TYPES.length)];
+    const nombre = comp.name, formula = sub(comp.f);
+    switch (type) {
+      case 'masa-mol':
+        return { prompt:`Tenés <strong>${g} g</strong> de ${nombre} (${formula}, ${mm} g/mol). ¿Cuántos <strong>mol</strong> son?`,
+          options: qtyDistractors(mol).map(o => ({ label:o+' mol', ok:o===mol })), explica:`mol = ${g} ÷ ${mm} = ${mol}` };
+      case 'mol-masa':
+        return { prompt:`Tenés <strong>${mol} mol</strong> de ${nombre} (${mm} g/mol). ¿Cuántos <strong>gramos</strong> son?`,
+          options: qtyDistractors(g).map(o => ({ label:o+' g', ok:o===g })), explica:`masa = ${mol} × ${mm} = ${g}` };
+      case 'mol-part':
+        return { prompt:`¿Cuántas <strong>partículas</strong> hay en <strong>${mol} mol</strong> de ${nombre}?`,
+          options: shuffle(particleDistractors(mol, partText)).map(o => ({ label:o, ok:o===partText })), explica:`${mol} × 6.022×10²³ = ${partText}` };
+      case 'part-mol':
+        return { prompt:`Tenés <strong>${partText}</strong> partículas de ${nombre}. ¿Cuántos <strong>mol</strong> son?`,
+          options: qtyDistractors(mol).map(o => ({ label:o+' mol', ok:o===mol })), explica:`mol = partículas ÷ 6.022×10²³ = ${mol}` };
+      case 'masa-part':
+        return { prompt:`Tenés <strong>${g} g</strong> de ${nombre} (${mm} g/mol). ¿Cuántas <strong>partículas</strong> son?`,
+          options: shuffle(particleDistractors(mol, partText)).map(o => ({ label:o, ok:o===partText })), explica:`primero mol = ${g}÷${mm} = ${mol}, luego partículas = ${mol}×6.022×10²³ = ${partText}` };
+      case 'part-masa':
+        return { prompt:`Tenés <strong>${partText}</strong> partículas de ${nombre} (${mm} g/mol). ¿Cuántos <strong>gramos</strong> son?`,
+          options: qtyDistractors(g).map(o => ({ label:o+' g', ok:o===g })), explica:`primero mol = ${partText}÷6.022×10²³ = ${mol}, luego masa = ${mol}×${mm} = ${g}` };
+      case 'cadena-mp': {
+        /* dos conversiones consecutivas: masa → mol → partículas.
+           El distractor MÁS importante acá es el propio valor de mol
+           (el error real más común: quedarse a mitad de camino y
+           entregar el mol como si fuera la respuesta final). */
+        const pd = particleDistractors(mol, partText).filter(v => v !== partText); /* 3 distractores, ya únicos y distintos de partText */
+        const opts = [partText, mol+' mol (te quedaste en el paso intermedio)', pd[0], pd[1]];
+        return { prompt:`Tenés <strong>${g} g</strong> de ${nombre} (${mm} g/mol). Convertí primero a mol y luego a <strong>partículas</strong>. ¿Cuál es el resultado final?`,
+          options: shuffle(opts).map(o => ({ label:o, ok:o===partText })), explica:`mol = ${g}÷${mm} = ${mol} → partículas = ${mol}×6.022×10²³ = ${partText}` };
+      }
+      case 'cadena-pm': {
+        const qd = qtyDistractors(g).filter(v => v !== g); /* 3 distractores, ya únicos y distintos de g */
+        const opts = [g, mol+' mol (te quedaste en el paso intermedio)', qd[0], qd[1]];
+        return { prompt:`Tenés <strong>${partText}</strong> partículas de ${nombre} (${mm} g/mol). Convertí primero a mol y luego a <strong>gramos</strong>. ¿Cuál es el resultado final?`,
+          options: shuffle(opts).map(o => ({ label:o+(String(o).includes('paso')?'':' g'), ok:o===g })), explica:`mol = ${partText}÷6.022×10²³ = ${mol} → masa = ${mol}×${mm} = ${g} g` };
+      }
+    }
+  }
+
   function makeCase(idx){
     const chem=CHEM();
     if(idx===0){ const comp=chem.COMPOUNDS[Math.floor(Math.random()*chem.COMPOUNDS.length)]; const mm=chem.molarMass(comp.f);
       const opts=shuffle([mm,mm+2,Math.round(mm/2),mm+16]).slice(0,4);
       return {prompt:`¿Masa molar de <span style="font-family:var(--font-code);color:${C}">${sub(comp.f)}</span> (${comp.name})?`,
         options:opts.map(o=>({label:o+' g/mol',ok:o===mm})),explica:`Sumando las masas atómicas: ${mm} g/mol.`}; }
-    if(idx===1){ const comp=chem.COMPOUNDS[Math.floor(Math.random()*chem.COMPOUNDS.length)]; const mm=chem.molarMass(comp.f);
-      const mol=[1,2,3][Math.floor(Math.random()*3)]; const g=chem.massFromMoles(mol,mm);
-      const opts=shuffle([g,mol,mm,Math.round(g*2)]).slice(0,4);
-      return {prompt:`¿Cuántos gramos son <strong>${mol} mol</strong> de ${comp.name} (${mm} g/mol)?`,
-        options:opts.map(o=>({label:o+' g',ok:o===g})),explica:`${mol} × ${mm} = ${g} g.`}; }
-    /* idx 2: proporción de reacción */
+    if(idx===1){ return makeConversion(chem); }
+    /* idx 2: proporción de reacción — Parte II: pool de valores ampliado (antes solo [2,4,6]) */
     const eq=chem.EQUATIONS[Math.floor(Math.random()*chem.EQUATIONS.length)];
     const i1=0, i2=eq.terms.length-1; const c1=eq.coeffs[i1], c2=eq.coeffs[i2];
-    const dado=[2,4,6][Math.floor(Math.random()*3)]; const resp=Math.round(dado*c2/c1*100)/100;
+    const dado=pickMolValue(); const resp=Math.round(dado*c2/c1*100)/100;
     const opts=shuffle([resp,dado,Math.round(dado*c1/c2*100)/100,resp+2]).slice(0,4);
-    return {prompt:`En <span style="font-family:var(--font-code)">${eq.coeffs[i1]} ${sub(eq.terms[i1])} … → ${eq.coeffs[i2]} ${sub(eq.terms[i2])}</span>, si reaccionan <strong>${dado} mol</strong> de ${sub(eq.terms[i1])}, ¿cuántos mol de ${sub(eq.terms[i2])} se forman?`,
+    return {prompt:`En <span style="font-family:var(--font-code);font-size:1.05rem"><strong style="color:${C}">${eq.coeffs[i1]}</strong> ${sub(eq.terms[i1])} <span style="color:var(--text-muted)">…</span> <span style="color:${C};font-weight:900;margin:0 .25rem">⟶</span> <strong style="color:${C}">${eq.coeffs[i2]}</strong> ${sub(eq.terms[i2])}</span>, si reaccionan <strong>${dado} mol</strong> de ${sub(eq.terms[i1])}, ¿cuántos mol de ${sub(eq.terms[i2])} se forman?`,
       options:[...new Set(opts)].map(o=>({label:o+' mol',ok:o===resp})),explica:`Proporción ${c1}:${c2} → ${dado} × ${c2}/${c1} = ${resp} mol.`};
   }
   function renderJuego(unit,uData){
@@ -330,7 +435,7 @@
   }
   function bindJuego(unit,uData){const c=document.getElementById('tab-content');if(!c)return;if(typeof Mentor!=='undefined')Mentor.bind(c);c.querySelectorAll('[data-play]').forEach(b=>b.addEventListener('click',()=>startLevel(+b.getAttribute('data-play'))));}
   function backLevels(){const c=document.getElementById('tab-content');if(!c)return;const f=loadUnitData();c.innerHTML=renderJuego(null,f);bindJuego(null,f);}
-  function startLevel(idx){const lv=GAME_LEVELS[idx];if(!lv)return;game={idx,lv,round:0,score:0,correct:0,answered:false,caso:null};awardXP('game-played');nextRound();}
+  function startLevel(idx){const lv=GAME_LEVELS[idx];if(!lv)return;game={idx,lv,round:0,score:0,correct:0,answered:false,caso:null};/*FIX-XP-02: sin XP por solo iniciar*/nextRound();}
   function nextRound(){game.caso=makeCase(game.idx);game.answered=false;drawRound();}
   function drawRound(){
     const c=document.getElementById('tab-content');if(!c||!game)return;const caso=game.caso;
@@ -354,9 +459,12 @@
   }
   function finishLevel(){
     if(!game)return;const passed=game.correct>=GAME_PASS,perfect=game.correct===GAME_ROUNDS,score=game.score;
-    const stt=gameState();const done=stt.done.slice();if(passed&&!done.includes(game.lv.id))done.push(game.lv.id);
-    patchUnit({gameScore:Math.max(stt.best,score),gameLevels:done});
-    if(passed)awardXP('game-won');if(score>stt.best)awardXP('game-highscore');
+    const stt=gameState();const done=stt.done.slice();const yaAprobadoAntes=done.includes(game.lv.id);if(passed&&!yaAprobadoAntes)done.push(game.lv.id);
+    const jugadosAntes=Array.isArray(loadUnitData().gameLevelsPlayed)?loadUnitData().gameLevelsPlayed.slice():[];const yaJugadoAntes=jugadosAntes.includes(game.lv.id);const jugados=jugadosAntes.slice();if(!yaJugadoAntes)jugados.push(game.lv.id);
+    patchUnit({gameScore:Math.max(stt.best,score),gameLevels:done,gameLevelsPlayed:jugados});
+    // FIX-XP-02b: game-won/game-played UNA sola vez por nivel, no por intento
+    if(passed&&!yaAprobadoAntes)awardXP('game-won');else if(!passed&&!yaJugadoAntes)awardXP('game-played');
+    if(score>stt.best)awardXP('game-highscore');
     const c=document.getElementById('tab-content');const nx=game.idx+1,hay=nx<GAME_LEVELS.length,unlk=passed&&hay;
     c.innerHTML=`<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;animation:pageIn .4s ease">
       <div style="font-size:2.8rem">${perfect?'🏆':passed?'🎉':'🔁'}</div><h3 style="margin:.4rem 0">${perfect?'¡Nivel perfecto!':passed?'¡Nivel superado!':'Sigue practicando'}</h3>
@@ -417,8 +525,8 @@
   }
   function finishExam(){
     if(!exam)return;clearInterval(exam.timerId);const correct=exam.answers.filter(a=>a.ok).length,total=exam.qs.length,score=Math.round((correct/total)*100),passed=score>=EXAM_CFG.pass;
-    const u=loadUnitData();patchUnit({examBest:Math.max(u.examBest||0,score),examAttempts:(u.examAttempts||0)+1});
-    if(passed)awardXP('exam-done');
+    const u=loadUnitData();const yaOtorgadoAntes=!!u.examXpAwarded;patchUnit({examBest:Math.max(u.examBest||0,score),examAttempts:(u.examAttempts||0)+1,examXpAwarded:u.examXpAwarded||passed});
+    if(passed&&!yaOtorgadoAntes)awardXP('exam-done');
     const review=exam.qs.map((q,i)=>{const a=exam.answers[i];return `<div style="display:flex;gap:.5rem;padding:.5rem .6rem;border-bottom:1px solid var(--border);font-size:.82rem"><span>${a&&a.ok?'✅':'❌'}</span><span style="flex:1;color:var(--text-secondary)">${i+1}. ${present(q).pregunta}</span></div>`;}).join('');
     const root=document.getElementById('u6-exam-root');
     root.innerHTML=`<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;animation:pageIn .4s ease">

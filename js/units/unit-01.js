@@ -349,8 +349,13 @@
       btn.addEventListener('click', () => {
         const i = btn.getAttribute('data-read');
         const tid = `${UNIT_ID}-topic-${i}`;
+        // FIX-XP-01: awardXP('topic-read') se disparaba en CADA clic,
+        // incluso releyendo un tema ya marcado. loadUnitData().topicsRead
+        // ya está deduplicado por Storage — solo hace falta consultarlo
+        // ANTES de marcar, para saber si es la primera vez.
+        const yaLeidoAntes = (loadUnitData().topicsRead || []).includes(tid);
         markRead(tid);
-        awardXP('topic-read');   /* gamification.js ya muestra el toast "+15 XP" */
+        if (!yaLeidoAntes) awardXP('topic-read');   /* gamification.js ya muestra el toast "+15 XP" */
         /* Re-render del tab manteniendo el acordeón abierto */
         const fresh = loadUnitData();
         container.innerHTML = renderTeoria(unit, fresh);
@@ -847,11 +852,15 @@
     const uData = loadUnitData();
     const prevBest = uData.examBest || 0;
     const attempts = (uData.examAttempts || 0) + 1;
+    // FIX-XP-03: awardXP('exam-done') se otorgaba en CADA intento
+    // aprobado — repetir el examen ya aprobado volvía a dar XP completo.
+    const yaOtorgadoAntes = !!uData.examXpAwarded;
     patchUnit({
       examBest: Math.max(prevBest, score),
-      examAttempts: attempts
+      examAttempts: attempts,
+      examXpAwarded: uData.examXpAwarded || passed
     });
-    if (passed) {
+    if (passed && !yaOtorgadoAntes) {
       awardXP('exam-done');   /* clave real de gamification.js (40 XP) */
     }
 
@@ -1077,7 +1086,10 @@
     /* Barajamos el orden de los casos para que cada partida sea distinta */
     const casos = shuffle(lv.casos);
     game = { levelIdx, lv, casos, i: 0, score: 0, correct: 0, pistas: 0, answered: false };
-    awardXP('game-played'); /* clave real de gamification.js (30 XP) */
+    // FIX-XP-02: awardXP('game-played') se otorgaba acá, en CADA inicio
+    // de nivel — bastaba tocar "jugar" y salir para ganar XP infinito,
+    // sin responder ni una pregunta. El XP real de juego se otorga al
+    // TERMINAR el nivel (ver finishLevel), no al empezarlo.
     drawCase();
   }
 
@@ -1208,11 +1220,26 @@
     const st = gameState();
     const newBest = Math.max(st.best, levelScore);
     const done = st.done.slice();
-    if (passed && !done.includes(game.lv.id)) done.push(game.lv.id);
-    patchUnit({ gameScore: newBest, gameLevels: done });
+    const yaAprobadoAntes = done.includes(game.lv.id);
+    if (passed && !yaAprobadoAntes) done.push(game.lv.id);
+
+    // FIX-XP-02b: 'game-won'/'game-played' se otorgaban en CADA intento
+    // terminado, sin límite — repetir el mismo nivel una y otra vez daba
+    // XP infinito. Ahora se otorgan UNA sola vez POR NIVEL (no por
+    // intento): la primera vez que lo apruebas ('game-won'), o si nunca
+    // lo intentaste antes y no lo aprobás esta vez ('game-played'). La
+    // mejora de puntaje sigue premiándose cada vez que se supera el
+    // récord, como ya funcionaba correctamente.
+    const jugadosAntes = Array.isArray(loadUnitData().gameLevelsPlayed) ? loadUnitData().gameLevelsPlayed.slice() : [];
+    const yaJugadoAntes = jugadosAntes.includes(game.lv.id);
+    const jugados = jugadosAntes.slice();
+    if (!yaJugadoAntes) jugados.push(game.lv.id);
+
+    patchUnit({ gameScore: newBest, gameLevels: done, gameLevelsPlayed: jugados });
 
     /* XP con las claves reales de gamification.js */
-    if (passed) awardXP('game-won');                     /* 60 XP */
+    if (passed && !yaAprobadoAntes) awardXP('game-won');                     /* 60 XP */
+    else if (!passed && !yaJugadoAntes) awardXP('game-played');              /* 30 XP */
     if (levelScore > st.best) awardXP('game-highscore'); /* 100 XP al superar tu récord */
 
     const container = document.getElementById('tab-content');
