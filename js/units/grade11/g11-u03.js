@@ -53,6 +53,20 @@
       try { Storage.markGrade11TopicRead(UNIT_ID, topicId); } catch (e) {}
     }
   }
+  /* SPRINT DE AFINAMIENTO PRE-PNE — Parte I: bug real confirmado por
+     auditoría. 'alcano', 'alqueno' y 'alquino' se enseñan a fondo en
+     esta unidad (teoría, 3 simuladores, examen) pero ANTES de este
+     fix nunca llamaban al motor del Atlas Químico (AtlasQuimico.js)
+     — esas 3 fichas quedaban bloqueadas de forma permanente, sin
+     ningún camino posible para desbloquearlas, sin importar cuánto
+     avanzara el estudiante. No otorga XP (mismo comportamiento que
+     el resto del Atlas — es evidencia de aprendizaje, no un sistema
+     de recompensa paralelo) y no modifica ningún texto ni contenido
+     de la unidad, solo conecta interacciones ya existentes. */
+  function discoverAtlas(atlasId) {
+    if (typeof AtlasQuimico === 'undefined' || !AtlasQuimico.markDiscovered) return;
+    try { AtlasQuimico.markDiscovered(atlasId); } catch (e) {}
+  }
   function markSimDone(simId, score) {
     const uData = loadUnitData();
     const done = Array.isArray(uData.simsDone) ? uData.simsDone.slice() : [];
@@ -193,8 +207,13 @@
       btn.addEventListener('click', () => {
         const i = btn.getAttribute('data-read');
         const tid = `${UNIT_ID}-topic-${i}`;
+        // FIX-XP-01: awardXP('topic-read') se disparaba en CADA clic,
+        // incluso releyendo un tema ya marcado. Storage.markGrade11TopicRead
+        // ya deduplica en su propio array topicsRead; acá solo hace falta
+        // consultarlo ANTES de marcar, para saber si es la primera vez.
+        const yaLeidoAntes = (loadUnitData().topicsRead || []).includes(tid);
         markRead(tid);
-        awardXP('topic-read');
+        if (!yaLeidoAntes) awardXP('topic-read');
         const fresh = loadUnitData();
         container.innerHTML = renderTeoria(unit, fresh);
         bindTeoria(unit, fresh);
@@ -286,6 +305,7 @@
         </div>`;
       document.getElementById('cm-n').addEventListener('input', e => { n = parseInt(e.target.value, 10); if (n < 2 && family !== 'alcano') family = 'alcano'; draw(); markSimDone('sim-g11u3-01', 100); });
       host.querySelectorAll('[data-fam]').forEach(b => b.addEventListener('click', () => { if (!b.disabled) { family = b.getAttribute('data-fam'); draw(); markSimDone('sim-g11u3-01', 100); } }));
+      discoverAtlas(family);
       _bindBackSim();
     }
     draw();
@@ -320,6 +340,7 @@
         </div>`;
       host.querySelectorAll('[data-fam]').forEach(b => b.addEventListener('click', () => { family = b.getAttribute('data-fam'); draw(); markSimDone('sim-g11u3-02', 100); }));
       markSimDone('sim-g11u3-02', 100);
+      discoverAtlas(family);
       _bindBackSim();
     }
     draw();
@@ -353,6 +374,7 @@
         document.getElementById('det-reveal').style.display = 'none';
         document.getElementById('det-next').style.display = 'inline-block';
         markSimDone('sim-g11u3-03', 100);
+        discoverAtlas(data.family);
       });
       document.getElementById('det-next').addEventListener('click', () => { idx = (idx + 1) % DETECTOR_CASOS.length; draw(); });
       _bindBackSim();
@@ -395,8 +417,13 @@
         const uData = loadUnitData();
         const prevBest = uData.gameScore || 0;
         const best = Math.max(prevBest, pct);
-        patchUnit({ gameScore: best });
-        awardXP(pct >= 60 ? 'game-won' : 'game-played');
+        // FIX-XP-02: awardXP('game-won'/'game-played') se otorgaba en CADA
+        // ronda terminada, sin límite. Ahora ese XP de participación se
+        // otorga UNA sola vez por unidad (la primera ronda jugada); la
+        // mejora de puntaje sigue premiándose al superar la marca anterior.
+        const esPrimeraRonda = !uData.gameXpAwarded;
+        patchUnit({ gameScore: best, gameXpAwarded: true });
+        if (esPrimeraRonda) awardXP(pct >= 60 ? 'game-won' : 'game-played');
         if (pct > prevBest) awardXP('game-highscore');
         host.innerHTML = `
           <div style="text-align:center;padding:1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:520px;margin:0 auto">
@@ -581,8 +608,14 @@
     const uData = loadUnitData();
     const prevBest = uData.examBest || 0;
     const attempts = (uData.examAttempts || 0) + 1;
-    patchUnit({ examBest: Math.max(prevBest, score), examAttempts: attempts });
-    if (passed) awardXP('exam-done');
+    // FIX-XP-03: awardXP('exam-done') se otorgaba en CADA intento aprobado.
+    const yaOtorgadoAntes = !!uData.examXpAwarded;
+    patchUnit({
+      examBest: Math.max(prevBest, score),
+      examAttempts: attempts,
+      examXpAwarded: uData.examXpAwarded || passed
+    });
+    if (passed && !yaOtorgadoAntes) awardXP('exam-done');
     const review = exam.qs.map((q, i) => {
       const a = exam.answers[i];
       const got = a ? a.ok : false;

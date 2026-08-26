@@ -278,8 +278,13 @@
       btn.addEventListener('click', () => {
         const i = btn.getAttribute('data-read');
         const tid = `${UNIT_ID}-topic-${i}`;
+        // FIX-XP-01: awardXP('topic-read') se disparaba en CADA clic,
+        // incluso releyendo un tema ya marcado. Storage.markGrade11TopicRead
+        // ya deduplica en su propio array topicsRead; acá solo hace falta
+        // consultarlo ANTES de marcar, para saber si es la primera vez.
+        const yaLeidoAntes = (loadUnitData().topicsRead || []).includes(tid);
         markRead(tid);
-        awardXP('topic-read');
+        if (!yaLeidoAntes) awardXP('topic-read');
         const fresh = loadUnitData();
         container.innerHTML = renderTeoria(unit, fresh);
         bindTeoria(unit, fresh);
@@ -428,7 +433,13 @@
         const fb = document.getElementById('escaner-fb');
         if (correcto) {
           const ficha = (typeof ATLAS_QUIMICO_DATA !== 'undefined') ? ATLAS_QUIMICO_DATA.gruposFuncionales.find(x => x.id === tag) : null;
-          fb.innerHTML = `<p style="color:var(--green);font-size:.85rem">✓ ¡Correcto! Es <strong>${ficha ? ficha.nombre : tag}</strong> — ${ficha ? ficha.grupo : ''}.</p>`;
+          /* SPRINT PRE-PNE — Parte V, punto 2: conecta el grupo
+             encontrado con las OTRAS moléculas reales (de las mismas
+             9 ya cargadas) que también lo contienen — no un dato
+             inventado, sale del mismo banco de datos que ya existe. */
+          const otras = MOLECULAS_REALES.filter(m => m.id !== mol.id && (m.grupos || []).includes(tag)).map(m => m.nombre);
+          const conexion = otras.length ? `<p style="color:var(--text-secondary);font-size:.78rem;margin-top:.4rem">💡 Este grupo también aparece en: <strong>${otras.join(', ')}</strong>.</p>` : '';
+          fb.innerHTML = `<p style="color:var(--green);font-size:.85rem">✓ ¡Correcto! Es <strong>${ficha ? ficha.nombre : tag}</strong> — ${ficha ? ficha.grupo : ''}.</p>${conexion}`;
         } else {
           fb.innerHTML = `<p style="color:var(--red);font-size:.85rem">✗ Ese segmento no es un grupo funcional. Se resaltaron en color los que sí lo son — fijate cuál era.</p>`;
         }
@@ -567,8 +578,13 @@
         const uData = loadUnitData();
         const prevBest = uData.gameScore || 0;
         const best = Math.max(prevBest, pct);
-        patchUnit({ gameScore: best });
-        awardXP(pct >= 60 ? 'game-won' : 'game-played');
+        // FIX-XP-02: awardXP('game-won'/'game-played') se otorgaba en CADA
+        // ronda terminada, sin límite. Ahora ese XP de participación se
+        // otorga UNA sola vez por unidad (la primera ronda jugada); la
+        // mejora de puntaje sigue premiándose al superar la marca anterior.
+        const esPrimeraRonda = !uData.gameXpAwarded;
+        patchUnit({ gameScore: best, gameXpAwarded: true });
+        if (esPrimeraRonda) awardXP(pct >= 60 ? 'game-won' : 'game-played');
         if (pct > prevBest) awardXP('game-highscore');
         host.innerHTML = `
           <div style="text-align:center;padding:1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);max-width:520px;margin:0 auto">
@@ -621,7 +637,14 @@
      comparación estructural), no definiciones aisladas. Se exige un
      mínimo real (no solo agregada al banco) para que cada intento
      del examen incluya interpretación, tal como pide el ticket §10. */
-  const MIN_POR_CATEGORIA = { 'identificacion-grupo': 4, 'clasificacion': 3, 'biomoleculas': 3, 'ejemplos-cotidianos': 3, 'aplicaciones': 3, 'interpretacion-molecular': 4 };
+  /* SPRINT PRE-PNE — Parte VI: se agrega 'razonamiento-pne' (nuevas
+     variantes: NO aparece / cuántos aparecen / seleccione todos /
+     contiene simultáneamente). Para que la suma siga dando exactamente
+     20 = perExam, se bajan levemente 'clasificacion' y
+     'ejemplos-cotidianos' (las 2 categorías más memorísticas) de 3 a
+     2 cada una — el examen sigue teniendo 20 preguntas, solo con más
+     peso real en razonamiento, tal como pide el ticket. */
+  const MIN_POR_CATEGORIA = { 'identificacion-grupo': 4, 'clasificacion': 2, 'biomoleculas': 3, 'ejemplos-cotidianos': 2, 'aplicaciones': 3, 'interpretacion-molecular': 4, 'razonamiento-pne': 2 };
   const EXAM_CFG = { perExam: 20, time: 30, pass: 70 };
   function buildBalancedExam() {
     const bank = getBank();
@@ -743,8 +766,14 @@
     const uData = loadUnitData();
     const prevBest = uData.examBest || 0;
     const attempts = (uData.examAttempts || 0) + 1;
-    patchUnit({ examBest: Math.max(prevBest, score), examAttempts: attempts });
-    if (passed) awardXP('exam-done');
+    // FIX-XP-03: awardXP('exam-done') se otorgaba en CADA intento aprobado.
+    const yaOtorgadoAntes = !!uData.examXpAwarded;
+    patchUnit({
+      examBest: Math.max(prevBest, score),
+      examAttempts: attempts,
+      examXpAwarded: uData.examXpAwarded || passed
+    });
+    if (passed && !yaOtorgadoAntes) awardXP('exam-done');
     const review = exam.qs.map((q, i) => {
       const a = exam.answers[i];
       const got = a ? a.ok : false;
