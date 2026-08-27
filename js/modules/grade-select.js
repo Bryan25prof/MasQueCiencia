@@ -11,6 +11,16 @@
 Router.register('grade-select', (() => {
   'use strict';
 
+  /* Ajuste v3 (pedido explícito): en vez de mostrar las 3 disciplinas
+     "abiertas" de una vez, la pantalla ahora tiene 2 niveles:
+       1) 3 botones grandes: Química / Física / Biología
+       2) al tocar Química se despliegan las tarjetas 10.º/11.º de
+          siempre (con botón "← Volver"); al tocar Física o Biología
+          se navega directo al placeholder "en desarrollo" ya existente
+          (el mismo que usa el sidebar) — nunca abre contenido
+          inexistente. */
+  let _vista = 'hub'; // 'hub' | 'quimica'
+
   function _unlockStatus(data) {
     const examsPassed = (typeof UNIDADES_DATA !== 'undefined') ? UNIDADES_DATA.filter(u => {
       const uData = data.units[u.id];
@@ -20,7 +30,34 @@ Router.register('grade-select', (() => {
     return { examsPassed, totalExams: (typeof UNIDADES_DATA !== 'undefined') ? UNIDADES_DATA.length : 9 };
   }
 
-  function _render() {
+  /* ── Nivel 1: los 3 botones grandes ─────────────────────── */
+  function _renderHub() {
+    return `
+      <div class="section-header">
+        <p class="section-title">MásQueCiencia</p>
+        <h2 class="section-heading">Selecciona tu ruta científica</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;max-width:1000px;margin-top:1.5rem">
+        ${_disciplinaBoton('Química', '🧪', 'var(--cyan)', 'Disponible', 'quimica')}
+        ${_disciplinaBoton('Física', '⚛️', 'var(--violet)', 'En desarrollo', 'fisica-proximamente')}
+        ${_disciplinaBoton('Biología', '🧬', 'var(--green)', 'En desarrollo', 'biologia-proximamente')}
+      </div>
+    `;
+  }
+
+  function _disciplinaBoton(nombre, icono, color, estado, destino) {
+    return `
+        <button class="unit-card-btn" data-disciplina="${destino}"
+                style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);
+                       padding:2rem 1.5rem;text-align:center;cursor:pointer;transition:var(--transition-fast)">
+          <div style="font-size:2.6rem;text-shadow:0 0 24px ${color};margin-bottom:.6rem">${icono}</div>
+          <h3 style="margin:0 0 .3rem;color:${color};font-family:var(--font-display);letter-spacing:.03em">${nombre}</h3>
+          <p style="color:var(--text-secondary);font-size:.82rem;margin:0">${estado}</p>
+        </button>`;
+  }
+
+  /* ── Nivel 2: Química (tarjetas 10.º/11.º — SIN CAMBIOS de lógica) ── */
+  function _renderQuimica() {
     const data = Storage.load();
     const g11 = data.grade11Unlock || { unlocked: false };
     const pne = data.pne || { bestScore: 0 };
@@ -28,7 +65,7 @@ Router.register('grade-select', (() => {
     const levelInfo = (typeof Gamification !== 'undefined') ? Gamification.getLevelInfo() : { percent: 0 };
 
     const g10ExamsLabel = `${examsPassed}/9 exámenes aprobados`;
-    const g10PneLabel = pne.bestScore > 0 ? `Mejor Examen Final 10.º: ${pne.bestScore}/100` : 'Aún sin intentos del Examen Final';
+    const g10PneLabel = pne.bestScore > 0 ? `Mejor Desafío Final 10.º: ${pne.bestScore}/100` : 'Aún sin intentos del Desafío Final';
 
     let g11Body;
     if (g11.unlocked) {
@@ -44,15 +81,16 @@ Router.register('grade-select', (() => {
         <p style="color:var(--text-secondary);font-size:.82rem;margin:.6rem 0 .4rem">Se desbloquea cumpliendo <strong>cualquiera</strong> de estas dos rutas:</p>
         <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.3rem">Ruta A — ${examsPassed} de 6 exámenes requeridos</div>
         <div class="progress-bar" style="margin-bottom:.6rem"><div class="progress-fill progress-fill-cyan" style="width:${routeAPct}%"></div></div>
-        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.3rem">Ruta B — Mejor resultado del Examen Final 10.º: ${pne.bestScore}/100 (necesitás 80)</div>
+        <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.3rem">Ruta B — Mejor resultado del Desafío Final 10.º: ${pne.bestScore}/100 (necesitás 80)</div>
         <div class="progress-bar" style="margin-bottom:.6rem"><div class="progress-fill progress-fill-cyan" style="width:${routeBPct}%"></div></div>
         <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">Química 11.º bloqueada</button>`;
     }
 
     return `
       <div class="section-header">
-        <p class="section-title">MásQueCiencia</p>
-        <h2 class="section-heading">Selecciona tu ruta científica</h2>
+        <button class="btn btn-ghost btn-sm" data-action="volver-hub" style="margin-bottom:.8rem">← Volver</button>
+        <p class="section-title">🧪 Química</p>
+        <h2 class="section-heading">Elegí tu año</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;max-width:900px;margin-top:1.5rem">
 
@@ -78,7 +116,25 @@ Router.register('grade-select', (() => {
     `;
   }
 
+  function _rerender() {
+    const content = document.getElementById('content');
+    if (!content) return;
+    content.innerHTML = _vista === 'quimica' ? _renderQuimica() : _renderHub();
+    _bind();
+  }
+
   function _bind() {
+    /* Nivel 1 → Nivel 2 (o navegación directa para Física/Biología) */
+    document.querySelectorAll('[data-disciplina]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const destino = btn.getAttribute('data-disciplina');
+        if (destino === 'quimica') { _vista = 'quimica'; _rerender(); }
+        else Router.navigate(destino); // fisica-proximamente / biologia-proximamente
+      });
+    });
+    const volver = document.querySelector('[data-action="volver-hub"]');
+    if (volver) volver.addEventListener('click', () => { _vista = 'hub'; _rerender(); });
+
     const goG10 = document.querySelector('[data-action="go-grade10"]');
     if (goG10) goG10.addEventListener('click', () => Router.navigate('home'));
     const goG11 = document.querySelector('[data-action="go-grade11"]');
@@ -86,10 +142,8 @@ Router.register('grade-select', (() => {
   }
 
   function init() {
-    const content = document.getElementById('content');
-    if (!content) return;
-    content.innerHTML = _render();
-    _bind();
+    _vista = 'hub'; // siempre entra por el hub, cada vez que se navega a esta sección
+    _rerender();
     if (typeof Gamification !== 'undefined' && Gamification.checkBadges) Gamification.checkBadges();
   }
 
