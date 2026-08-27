@@ -8,22 +8,26 @@
   ============================================================ -->
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Plataforma educativa e interactiva de Química 10° y 11° — Lic. Bryan Chavarría C.">
-  <title>Química Interactiva 10° y 11° | Lic. Bryan Chavarría C.</title>
+  <meta name="description" content="Plataforma educativa e interactiva de Ciencias — Química, Física y Biología — 10° y 11° — Lic. Bryan Chavarría C.">
+  <title>MásQueCiencia — Ciencias Interactivas 10° y 11° | Lic. Bryan Chavarría C.</title>
 
   <!-- Open Graph / vistas previas al compartir el enlace (WhatsApp, Facebook, Discord, etc.)
-       Antes no existían estas etiquetas, así que WhatsApp usaba el <title>/<meta description>
-       de respaldo (que decían solo "10°"). Se agregan explícitamente y ya cubren 10° y 11°. -->
+       SPRINT MULTICIENCIA — FASE 1: ya no debe leerse como "solo Química".
+       Se agrega og:image con el nuevo logo multiciencia (Química/Física/Biología). -->
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Química Interactiva | MásQueCiencia">
-  <meta property="og:title" content="Química Interactiva 10° y 11° | Lic. Bryan Chavarría C.">
-  <meta property="og:description" content="Plataforma educativa e interactiva de Química 10° y 11° — Lic. Bryan Chavarría C.">
+  <meta property="og:site_name" content="MásQueCiencia">
+  <meta property="og:title" content="MásQueCiencia — Ciencias Interactivas 10° y 11° | Lic. Bryan Chavarría C.">
+  <meta property="og:description" content="Plataforma educativa e interactiva de Ciencias — Química, Física y Biología — 10° y 11° — Lic. Bryan Chavarría C.">
   <meta property="og:url" content="https://bryan25prof.github.io/MasQueCiencia/">
+  <meta property="og:image" content="https://bryan25prof.github.io/MasQueCiencia/assets/branding/mqc-logo-ciencias.jpg">
+  <meta property="og:image:width" content="1536">
+  <meta property="og:image:height" content="1024">
 
   <!-- Twitter/X Card (mismo contenido, para que tampoco se quede desactualizado ahí) -->
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Química Interactiva 10° y 11° | Lic. Bryan Chavarría C.">
-  <meta name="twitter:description" content="Plataforma educativa e interactiva de Química 10° y 11° — Lic. Bryan Chavarría C.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="MásQueCiencia — Ciencias Interactivas 10° y 11° | Lic. Bryan Chavarría C.">
+  <meta name="twitter:description" content="Plataforma educativa e interactiva de Ciencias — Química, Física y Biología — 10° y 11° — Lic. Bryan Chavarría C.">
+  <meta name="twitter:image" content="https://bryan25prof.github.io/MasQueCiencia/assets/branding/mqc-logo-ciencias.jpg">
   <!-- Identidad v2.0: favicon SVG propio (átomo — núcleo + 3 órbitas), reemplaza el emoji -->
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 34 34'%3E%3Ccircle cx='17' cy='17' r='4.4' fill='%23FFD700'/%3E%3Cg fill='none' stroke='%231FDBFF' stroke-width='1.6'%3E%3Cellipse cx='17' cy='17' rx='15' ry='6'/%3E%3Cellipse cx='17' cy='17' rx='15' ry='6' transform='rotate(60 17 17)'/%3E%3Cellipse cx='17' cy='17' rx='15' ry='6' transform='rotate(120 17 17)'/%3E%3C/g%3E%3Ccircle cx='2' cy='17' r='2' fill='%237B2FFF'/%3E%3Ccircle cx='32' cy='17' r='2' fill='%2300FF88'/%3E%3C/svg%3E">
 
@@ -140,7 +144,7 @@
     <div id="mqc-intro-credit">Lic. Bryan Chavarría C.</div>
     <div id="mqc-intro-eyebrow">MÁSQUECIENCIA</div>
     <div id="mqc-intro-brand">MÁSQUECIENCIA</div>
-    <div id="mqc-intro-route">Química Interactiva · 10.º • 11.º</div>
+    <div id="mqc-intro-route">Ciencias Interactivas · 10.º • 11.º</div>
     <div id="mqc-intro-tagline">"Tú defines tu éxito, comienza ahora."</div>
     <button id="mqc-intro-enter">Entrar al laboratorio</button>
   </div>
@@ -185,7 +189,7 @@
     </div>
     <div class="loading-brand-block">
       <p class="loading-text">MÁSQUECIENCIA</p>
-      <p class="loading-descriptor">Química Interactiva</p>
+      <p class="loading-descriptor">Ciencias Interactivas</p>
       <p class="loading-scope">10.º • 11.º</p>
     </div>
     <p class="loading-sub">Construyendo tu espacio de aprendizaje...</p>
@@ -194,11 +198,11 @@
   <!-- ── MODAL DE BIENVENIDA (primera visita) ─────────────── -->
   <div id="welcome-modal" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="welcome-title-id">
     <div class="modal-card welcome-card">
-      <div class="welcome-atom-icon"><svg width="52" height="52" viewBox="0 0 34 34"><use href="#mqc-atom-logo"/></svg></div>
-      <h2 class="welcome-title" id="welcome-title-id">QUÍMICA INTERACTIVA</h2>
-      <p class="welcome-subtitle">Décimo Año — Lic. Bryan Chavarría C.</p>
+      <img src="assets/branding/mqc-logo-ciencias.jpg" alt="MásQueCiencia — Ciencias Interactivas" class="welcome-logo-img">
+      <h2 class="welcome-title" id="welcome-title-id">¡Bienvenido a MásQueCiencia!</h2>
+      <p class="welcome-subtitle">Ciencias Interactivas — Lic. Bryan Chavarría C.</p>
       <p class="welcome-desc">
-        Bienvenido a tu laboratorio digital de química.<br>
+        Bienvenido a tu laboratorio digital de ciencia.<br>
         ¿Cómo te llamas, estudiante?
       </p>
       <div class="welcome-form">
@@ -288,6 +292,13 @@
           <span class="nav-icon" aria-hidden="true">🧭</span>
           <span class="nav-label">Inicio académico</span>
         </li>
+
+        <!-- SPRINT MULTICIENCIA — FASE 1: Química agrupada visualmente como
+             una de las tres disciplinas. Los data-section de abajo NO
+             cambiaron (siguen siendo 'home','units','grade11', etc.),
+             solo se agregó el separador de grupo — cero riesgo de romper
+             el router ni el progreso existente. -->
+        <li class="nav-separator" role="separator"><span>🧪 Química</span></li>
         <li class="nav-item active" data-section="home" role="button" tabindex="0" aria-current="page">
           <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
 <path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>
@@ -304,10 +315,6 @@
           <span class="nav-icon" aria-hidden="true">🎓</span>
           <span class="nav-label">Química 11.º</span>
         </li>
-        <li class="nav-item" data-section="simulacro-nacional" role="button" tabindex="0">
-          <span class="nav-icon" aria-hidden="true">🎯</span>
-          <span class="nav-label">Simulacro PNE · Ciencias</span>
-        </li>
         <li class="nav-item" data-section="atlas-quimico" role="button" tabindex="0">
           <span class="nav-icon" aria-hidden="true">🧬</span>
           <span class="nav-label">Atlas Químico</span>
@@ -317,6 +324,38 @@
 <path d="M12 3l3 3-3 3-3-3z"/><path d="M21 12l-3 3-3-3 3-3z"/><path d="M12 21l-3-3 3-3 3 3z"/><path d="M3 12l3-3 3 3-3 3z"/>
 </svg></span>
           <span class="nav-label">Proyecto Integrador</span>
+        </li>
+
+        <!-- SPRINT MULTICIENCIA — FASE 1: Física y Biología, en desarrollo.
+             data-section apunta a rutas NO registradas en Router
+             ('fisica-proximamente'/'biologia-proximamente') — al no existir,
+             el propio router.js cae en su mecanismo genérico de fallback
+             (_showPlaceholder), ya usado por cualquier sección futura sin
+             construir. No se generó ningún contenido curricular nuevo. -->
+        <!-- SPRINT MULTICIENCIA — FASE 1 (ajuste v2, por pedido explícito):
+             Física y Biología pasan a ser grupos PARALELOS a Química, con
+             la misma jerarquía visual (mismo estilo de separador), en vez
+             de quedar agrupadas bajo un genérico "Otras ciencias" que se
+             leía subordinado a Química. Cada una con una sola fila (el
+             detalle 10.º/11.º ya vive en "Inicio académico", así se evita
+             duplicar esa granularidad acá y el sidebar queda liviano). -->
+        <li class="nav-separator" role="separator"><span>⚛️ Física</span></li>
+        <li class="nav-item nav-item-soon" data-section="fisica-proximamente" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">⚛️</span>
+          <span class="nav-label">Física</span>
+          <span class="nav-badge soon">Pronto</span>
+        </li>
+
+        <li class="nav-separator" role="separator"><span>🧬 Biología</span></li>
+        <li class="nav-item nav-item-soon" data-section="biologia-proximamente" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">🧬</span>
+          <span class="nav-label">Biología</span>
+          <span class="nav-badge soon">Pronto</span>
+        </li>
+
+        <li class="nav-item" data-section="simulacro-nacional" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true">🎯</span>
+          <span class="nav-label">Simulacro PNE · Ciencias</span>
         </li>
 
         <!-- Separador -->
