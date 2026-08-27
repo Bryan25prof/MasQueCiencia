@@ -140,7 +140,7 @@ window.MQCProfilesUI = (function () {
       <div class="mqc-gate-photons">${[10,25,42,58,73,88].map((left,i)=>`<i style="left:${left}%;bottom:${5+((i*13)%40)}%;animation-duration:${20+i*4}s;animation-delay:-${i*5}s"></i>`).join('')}</div>
       <div class="mqc-gate-stage">
         <h1 class="mqc-gate-headline" id="mqc-gate-headline-id">La ciencia empieza con <em>una buena pregunta</em>.</h1>
-        <p class="mqc-gate-subheadline">Aprender química no es memorizar: es descubrir cómo funciona el mundo. Entra a tu laboratorio digital para continuar tu exploración.</p>
+        <p class="mqc-gate-subheadline">Aprender ciencia no es memorizar: es descubrir cómo funciona el mundo. Entra a tu laboratorio digital para continuar tu exploración.</p>
         <div class="mqc-gate-card">
           <div class="mqc-gate-card-label"><span class="dot"></span> ${profs.length ? 'Selecciona tu perfil científico para comenzar tu experiencia.' : 'Crea tu primer perfil científico y comienza tu viaje por MásQueCiencia.'}</div>
           <div style="margin-bottom:.3rem" class="mqc-gate-content-fade">${listHTML}</div>
