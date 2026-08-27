@@ -125,16 +125,12 @@ const Router = (() => {
     _updateBrandRoute(section);
   }
 
-  /* HOTFIX-11: por pedido explícito del docente, esta línea de marca
-     deja de cambiar según el grado activo (antes: "QUÍMICA 10.º" en
-     secciones de Décimo, "QUÍMICA 11.º" en 'grade11') y pasa a ser
-     un rótulo fijo — la plataforma ya cubre ambos grados, así que la
-     identidad de marca siempre lo refleja, sin importar en qué
-     sección esté navegando el estudiante. Se conserva el mecanismo
-     (se sigue actualizando desde el mismo punto donde se marca la
-     navegación activa) por si en el futuro se decide revertir este
-     comportamiento — solo cambiaría la línea de abajo. */
-  const BRAND_ROUTE_LABEL = 'QUÍMICA INTERACTIVA 10.º Y 11.º';
+  /* SPRINT MULTICIENCIA — FASE 1 (pedido explícito del docente): la marca
+     general deja de leerse como "solo Química" — MQC ahora presenta tres
+     disciplinas (Química/Física/Biología). Antes: HOTFIX-11 ya había fijado
+     este rótulo para que no cambiara según el grado activo; se mantiene ese
+     mismo mecanismo, solo cambia el texto fijo. */
+  const BRAND_ROUTE_LABEL = 'CIENCIAS INTERACTIVAS 10.º Y 11.º';
   function _updateBrandRoute(section) {
     const label = BRAND_ROUTE_LABEL;
     const sidebarLabel = document.getElementById('sidebar-route-label');
@@ -150,11 +146,19 @@ const Router = (() => {
 
     const meta = _placeholderMeta(section);
     const iconClass = 'placeholder-icon' + (meta.iconGlow ? ' placeholder-icon-glow' : '');
+    /* SPRINT MULTICIENCIA — FASE 1: campo opcional 'image' (no rompe nada
+       de lo existente — si una sección no lo define, no se renderiza
+       ninguna etiqueta <img>, exactamente el comportamiento de siempre). */
+    const imageHTML = meta.image
+      ? `<img src="${meta.image}" alt="${meta.imageAlt || ''}" style="max-width:260px;width:100%;height:auto;border-radius:var(--radius-lg);margin-bottom:1rem;box-shadow:0 8px 30px rgba(0,0,0,.4)">`
+      : '';
+    const accentStyle = meta.accent ? ` style="color:${meta.accent};text-shadow:0 0 16px ${meta.accent}55"` : '';
 
     content.innerHTML = `
       <div class="placeholder-page">
-        <span class="${iconClass}">${meta.icon}</span>
-        <h2 class="placeholder-title">${meta.title}</h2>
+        ${imageHTML}
+        <span class="${iconClass}"${meta.image ? '' : accentStyle}>${meta.image ? '' : meta.icon}</span>
+        <h2 class="placeholder-title"${accentStyle}>${meta.title}</h2>
         <p class="placeholder-desc">${meta.desc}</p>
         <span class="placeholder-coming-soon">🚧 En Construcción — Próximas Fases</span>
         <br><br>
@@ -170,15 +174,32 @@ const Router = (() => {
   function _placeholderMeta(section) {
     const map = {
       'about': {
-        /* HOTFIX-11: el ícono ℹ️ genérico se reemplaza por un átomo,
-           coherente con la identidad química de la marca (el propio
-           logo de MQC ya es un átomo — ver #mqc-atom-logo), con un
-           glow cian/violeta exclusivo de esta sección (iconGlow),
-           que no afecta a ninguna otra página placeholder. */
+        /* SPRINT MULTICIENCIA — FASE 1: ahora usa el logo oficial nuevo
+           (Química/Física/Biología) en vez del emoji de átomo solo, y el
+           texto ya no presenta a MQC como exclusivamente Química. */
+        image: 'assets/branding/mqc-logo-ciencias.jpg',
+        imageAlt: 'MásQueCiencia — Ciencias Interactivas',
         icon: '⚛️',
         iconGlow: true,
         title: 'Acerca de la Plataforma',
-        desc: 'Química Interactiva 10.º y 11.º surge como un plan novedoso para incentivar la enseñanza de la Química y brindar más que una plataforma: una experiencia nueva para aprender ciencia, pensada para estudiantes de secundaria del sistema educativo de Costa Rica. Lic. Bryan Chavarría C.'
+        desc: 'MásQueCiencia es una plataforma interactiva orientada al aprendizaje de Química, Física y Biología para 10.º y 11.º. Química ya está disponible y en funcionamiento completo; Física y Biología se irán incorporando en próximas fases. Un proyecto del Lic. Bryan Chavarría C., pensado para estudiantes de secundaria del sistema educativo de Costa Rica.'
+      },
+      /* SPRINT MULTICIENCIA — FASE 1: Física y Biología, "en desarrollo".
+         Sin contenido curricular real todavía — solo branding y
+         navegación, tal como pide el sprint (punto 11). */
+      'fisica-proximamente': {
+        icon: '⚛️',
+        iconGlow: true,
+        accent: '#7B2FFF',
+        title: 'Física — En Desarrollo',
+        desc: 'Física 10.º y 11.º ya forman parte de la visión de MásQueCiencia. Próximamente nuevas experiencias de aprendizaje: unidades, simuladores y juegos interactivos, con la misma calidad que ya conocés en Química.'
+      },
+      'biologia-proximamente': {
+        icon: '🧬',
+        iconGlow: true,
+        accent: 'var(--green)',
+        title: 'Biología — En Desarrollo',
+        desc: 'Biología 10.º y 11.º ya forman parte de la visión de MásQueCiencia. Próximamente nuevas experiencias de aprendizaje: unidades, simuladores y juegos interactivos, con la misma calidad que ya conocés en Química.'
       }
     };
     return map[section] || {
