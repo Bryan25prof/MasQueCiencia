@@ -390,6 +390,17 @@ code, .formula {
   animation: float 3s ease-in-out infinite;
 }
 
+/* SPRINT MULTICIENCIA — FASE 1: logo multiciencia en el modal de bienvenida */
+.welcome-logo-img {
+  display: block;
+  max-width: 220px;
+  width: 100%;
+  height: auto;
+  margin: 0 auto 1rem;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+}
+
 .welcome-title {
   font-family: var(--font-display);
   color: var(--cyan);
@@ -703,6 +714,28 @@ code, .formula {
 }
 
 .nav-item.active .nav-icon { filter: drop-shadow(0 0 4px var(--cyan)); }
+
+/* SPRINT MULTICIENCIA — FASE 1: Física/Biología, disciplinas en desarrollo.
+   Ligeramente atenuadas para que se lean como "vista previa", nunca por
+   encima visualmente de la navegación funcional de Química. */
+.nav-item-soon { opacity: 0.72; }
+.nav-item-soon:hover { opacity: 1; }
+
+/* SPRINT MULTICIENCIA — FASE 1 v3: botones grandes del hub de 3 ciencias
+   en "Selecciona tu ruta científica". Reset mínimo de <button> + hover. */
+.unit-card-btn {
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+}
+.unit-card-btn:hover {
+  transform: translateY(-3px);
+  border-color: var(--border-glow) !important;
+}
+.unit-card-btn:focus-visible {
+  outline: 2px solid var(--cyan);
+  outline-offset: 2px;
+}
 
 .nav-icon { font-size: 1.1rem; flex-shrink: 0; display:flex; align-items:center; justify-content:center; }
 .nav-icon svg { width: 18px; height: 18px; display: block; }
