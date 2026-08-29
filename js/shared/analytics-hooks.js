@@ -71,60 +71,94 @@
   /* ================================================================
      2. SIMULACRO PNE — un intento finalizado + sus respuestas
      ================================================================
-     _confirmarEntregaFinal() en simulacro-nacional.js (NO se toca ese
-     archivo) hace, en este orden:
-       1. sn = Storage.get('simulacroNacional')   ← estado ANTES de este guardado,
-          todavía con el enProgreso completo (preguntas + respuestas)
-          del intento recién terminado.
-       2. sn.historial.push(registro)             ← agrega el resumen
-       3. sn.enProgreso = null
-       4. Storage.set('simulacroNacional', sn)    ← ESTE es el que envolvemos
+     SPRINT ANALYTICS — PARTE 1 (rediseño, reemplaza el mecanismo
+     anterior): el diseño original intentaba detectar "¿esta llamada a
+     Storage.set es la entrega final?" comparando un Storage.get()
+     ANTES contra el `value` que se está por guardar. En pruebas reales
+     controladas (perfil de prueba, Simulacro completo con Chromium)
+     se confirmó que esa comparación es frágil — el intento SÍ queda
+     guardado correctamente en el historial local, pero el evento de
+     Analytics no se generaba nunca (0 eventos en la cola).
 
-     Por eso, dentro de nuestro envoltorio, leer Storage.get('simulacroNacional')
-     ANTES de llamar al original nos da exactamente los datos completos
-     del intento que se está por confirmar — sin tocar simulacro-nacional.js. */
+     Nuevo enfoque, robusto por diseño: en vez de inferir una
+     "transición", simplemente se revisa el CONTENIDO de value.historial
+     cada vez que se guarda 'simulacroNacional', y se envía a Analytics
+     cualquier intento (identificado por su `fecha`, único por diseño)
+     que todavía no se haya enviado antes — sin importar cuántas veces
+     se llame a Storage.set ni en qué orden. Se lleva un registro local
+     propio y aislado de "fechas ya enviadas" (mismo espíritu que
+     SYNCED_KEY más abajo), así que reintentar nunca duplica: si ya se
+     envió, se ignora; si no, se envía y se marca. */
+  const PNE_ENVIADOS_KEY = 'mqc_analytics_pne_enviados_v1'; // aislado de Storage y de la cola
+
+  function _intentosPNEYaEnviados() {
+    try { return JSON.parse(localStorage.getItem(PNE_ENVIADOS_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function _marcarIntentoPNEEnviado(fecha) {
+    try {
+      const lista = _intentosPNEYaEnviados();
+      const clave = String(fecha);
+      if (lista.indexOf(clave) === -1) {
+        lista.push(clave);
+        localStorage.setItem(PNE_ENVIADOS_KEY, JSON.stringify(lista));
+      }
+    } catch (e) { /* si falla, en el peor caso se reintenta la próxima vez — el servidor
+                     descarta duplicados por attempt_id, sin efectos secundarios */ }
+  }
+
   (function () {
     const originalSet = Storage.set;
     if (typeof originalSet !== 'function') return;
 
     Storage.set = function (key, value) {
-      let capturaPendiente = null;
+      let entradasNuevas = [];
+      let detalleIntentoActual = null; // { preguntas, respuestas } del intento que se está cerrando ahora mismo, si está disponible
 
-      if (key === 'simulacroNacional') {
+      if (key === 'simulacroNacional' && value && Array.isArray(value.historial)) {
         try {
-          const antes = Storage.get('simulacroNacional');
-          const historialAntes = (antes && Array.isArray(antes.historial)) ? antes.historial.length : 0;
-          const historialDespues = (value && Array.isArray(value.historial)) ? value.historial.length : 0;
-          const esEntregaFinal = historialDespues > historialAntes
-                                && antes && antes.enProgreso
-                                && Array.isArray(antes.enProgreso.preguntas)
-                                && antes.enProgreso.respuestas;
-          if (esEntregaFinal) {
-            capturaPendiente = {
-              registro: value.historial[value.historial.length - 1],
-              preguntas: antes.enProgreso.preguntas,
-              respuestas: antes.enProgreso.respuestas
-            };
+          const yaEnviados = _intentosPNEYaEnviados();
+          entradasNuevas = value.historial.filter(function (registro) {
+            return registro && registro.fecha != null && yaEnviados.indexOf(String(registro.fecha)) === -1;
+          });
+          if (entradasNuevas.length) {
+            // Mejor esfuerzo: capturar preguntas/respuestas del intento recién
+            // cerrado (para pneAnswers) leyendo el estado ANTES de este guardado.
+            // Si no están disponibles (ej. viene de un backfill), se envía igual
+            // el resumen agregado — solo se pierde el detalle por pregunta.
+            const antes = Storage.get('simulacroNacional');
+            if (antes && antes.enProgreso && Array.isArray(antes.enProgreso.preguntas) && antes.enProgreso.respuestas) {
+              detalleIntentoActual = { preguntas: antes.enProgreso.preguntas, respuestas: antes.enProgreso.respuestas };
+            }
           }
-        } catch (e) { /* si algo falla al inspeccionar, simplemente no se registra este intento */ }
+        } catch (e) { /* si algo falla al inspeccionar, simplemente no se registra este guardado */ }
       }
 
       const resultado = originalSet.call(Storage, key, value); // comportamiento original, sin cambios
 
-      if (capturaPendiente) {
-        try { _registrarIntentoPNE(capturaPendiente.registro, capturaPendiente.preguntas, capturaPendiente.respuestas); }
-        catch (e) { /* Analytics nunca debe interrumpir el Simulacro PNE */ }
+      if (entradasNuevas.length) {
+        entradasNuevas.forEach(function (registro) {
+          try {
+            _marcarIntentoPNEEnviado(registro.fecha); // marcar ANTES de enviar: nunca se duplica, aunque falle el envío
+            const preguntas = (detalleIntentoActual && registro === value.historial[value.historial.length - 1]) ? detalleIntentoActual.preguntas : [];
+            const respuestas = (detalleIntentoActual && registro === value.historial[value.historial.length - 1]) ? detalleIntentoActual.respuestas : {};
+            _registrarIntentoPNE(registro, preguntas, respuestas, 'live_event');
+          } catch (e) { /* Analytics nunca debe interrumpir el Simulacro PNE */ }
+        });
       }
 
       return resultado;
     };
   })();
 
-  function _generarAttemptId(profileId) {
-    return 'pne_' + profileId + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  function _generarAttemptId(profileId, fecha) {
+    // Determinístico por perfil+fecha: si por cualquier motivo este mismo
+    // intento se procesa más de una vez (reintento de red, doble carga),
+    // el servidor lo descarta por clave primaria duplicada — nunca se
+    // duplica un intento real en Supabase.
+    return 'pne_' + profileId + '_' + fecha;
   }
 
-  function _registrarIntentoPNE(registro, preguntas, respuestas) {
+  function _registrarIntentoPNE(registro, preguntas, respuestas, source) {
     const data = Storage.load();
     const profileId = data.profileMeta && data.profileMeta.profileId;
     if (!profileId) return; // sin profileId (no debería ocurrir con un perfil real) → no se registra
@@ -132,7 +166,7 @@
     const grupo = (typeof MQCProfiles !== 'undefined' && MQCProfiles.activeMeta && MQCProfiles.activeMeta())
       ? (MQCProfiles.activeMeta().group || null) : null;
 
-    const attemptId = _generarAttemptId(profileId);
+    const attemptId = _generarAttemptId(profileId, registro.fecha);
 
     window.AnalyticsQueue.push('pneAttempts', {
       attempt_id: attemptId,
@@ -146,10 +180,14 @@
       fisica_aciertos: _buscarCiencia(registro.porCiencia, 'Física'),
       quimica_aciertos: _buscarCiencia(registro.porCiencia, 'Química'),
       proyeccion_final: registro.proyeccionFinal,
-      fecha: new Date(registro.fecha).toISOString()
+      fecha: new Date(registro.fecha).toISOString(),
+      source: source || 'live_event' /* SPRINT ANALYTICS — PARTE 4: 'live_event' | 'legacy_backfill' */
     });
 
     // Una fila por pregunta respondida (Sección 14) — alimenta el análisis de ítems.
+    // Si no hay detalle disponible (ej. backfill de un intento antiguo), preguntas
+    // viene vacío y simplemente no se genera ninguna fila de pneAnswers para ese
+    // intento — el resumen agregado en pneAttempts sí queda completo igual.
     preguntas.forEach(function (p) {
       window.AnalyticsQueue.push('pneAnswers', {
         attempt_id: attemptId,
@@ -279,29 +317,16 @@
 
       // 3. Intentos de PNE ya presentes en el historial (solo el resumen agregado —
       //    ver límite documentado arriba: no hay detalle pregunta por pregunta disponible).
+      //    Reutiliza _registrarIntentoPNE (misma función que usa el hook en vivo) y el
+      //    mismo registro de "ya enviados", así que si el hook en vivo procesa este
+      //    mismo intento en algún momento (no debería, pero por las dudas), no se duplica.
       const sn = data.simulacroNacional;
       if (sn && Array.isArray(sn.historial)) {
-        const grupoActual = (typeof MQCProfiles !== 'undefined' && MQCProfiles.activeMeta && MQCProfiles.activeMeta())
-          ? (MQCProfiles.activeMeta().group || null) : null;
-        sn.historial.forEach(function (registro, indice) {
-          // attempt_id determinístico: si por alguna razón esta función corriera dos veces
-          // antes de que el marcador local se guarde, el servidor lo descarta por clave
-          // primaria duplicada (mismo comportamiento que el resto de la cola, Sección 21).
-          const attemptId = 'pne_backfill_' + profileId + '_' + indice + '_' + (registro.fecha || 0);
-          window.AnalyticsQueue.push('pneAttempts', {
-            attempt_id: attemptId,
-            profile_id: profileId,
-            grupo: grupoActual,
-            nota_presentacion: registro.presentacion,
-            aciertos: registro.aciertos,
-            nota_pne: registro.notaPNE,
-            aprobado: !!registro.favorable,
-            biologia_aciertos: _buscarCiencia(registro.porCiencia, 'Biología'),
-            fisica_aciertos: _buscarCiencia(registro.porCiencia, 'Física'),
-            quimica_aciertos: _buscarCiencia(registro.porCiencia, 'Química'),
-            proyeccion_final: registro.proyeccionFinal,
-            fecha: new Date(registro.fecha || Date.now()).toISOString()
-          });
+        sn.historial.forEach(function (registro) {
+          if (!registro || registro.fecha == null) return;
+          if (_intentosPNEYaEnviados().indexOf(String(registro.fecha)) !== -1) return; // ya enviado
+          _marcarIntentoPNEEnviado(registro.fecha);
+          _registrarIntentoPNE(registro, [], {}, 'legacy_backfill');
         });
       }
 
@@ -393,7 +418,23 @@
   }
 
   /* ================================================================
-     5. EJECUTAR LA SINCRONIZACIÓN INICIAL — una vez por carga de página
+     5. LATIDO DE SESIÓN — SPRINT ANALYTICS, PARTE 8 (Activo/Inactivo)
+     ================================================================
+     Una fila liviana en profile_sessions por cada carga real de la
+     app con un perfil no invitado. El panel calcula last_seen_at como
+     el MAX(seen_at) de estas filas — así "Activo" vs "Inactivo" (30
+     días sin uso) refleja actividad real, no solo la fecha de
+     creación del perfil. No se manda nada para perfiles invitados
+     (no persisten, no tiene sentido rastrear su actividad). */
+  function _registrarLatidoSesion() {
+    const data = Storage.load();
+    const profileId = data.profileMeta && data.profileMeta.profileId;
+    if (!profileId) return;
+    window.AnalyticsQueue.push('profileSessions', { profile_id: profileId });
+  }
+
+  /* ================================================================
+     6. EJECUTAR LA SINCRONIZACIÓN INICIAL — una vez por carga de página
      ================================================================
      Cubre tanto "un perfil ya existía y Analytics se activó después"
      como "el estudiante cambió a otro perfil ya existente" — el
@@ -402,5 +443,6 @@
      archivo vuelve a ejecutarse desde cero en ambos casos, sin
      necesitar envolver MQCProfiles.select() por separado. */
   try { _sincronizacionInicial(); } catch (e) { /* nunca debe interrumpir la carga de la app */ }
+  try { _registrarLatidoSesion(); } catch (e) { /* nunca debe interrumpir la carga de la app */ }
 
 })();

@@ -18,8 +18,10 @@
    que hace es visible y reversible.
 
    Cómo abrirlo:
-   - Tocar/clicar 5 veces seguidas el texto "Versión 1.0 — Fase 0"
-     al pie del sidebar (patrón "modo desarrollador" tipo Android).
+   - Tocar/clicar 5 veces seguidas, en menos de 3 segundos, el logo
+     oficial de MásQueCiencia dentro de "Acerca de la Plataforma"
+     (SPRINT ANALYTICS — PARTE 11: antes estaba en el pie del sidebar,
+     se movió acá por pedido explícito — sin ninguna pista visual).
    - O visitar la URL con ?mqcadmin=1 (ej. .../?mqcadmin=1).
 
    100% ADITIVO: no toca Storage.js, router.js, ni simulacro-nacional.js
@@ -31,7 +33,13 @@
 window.MQCDevTools = (function () {
   'use strict';
 
-  const FOOTER_SELECTOR = '.sidebar-footer span';
+  /* SPRINT ANALYTICS — PARTE 11: el logo de "Acerca de" se re-renderiza
+     cada vez que se navega a esa sección (router.js, _showPlaceholder),
+     así que el trigger usa delegación de eventos sobre document — no
+     necesita volver a engancharse cada vez que el logo aparece/desaparece
+     del DOM. router.js le agrega el id="mqc-about-logo" solo a esa imagen
+     (ver _placeholderMeta 'about'), ninguna otra imagen del sitio lo tiene. */
+  const LOGO_SELECTOR = '#mqc-about-logo';
   const TAPS_REQUIRED = 5;
   const TAP_WINDOW_MS = 2500;
 
@@ -253,9 +261,9 @@ window.MQCDevTools = (function () {
     else _abrirPanel();
   }
 
-  /* ── Disparador: 5 toques seguidos sobre el pie del sidebar ──── */
+  /* ── Disparador: 5 toques seguidos sobre el logo de "Acerca de" ── */
   function _resetToques() { _tapCount = 0; }
-  function _onFooterTap() {
+  function _onLogoTap() {
     _tapCount++;
     clearTimeout(_tapTimer);
     _tapTimer = setTimeout(_resetToques, TAP_WINDOW_MS);
@@ -263,8 +271,13 @@ window.MQCDevTools = (function () {
   }
 
   function init() {
-    const footer = document.querySelector(FOOTER_SELECTOR);
-    if (footer) footer.addEventListener('click', _onFooterTap);
+    // Delegación sobre document: el logo se crea/destruye dinámicamente
+    // cada vez que se navega a "Acerca de" (ver router.js) — así no hace
+    // falta re-enganchar el listener en cada render.
+    document.addEventListener('click', (e) => {
+      const logo = e.target.closest ? e.target.closest(LOGO_SELECTOR) : null;
+      if (logo) _onLogoTap();
+    });
 
     // Atajo directo por URL: .../?mqcadmin=1
     try {

@@ -36,6 +36,18 @@ window.MQCProfilesUI = (function () {
       .join('');
     return `<select id="${idHtml}" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">${optsHtml}</select>`;
   }
+
+  /* SPRINT ANALYTICS — PARTE 6: variante SIN "Sin asignar (Grupo pendiente)",
+     para los formularios de CREAR un perfil nuevo — ahí el grupo pasa a ser
+     obligatorio. No se toca _renderSelectorGrupo (arriba) porque la sigue
+     usando la edición de un perfil ya existente, donde "sin asignar" debe
+     poder seguir eligiéndose sin romper nada de lo ya construido. */
+  function _renderSelectorGrupoObligatorio(idHtml) {
+    const optsHtml = ['<option value="" disabled selected>— Selecciona tu grupo/sección —</option>']
+      .concat(GRUPOS_DISPONIBLES.map(g => `<option value="${esc(g)}">${esc(g)}</option>`))
+      .join('');
+    return `<select id="${idHtml}" class="qi-overlay-input" required style="width:100%;margin:0 0 .5rem">${optsHtml}</select>`;
+  }
   function P(){ return (typeof MQCProfiles !== 'undefined') ? MQCProfiles : null; }
   function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
   function fecha(ts){ try { return new Date(ts).toLocaleDateString('es-CR',{day:'2-digit',month:'short',year:'numeric'}); } catch(e){ return '—'; } }
@@ -171,7 +183,7 @@ window.MQCProfilesUI = (function () {
     const host = ov.querySelector('#mqc-gate-create');
     host.innerHTML = `<div class="mqc-gate-create-panel" style="background:var(--bg-deep,#0d0d24);border-radius:var(--radius-md,12px);padding:1rem;margin:.3rem 0 .8rem;border:1px solid var(--border)">
       <input id="mqc-nf-alias" placeholder="Alias (ej. Bryan)" maxlength="24" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
-      ${_renderSelectorGrupo('mqc-nf-group', '')}
+      ${_renderSelectorGrupoObligatorio('mqc-nf-group')}
       <p style="font-size:.72rem;color:var(--text-muted);margin:0 0 .4rem">Elige tu insignia:</p>
       <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem" id="mqc-nf-avatars">${AVATARS.map((a,i)=>`<button data-av="${a}" class="mqc-avatar-btn${i===0?' active':''}">${a}</button>`).join('')}</div>
       <button id="mqc-nf-go" class="btn btn-primary btn-sm" style="width:100%">Crear y entrar</button>
@@ -182,6 +194,8 @@ window.MQCProfilesUI = (function () {
     host.querySelector('#mqc-nf-go').addEventListener('click',()=>{
       const alias=host.querySelector('#mqc-nf-alias').value;
       const group=host.querySelector('#mqc-nf-group').value;
+      // SPRINT ANALYTICS — PARTE 6: grupo/sección obligatorio para perfiles nuevos.
+      if (!group) { host.querySelector('#mqc-nf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
       const r=P().create(alias,group,av);
       if(!r.ok){ host.querySelector('#mqc-nf-err').textContent=r.message||'No se pudo crear.'; return; }
       location.reload();
@@ -201,6 +215,36 @@ window.MQCProfilesUI = (function () {
     reader.readAsText(f);
   }
 
+  /* SPRINT ANALYTICS — PARTE 7: modal obligatorio para perfiles legacy sin
+     grupo/sección. Se muestra al cargar la app si el perfil activo (no
+     invitado) no tiene grupo asignado. NO toca XP, progreso, notas,
+     medallas, PNE ni profileId — solo agrega el grupo faltante mediante
+     la misma función ya existente p.setGroup(), y sincroniza a Supabase
+     reutilizando el mismo camino que ya usa la edición de perfil. */
+  function _mostrarCompletarPerfilSiHaceFalta(){
+    const p = P(); if (!p || p.isGuest()) return;
+    const meta = p.activeMeta();
+    if (!meta || meta.group) return; // ya tiene grupo, o no hay perfil activo real
+    if (document.getElementById('mqc-completar-perfil')) return; // ya se está mostrando
+
+    const ov=_overlay('mqc-completar-perfil');
+    ov.innerHTML=`<div class="modal-card" style="max-width:380px;text-align:center">
+      <h2 style="margin:0 0 .3rem;font-family:var(--font-display,inherit);color:var(--cyan,#1FDBFF)">COMPLETA TU PERFIL</h2>
+      <p style="color:var(--text-secondary,#B8B8E0);font-size:.88rem;margin:.3rem 0 1rem">Selecciona tu grupo/sección para continuar.</p>
+      ${_renderSelectorGrupoObligatorio('mqc-cp-group')}
+      <button id="mqc-cp-go" class="btn btn-primary btn-sm" style="width:100%;margin-top:.4rem">Guardar y continuar</button>
+      <p id="mqc-cp-err" style="color:var(--red,#FF6B6B);font-size:.8rem;margin:.4rem 0 0;min-height:1em"></p>
+    </div>`;
+    // Sin botón de cerrar ni clic-afuera-para-cerrar: es obligatorio, a propósito.
+    ov.querySelector('#mqc-cp-go').addEventListener('click', () => {
+      const group = ov.querySelector('#mqc-cp-group').value;
+      if (!group) { ov.querySelector('#mqc-cp-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
+      const activeId = p.activeId ? p.activeId() : null;
+      if (activeId) p.setGroup(activeId, group); // reutiliza la función ya existente (local + sync a Supabase, ver analytics-hooks.js)
+      ov.remove();
+    });
+  }
+
   /* ── CHIP flotante ── */
   function mountChip(){
     const p = P(); if(!p) return;
@@ -213,6 +257,7 @@ window.MQCProfilesUI = (function () {
     chip.innerHTML = `<span style="font-size:1.3rem">${esc(meta.avatar)}</span><span style="font-weight:700">${esc(meta.alias)}</span>`;
     chip.addEventListener('click',()=>{ (p.isGuest()) ? openManager() : openChipMenu(); });
     document.body.appendChild(chip);
+    _mostrarCompletarPerfilSiHaceFalta();
   }
 
   /* menú rápido del chip: Mi Bitácora / Administrar perfiles */
@@ -315,14 +360,17 @@ window.MQCProfilesUI = (function () {
     const host = ov.querySelector('#mqc-mgr-create');
     host.innerHTML = `<div style="background:var(--bg-deep,#0d0d24);border-radius:var(--radius-md,12px);padding:.9rem;margin:.5rem 0">
       <input id="mqc-cf-alias" placeholder="Alias" maxlength="24" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
-      ${_renderSelectorGrupo('mqc-cf-group', '')}
+      ${_renderSelectorGrupoObligatorio('mqc-cf-group')}
       <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.6rem">${AVATARS.map((a,i)=>`<button data-av="${a}" style="font-size:1.3rem;background:${i===0?_accent():'var(--bg-elevated,#1e1e4a)'};border:none;border-radius:8px;padding:.2rem .4rem;cursor:pointer">${a}</button>`).join('')}</div>
       <button id="mqc-cf-go" class="btn btn-primary btn-sm" style="width:100%">Crear</button>
       <p id="mqc-cf-err" style="color:var(--red,#FF6B6B);font-size:.8rem;margin:.4rem 0 0"></p></div>`;
     let av=AVATARS[0];
     host.querySelectorAll('[data-av]').forEach(b=>b.addEventListener('click',()=>{av=b.getAttribute('data-av');host.querySelectorAll('[data-av]').forEach(x=>x.style.background='var(--bg-elevated,#1e1e4a)');b.style.background=_accent();}));
     host.querySelector('#mqc-cf-go').addEventListener('click',()=>{
-      const r=P().create(host.querySelector('#mqc-cf-alias').value,host.querySelector('#mqc-cf-group').value,av);
+      const group = host.querySelector('#mqc-cf-group').value;
+      // SPRINT ANALYTICS — PARTE 6: grupo/sección obligatorio para perfiles nuevos.
+      if (!group) { host.querySelector('#mqc-cf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
+      const r=P().create(host.querySelector('#mqc-cf-alias').value,group,av);
       if(!r.ok){host.querySelector('#mqc-cf-err').textContent=r.message||'No se pudo crear.';return;}
       location.reload();
     });
