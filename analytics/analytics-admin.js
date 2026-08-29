@@ -20,7 +20,7 @@
   let _session = null;   // { access_token, user } | null
   let _vista = 'resumen';
   let _datos = null;     // cache de las vistas ya cargadas
-  let _filtros = { grado: 'todos', grupo: 'todos', estado: 'todos', busqueda: '', mostrarEliminados: false };
+  let _filtros = { grado: 'todos', grupo: 'todos', estado: 'todos', busqueda: '', mostrarEliminados: false, actividad: 'no_archivados' };
   let _ordenSeguimiento = { campo: 'alias', asc: true };
   let _ordenSeccion = { campo: 'grupo', asc: true };
   let _ordenItems = { campo: 'pct_error', asc: false };
@@ -199,8 +199,13 @@
      SECCIÓN: RESUMEN (Sección 17)
      ================================================================ */
   function _htmlResumen() {
-    const s = _datos.seguimiento.filter(x => !x.eliminado); // perfiles activos únicamente (ver Sección 3 de la migración)
-    const ps = _datos.porSeccion, pa = _datos.pneAttemptsCrudo;
+    // SPRINT ANALYTICS — PARTE 15: "perfiles registrados" = no eliminados
+    // Y no archivados (ambos se ocultan de las estadísticas por defecto).
+    const s = _datos.seguimiento.filter(x => !x.eliminado && !x.archived);
+    const archivadosCount = _datos.seguimiento.filter(x => x.archived && !x.eliminado).length;
+    const idsExcluidos = new Set(_datos.seguimiento.filter(x => x.eliminado || x.archived).map(x => x.profile_id));
+    const ps = _datos.porSeccion;
+    const pa = _datos.pneAttemptsCrudo.filter(x => !idsExcluidos.has(x.profile_id)); // Parte 15: PNE también excluye archivados/eliminados
     const perfiles = s.length;
     const conActividad = s.filter(x => x.examenes_10_aprobados > 0 || x.examenes_11_aprobados > 0 || x.pne_intentos > 0).length;
     const examenesAprobados = s.reduce((acc, x) => acc + (x.examenes_10_aprobados || 0) + (x.examenes_11_aprobados || 0), 0);
@@ -224,7 +229,7 @@
         ${_card('Grupo con mejor promedio', mejorGrupo ? mejorGrupo.grupo : '—', mejorGrupo ? mejorGrupo.promedio_pne + '% PNE' : '')}
         ${_card('Grupo que requiere refuerzo', peorGrupo ? peorGrupo.grupo : '—', peorGrupo ? peorGrupo.promedio_pne + '% PNE' : '')}
       </div>
-      <p class="an-note">Los promedios de grupo solo consideran grupos con al menos un intento de PNE registrado.</p>`;
+      <p class="an-note">Los promedios de grupo solo consideran grupos con al menos un intento de PNE registrado.${archivadosCount ? ` · 📦 Archivados: ${archivadosCount} (no incluidos arriba)` : ''}</p>`;
   }
 
   function _card(label, value, sub) {
@@ -239,10 +244,25 @@
     return ['todos'].concat([...set].sort());
   }
 
+  const DIAS_INACTIVO = 30; // Parte 8: umbral configurable de "sin actividad"
+
+  function _estadoActividad(x) {
+    if (x.archived) return 'archivado';
+    if (!x.last_seen_at) return 'inactivo'; // nunca registró una sesión — se trata como inactivo, no se asume actividad
+    const dias = (Date.now() - new Date(x.last_seen_at).getTime()) / 86400000;
+    return dias > DIAS_INACTIVO ? 'inactivo' : 'activo';
+  }
+
   function _filasSeguimientoFiltradas() {
     let filas = _datos.seguimiento.slice();
     const f = _filtros;
     if (!f.mostrarEliminados) filas = filas.filter(x => !x.eliminado);
+    // Parte 15: "perfiles registrados" = no archivados, por defecto.
+    if (f.actividad === 'todos') { /* no filtra por estado de actividad */ }
+    else if (f.actividad === 'archivados') filas = filas.filter(x => _estadoActividad(x) === 'archivado');
+    else if (f.actividad === 'activos') filas = filas.filter(x => _estadoActividad(x) === 'activo');
+    else if (f.actividad === 'inactivos') filas = filas.filter(x => _estadoActividad(x) === 'inactivo');
+    else filas = filas.filter(x => !x.archived); // default: 'no_archivados' — activos + inactivos
     if (f.grado === '10') filas = filas.filter(x => x.examenes_10_aprobados > 0);
     if (f.grado === '11') filas = filas.filter(x => x.examenes_11_aprobados > 0);
     if (f.grupo !== 'todos') filas = filas.filter(x => (x.grupo || 'Grupo pendiente') === f.grupo);
@@ -276,6 +296,13 @@
           <option value="10_completo">10.º completo (9/9)</option>
           <option value="11_completo">11.º completo (4/4)</option>
         </select>
+        <select id="an-f-actividad">
+          <option value="no_archivados">Activos + Inactivos</option>
+          <option value="activos">Solo activos</option>
+          <option value="inactivos">Solo inactivos</option>
+          <option value="archivados">Archivados</option>
+          <option value="todos">Todos (incluye archivados)</option>
+        </select>
         <input type="text" id="an-f-busqueda" placeholder="Buscar por nombre…">
         <label class="an-checkbox-label" style="display:flex;align-items:center;gap:.35rem;font-size:.82rem;color:var(--text-muted)">
           <input type="checkbox" id="an-f-eliminados">
@@ -283,6 +310,12 @@
         </label>
       </div>
       <div id="an-tabla-seguimiento-wrap"></div>`;
+  }
+
+  function _pillEstadoActividad(estado) {
+    if (estado === 'archivado') return '<span class="an-pill an-pill-muted">📦 Archivado</span>';
+    if (estado === 'inactivo') return '<span class="an-pill an-pill-gold">💤 Inactivo</span>';
+    return '<span class="an-pill an-pill-green">Activo</span>';
   }
 
   function _filasHtmlSeguimiento() {
@@ -293,46 +326,99 @@
       <div class="an-table-wrap"><table class="an-table">
         <thead><tr>
           <th data-sort="alias">Estudiante</th><th data-sort="grupo">Grupo</th>
+          <th>Estado</th>
           <th data-sort="examenes_10_aprobados">Exámenes 10.º</th><th data-sort="examenes_11_aprobados">Exámenes 11.º</th>
           <th data-sort="pne_aprobada">PNE 11.º</th><th data-sort="pne_mejor_nota">Mejor PNE</th><th data-sort="pne_intentos">Intentos</th>
-          ${verEliminados ? '<th>Estado</th><th>Profile ID</th>' : ''}
+          <th>Acciones</th>
+          ${verEliminados ? '<th>Eliminado</th><th>Profile ID</th>' : ''}
         </tr></thead>
-        <tbody>${filas.map(x => `
+        <tbody>${filas.map(x => {
+          const estado = _estadoActividad(x);
+          return `
           <tr${x.eliminado ? ' style="opacity:.55"' : ''}>
             <td>${_esc(x.alias)}</td>
             <td>${x.grupo ? _esc(x.grupo) : '<span class="an-pill an-pill-gold">Grupo pendiente</span>'}</td>
+            <td>${_pillEstadoActividad(estado)}</td>
             <td>${x.examenes_10_aprobados} / 9</td>
             <td>${x.examenes_11_aprobados} / 4</td>
             <td>${x.pne_intentos === 0 ? '<span class="an-pill an-pill-muted">No realizada</span>' : x.pne_aprobada ? '<span class="an-pill an-pill-green">Aprobada</span>' : '<span class="an-pill an-pill-red">No aprobada</span>'}</td>
             <td>${x.pne_mejor_nota == null ? '—' : Number(x.pne_mejor_nota).toFixed(1) + '%'}</td>
             <td>${x.pne_intentos}</td>
-            ${verEliminados ? `<td>${x.eliminado ? '<span class="an-pill an-pill-red">🗑️ Eliminado</span>' : '<span class="an-pill an-pill-green">Activo</span>'}</td><td style="font-family:var(--font-code);font-size:.75rem">${_esc(x.profile_id)}</td>` : ''}
-          </tr>`).join('')}
+            <td>${x.archived
+                ? `<button class="btn btn-ghost btn-sm" data-restaurar="${_esc(x.profile_id)}">↺ Restaurar</button>`
+                : `<button class="btn btn-ghost btn-sm" data-archivar="${_esc(x.profile_id)}">📦 Archivar</button>`}</td>
+            ${verEliminados ? `<td>${x.eliminado ? '<span class="an-pill an-pill-red">🗑️ Sí</span>' : '—'}</td><td style="font-family:var(--font-code);font-size:.75rem">${_esc(x.profile_id)}</td>` : ''}
+          </tr>`; }).join('')}
         </tbody>
       </table></div>
       ${verEliminados ? '<p style="font-size:.75rem;color:var(--text-muted);margin-top:.5rem">Los profile_id de los perfiles eliminados son los que podés limpiar de Supabase — ver SUPABASE_MIGRATION_profile_deletions.sql, Sección 4.</p>' : ''}`;
   }
 
+  /* SPRINT ANALYTICS — PARTE 9, 10, 16: archivar/restaurar. Escribe
+     directamente en profile_admin_state vía REST — esta tabla SOLO
+     acepta escrituras de un admin autenticado (RLS, ver la migración),
+     nunca de un estudiante (rol anon no tiene ninguna policy ahí). */
+  async function _archivarPerfil(profileId, archivar) {
+    const cfg = _cfg();
+    const url = cfg.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/profile_admin_state';
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': cfg.supabaseAnonKey,
+        'Authorization': 'Bearer ' + (_session && _session.access_token || cfg.supabaseAnonKey),
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        profile_id: profileId,
+        archived: archivar,
+        archived_at: archivar ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString()
+      })
+    });
+    await _cargarTodosLosDatos();
+    document.getElementById('an-tabla-seguimiento-wrap').innerHTML = _filasHtmlSeguimiento();
+    _bindAccionesSeguimiento();
+    _bindOrdenSeguimientoHeaders();
+  }
+
+  function _bindAccionesSeguimiento() {
+    document.querySelectorAll('[data-archivar]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (confirm('¿Archivar este perfil? No aparecerá en el seguimiento por defecto, pero conserva todos sus datos. Solo un admin puede restaurarlo.')) {
+          _archivarPerfil(btn.getAttribute('data-archivar'), true);
+        }
+      });
+    });
+    document.querySelectorAll('[data-restaurar]').forEach(btn => {
+      btn.addEventListener('click', () => _archivarPerfil(btn.getAttribute('data-restaurar'), false));
+    });
+  }
+
   function _bindSeguimiento() {
     document.getElementById('an-tabla-seguimiento-wrap').innerHTML = _filasHtmlSeguimiento();
-    ['an-f-grado', 'an-f-grupo', 'an-f-estado'].forEach(id => {
+    ['an-f-grado', 'an-f-grupo', 'an-f-estado', 'an-f-actividad'].forEach(id => {
       document.getElementById(id).addEventListener('change', (e) => {
-        const key = id === 'an-f-grado' ? 'grado' : id === 'an-f-grupo' ? 'grupo' : 'estado';
+        const key = id === 'an-f-grado' ? 'grado' : id === 'an-f-grupo' ? 'grupo' : id === 'an-f-estado' ? 'estado' : 'actividad';
         _filtros[key] = e.target.value;
         document.getElementById('an-tabla-seguimiento-wrap').innerHTML = _filasHtmlSeguimiento();
+        _bindAccionesSeguimiento();
         _bindOrdenSeguimientoHeaders();
       });
     });
     document.getElementById('an-f-busqueda').addEventListener('input', (e) => {
       _filtros.busqueda = e.target.value;
       document.getElementById('an-tabla-seguimiento-wrap').innerHTML = _filasHtmlSeguimiento();
+      _bindAccionesSeguimiento();
       _bindOrdenSeguimientoHeaders();
     });
     document.getElementById('an-f-eliminados').addEventListener('change', (e) => {
       _filtros.mostrarEliminados = !!e.target.checked;
       document.getElementById('an-tabla-seguimiento-wrap').innerHTML = _filasHtmlSeguimiento();
+      _bindAccionesSeguimiento();
       _bindOrdenSeguimientoHeaders();
     });
+    _bindAccionesSeguimiento();
     _bindOrdenSeguimientoHeaders();
   }
 
