@@ -148,9 +148,18 @@ const Router = (() => {
     const iconClass = 'placeholder-icon' + (meta.iconGlow ? ' placeholder-icon-glow' : '');
     /* SPRINT MULTICIENCIA — FASE 1: campo opcional 'image' (no rompe nada
        de lo existente — si una sección no lo define, no se renderiza
-       ninguna etiqueta <img>, exactamente el comportamiento de siempre). */
+       ninguna etiqueta <img>, exactamente el comportamiento de siempre).
+       SPRINT ANALYTICS — PARTE 13: centrado real vía flex/justify-content
+       en un contenedor propio (.placeholder-image-wrap, ver main.css),
+       en vez de depender de que <img> herede text-align del padre — así
+       queda centrado de forma robusta y responsive, sin márgenes fijos.
+       PARTE 11: el id="mqc-about-logo" SOLO se agrega cuando la imagen es
+       específicamente el logo de "Acerca de" — es el único punto donde
+       engancha el disparador oculto del panel de desarrollador
+       (ver js/shared/devtools.js). Ninguna otra imagen del sitio lo tiene. */
+    const imgId = (section === 'about') ? ' id="mqc-about-logo"' : '';
     const imageHTML = meta.image
-      ? `<img src="${meta.image}" alt="${meta.imageAlt || ''}" style="max-width:260px;width:100%;height:auto;border-radius:var(--radius-lg);margin-bottom:1rem;box-shadow:0 8px 30px rgba(0,0,0,.4)">`
+      ? `<div class="placeholder-image-wrap"><img${imgId} src="${meta.image}" alt="${meta.imageAlt || ''}" class="placeholder-image"></div>`
       : '';
     const accentStyle = meta.accent ? ` style="color:${meta.accent};text-shadow:0 0 16px ${meta.accent}55"` : '';
 
