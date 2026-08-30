@@ -20,7 +20,7 @@
   let _session = null;   // { access_token, user } | null
   let _vista = 'resumen';
   let _datos = null;     // cache de las vistas ya cargadas
-  let _filtros = { grado: 'todos', grupo: 'todos', estado: 'todos', busqueda: '', mostrarEliminados: false, actividad: 'no_archivados' };
+  let _filtros = { grado: 'todos', grupo: 'todos', estado: 'todos', busqueda: '', mostrarEliminados: false, actividad: 'no_archivados', rol: 'todos' };
   let _ordenSeguimiento = { campo: 'alias', asc: true };
   let _ordenSeccion = { campo: 'grupo', asc: true };
   let _ordenItems = { campo: 'pct_error', asc: false };
@@ -93,15 +93,16 @@
      CARGA DE DATOS (vistas de solo lectura)
      ================================================================ */
   async function _cargarTodosLosDatos() {
-    const [seguimiento, porSeccion, porCiencia, items, distribucion, pneAttemptsCrudo] = await Promise.all([
+    const [seguimiento, porSeccion, porCiencia, items, distribucion, pneAttemptsCrudo, panoramaColegios] = await Promise.all([
       _restGet('v_seguimiento_academico?select=*'),
       _restGet('v_resultados_por_seccion?select=*'),
       _restGet('v_rendimiento_por_ciencia?select=*'),
       _restGet('v_analisis_items?select=*'),
       _restGet('v_distribucion_opciones?select=*'),
-      _restGet('pne_attempts?select=nota_pne,aprobado,grupo,fecha')
+      _restGet('pne_attempts?select=nota_pne,aprobado,grupo,fecha'),
+      _restGet('v_panorama_colegios?select=*')
     ]);
-    _datos = { seguimiento, porSeccion, porCiencia, items, distribucion, pneAttemptsCrudo };
+    _datos = { seguimiento, porSeccion, porCiencia, items, distribucion, pneAttemptsCrudo, panoramaColegios };
   }
 
   /* ================================================================
@@ -175,6 +176,7 @@
         </div>
         <div class="an-tabs">
           <button class="an-tab" data-tab="resumen">Resumen</button>
+          <button class="an-tab" data-tab="panorama">🏫 Panorama Global</button>
           <button class="an-tab" data-tab="seguimiento">Seguimiento académico</button>
           <button class="an-tab" data-tab="pne">PNE 11.º — Analítica</button>
           <button class="an-tab" data-tab="items">Análisis de ítems</button>
@@ -190,20 +192,44 @@
     document.querySelectorAll('.an-tab').forEach(b => b.classList.toggle('active', b.getAttribute('data-tab') === _vista));
     const cont = document.getElementById('an-contenido');
     if (_vista === 'resumen') cont.innerHTML = _htmlResumen();
+    else if (_vista === 'panorama') cont.innerHTML = _htmlPanorama();
     else if (_vista === 'seguimiento') { cont.innerHTML = _htmlSeguimiento(); _bindSeguimiento(); }
     else if (_vista === 'pne') { cont.innerHTML = _htmlPNE(); _bindOrdenTabla('an-tabla-seccion', _ordenSeccion, _htmlFilasSeccion); }
     else if (_vista === 'items') { cont.innerHTML = _htmlItems(); _bindItems(); }
   }
 
   /* ================================================================
+     SECCIÓN: PANORAMA GLOBAL (Colegio + Docente)
+     ================================================================ */
+  function _htmlPanorama() {
+    const filas = (_datos.panoramaColegios || []).slice();
+    if (!filas.length) return `<div class="an-empty">Todavía no hay datos de colegio registrados.</div>`;
+    return `
+      <h2 class="an-section-title">🏫 Panorama Global — por colegio</h2>
+      <div class="an-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-top:1rem">
+        ${filas.map(f => `
+          <div class="an-card" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:1.1rem">
+            <h3 style="margin:0 0 .6rem;font-size:.95rem">${f.colegio === 'Sin colegio (legacy)' ? '❔' : '🏫'} ${_esc(f.colegio)}</h3>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.4rem;color:var(--text-secondary)"><span>Estudiantes</span><strong style="color:var(--cyan)">${f.estudiantes}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.4rem;color:var(--text-secondary)"><span>Docentes</span><strong style="color:var(--violet)">${f.docentes}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.4rem;color:var(--text-secondary)"><span>PNE realizadas</span><strong>${f.pne_realizadas}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-secondary)"><span>Tasa aprobación PNE</span><strong>${f.tasa_aprobacion_pne == null ? '—' : f.tasa_aprobacion_pne + '%'}</strong></div>
+          </div>`).join('')}
+      </div>
+      <p class="an-note" style="margin-top:1rem">Los perfiles archivados y eliminados no se incluyen en estos números. "Sin colegio (legacy)" son perfiles creados antes de que este campo existiera.</p>`;
+  }
+
+  /* ================================================================
      SECCIÓN: RESUMEN (Sección 17)
      ================================================================ */
   function _htmlResumen() {
-    // SPRINT ANALYTICS — PARTE 15: "perfiles registrados" = no eliminados
-    // Y no archivados (ambos se ocultan de las estadísticas por defecto).
-    const s = _datos.seguimiento.filter(x => !x.eliminado && !x.archived);
+    // SPRINT ANALYTICS — PARTE 15: "perfiles registrados" = no eliminados,
+    // no archivados, Y no docentes (los docentes se cuentan en Panorama
+    // Global, no en las estadísticas académicas de estudiantes).
+    const s = _datos.seguimiento.filter(x => !x.eliminado && !x.archived && x.rol !== 'docente');
+    const docentesCount = _datos.seguimiento.filter(x => x.rol === 'docente' && !x.eliminado && !x.archived).length;
     const archivadosCount = _datos.seguimiento.filter(x => x.archived && !x.eliminado).length;
-    const idsExcluidos = new Set(_datos.seguimiento.filter(x => x.eliminado || x.archived).map(x => x.profile_id));
+    const idsExcluidos = new Set(_datos.seguimiento.filter(x => x.eliminado || x.archived || x.rol === 'docente').map(x => x.profile_id));
     const ps = _datos.porSeccion;
     const pa = _datos.pneAttemptsCrudo.filter(x => !idsExcluidos.has(x.profile_id)); // Parte 15: PNE también excluye archivados/eliminados
     const perfiles = s.length;
@@ -229,7 +255,7 @@
         ${_card('Grupo con mejor promedio', mejorGrupo ? mejorGrupo.grupo : '—', mejorGrupo ? mejorGrupo.promedio_pne + '% PNE' : '')}
         ${_card('Grupo que requiere refuerzo', peorGrupo ? peorGrupo.grupo : '—', peorGrupo ? peorGrupo.promedio_pne + '% PNE' : '')}
       </div>
-      <p class="an-note">Los promedios de grupo solo consideran grupos con al menos un intento de PNE registrado.${archivadosCount ? ` · 📦 Archivados: ${archivadosCount} (no incluidos arriba)` : ''}</p>`;
+      <p class="an-note">Los promedios de grupo solo consideran grupos con al menos un intento de PNE registrado.${archivadosCount ? ` · 📦 Archivados: ${archivadosCount} (no incluidos arriba)` : ''}${docentesCount ? ` · 👩‍🏫 Docentes: ${docentesCount} (ver Panorama Global)` : ''}</p>`;
   }
 
   function _card(label, value, sub) {
@@ -263,8 +289,14 @@
     else if (f.actividad === 'activos') filas = filas.filter(x => _estadoActividad(x) === 'activo');
     else if (f.actividad === 'inactivos') filas = filas.filter(x => _estadoActividad(x) === 'inactivo');
     else filas = filas.filter(x => !x.archived); // default: 'no_archivados' — activos + inactivos
-    if (f.grado === '10') filas = filas.filter(x => x.examenes_10_aprobados > 0);
-    if (f.grado === '11') filas = filas.filter(x => x.examenes_11_aprobados > 0);
+    // Tipo de perfil: por defecto se ven ambos (estudiantes + docentes).
+    if (f.rol === 'estudiante') filas = filas.filter(x => (x.rol || 'estudiante') !== 'docente');
+    if (f.rol === 'docente') filas = filas.filter(x => x.rol === 'docente');
+    // "Grado" = en qué grupo está matriculado AHORA (10-X / 11-X), no qué
+    // exámenes ya aprobó — eso es un concepto distinto, ya cubierto por el
+    // filtro "10.º completo (9/9)" / "11.º completo (4/4)" en "Todos los estados".
+    if (f.grado === '10') filas = filas.filter(x => (x.grupo || '').startsWith('10-'));
+    if (f.grado === '11') filas = filas.filter(x => (x.grupo || '').startsWith('11-'));
     if (f.grupo !== 'todos') filas = filas.filter(x => (x.grupo || 'Grupo pendiente') === f.grupo);
     if (f.estado === 'pne_aprobada') filas = filas.filter(x => x.pne_aprobada);
     if (f.estado === 'pne_pendiente') filas = filas.filter(x => !x.pne_aprobada);
@@ -303,6 +335,11 @@
           <option value="archivados">Archivados</option>
           <option value="todos">Todos (incluye archivados)</option>
         </select>
+        <select id="an-f-rol">
+          <option value="todos">Estudiantes + Docentes</option>
+          <option value="estudiante">Solo estudiantes</option>
+          <option value="docente">Solo docentes</option>
+        </select>
         <input type="text" id="an-f-busqueda" placeholder="Buscar por nombre…">
         <label class="an-checkbox-label" style="display:flex;align-items:center;gap:.35rem;font-size:.82rem;color:var(--text-muted)">
           <input type="checkbox" id="an-f-eliminados">
@@ -325,7 +362,7 @@
     return `
       <div class="an-table-wrap"><table class="an-table">
         <thead><tr>
-          <th data-sort="alias">Estudiante</th><th data-sort="grupo">Grupo</th>
+          <th data-sort="alias">Estudiante</th><th>Tipo</th><th data-sort="grupo">Grupo</th><th>Colegio</th>
           <th>Estado</th>
           <th data-sort="examenes_10_aprobados">Exámenes 10.º</th><th data-sort="examenes_11_aprobados">Exámenes 11.º</th>
           <th data-sort="pne_aprobada">PNE 11.º</th><th data-sort="pne_mejor_nota">Mejor PNE</th><th data-sort="pne_intentos">Intentos</th>
@@ -334,16 +371,19 @@
         </tr></thead>
         <tbody>${filas.map(x => {
           const estado = _estadoActividad(x);
+          const esDocente = x.rol === 'docente';
           return `
           <tr${x.eliminado ? ' style="opacity:.55"' : ''}>
             <td>${_esc(x.alias)}</td>
-            <td>${x.grupo ? _esc(x.grupo) : '<span class="an-pill an-pill-gold">Grupo pendiente</span>'}</td>
+            <td>${esDocente ? '<span class="an-pill" style="background:rgba(123,47,255,.18);color:#c9a8ff">👩‍🏫 Docente</span>' : '<span class="an-pill an-pill-muted">🎓 Estudiante</span>'}</td>
+            <td>${x.grupo ? _esc(x.grupo) : (esDocente ? '—' : '<span class="an-pill an-pill-gold">Grupo pendiente</span>')}</td>
+            <td>${x.colegio ? _esc(x.colegio) : '<span class="an-pill an-pill-muted">Sin colegio</span>'}</td>
             <td>${_pillEstadoActividad(estado)}</td>
-            <td>${x.examenes_10_aprobados} / 9</td>
-            <td>${x.examenes_11_aprobados} / 4</td>
-            <td>${x.pne_intentos === 0 ? '<span class="an-pill an-pill-muted">No realizada</span>' : x.pne_aprobada ? '<span class="an-pill an-pill-green">Aprobada</span>' : '<span class="an-pill an-pill-red">No aprobada</span>'}</td>
-            <td>${x.pne_mejor_nota == null ? '—' : Number(x.pne_mejor_nota).toFixed(1) + '%'}</td>
-            <td>${x.pne_intentos}</td>
+            <td>${esDocente ? '—' : `${x.examenes_10_aprobados} / 9`}</td>
+            <td>${esDocente ? '—' : `${x.examenes_11_aprobados} / 4`}</td>
+            <td>${esDocente ? '—' : (x.pne_intentos === 0 ? '<span class="an-pill an-pill-muted">No realizada</span>' : x.pne_aprobada ? '<span class="an-pill an-pill-green">Aprobada</span>' : '<span class="an-pill an-pill-red">No aprobada</span>')}</td>
+            <td>${esDocente ? '—' : (x.pne_mejor_nota == null ? '—' : Number(x.pne_mejor_nota).toFixed(1) + '%')}</td>
+            <td>${esDocente ? '—' : x.pne_intentos}</td>
             <td>${x.archived
                 ? `<button class="btn btn-ghost btn-sm" data-restaurar="${_esc(x.profile_id)}">↺ Restaurar</button>`
                 : `<button class="btn btn-ghost btn-sm" data-archivar="${_esc(x.profile_id)}">📦 Archivar</button>`}</td>
@@ -397,9 +437,9 @@
 
   function _bindSeguimiento() {
     document.getElementById('an-tabla-seguimiento-wrap').innerHTML = _filasHtmlSeguimiento();
-    ['an-f-grado', 'an-f-grupo', 'an-f-estado', 'an-f-actividad'].forEach(id => {
+    ['an-f-grado', 'an-f-grupo', 'an-f-estado', 'an-f-actividad', 'an-f-rol'].forEach(id => {
       document.getElementById(id).addEventListener('change', (e) => {
-        const key = id === 'an-f-grado' ? 'grado' : id === 'an-f-grupo' ? 'grupo' : id === 'an-f-estado' ? 'estado' : 'actividad';
+        const key = id === 'an-f-grado' ? 'grado' : id === 'an-f-grupo' ? 'grupo' : id === 'an-f-estado' ? 'estado' : id === 'an-f-actividad' ? 'actividad' : 'rol';
         _filtros[key] = e.target.value;
         document.getElementById('an-tabla-seguimiento-wrap').innerHTML = _filasHtmlSeguimiento();
         _bindAccionesSeguimiento();
