@@ -38,19 +38,49 @@ Router.register('grade-select', (() => {
         <h2 class="section-heading">Selecciona tu ruta científica</h2>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;max-width:1000px;margin-top:1.5rem">
-        ${_disciplinaBoton('Química', '🧪', 'var(--cyan)', 'Disponible', 'quimica')}
-        ${_disciplinaBoton('Física', '⚛️', 'var(--violet)', 'En desarrollo', 'fisica-proximamente')}
-        ${_disciplinaBoton('Biología', '🧬', 'var(--green)', 'En desarrollo', 'biologia-proximamente')}
+        ${_disciplinaBoton('Química', _iconoQuimica(), 'var(--cyan)', 'Disponible', 'quimica')}
+        ${_disciplinaBoton('Física', _iconoFisica(), 'var(--violet)', 'En desarrollo', 'fisica-proximamente')}
+        ${_disciplinaBoton('Biología', _iconoBiologia(), 'var(--green)', 'En desarrollo', 'biologia-proximamente')}
       </div>
     `;
   }
 
-  function _disciplinaBoton(nombre, icono, color, estado, destino) {
+  /* Íconos propios en SVG (pedido explícito: más nítidos y consistentes
+     entre dispositivos que el emoji, que se ve distinto en cada sistema
+     operativo). Usan currentColor, así heredan el color de cada
+     disciplina automáticamente. */
+  function _iconoQuimica() {
+    return `<svg viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 6h10"/>
+      <path d="M20 6v13.5L11.5 35a4 4 0 0 0 3.5 6h18a4 4 0 0 0 3.5-6L28 19.5V6"/>
+      <path d="M15.5 30h17" opacity=".6"/>
+      <circle cx="21" cy="35" r="1.6" fill="currentColor" stroke="none"/>
+      <circle cx="27" cy="37" r="1.2" fill="currentColor" stroke="none"/>
+      <circle cx="24" cy="32" r="1" fill="currentColor" stroke="none"/>
+    </svg>`;
+  }
+  function _iconoFisica() {
+    return `<svg viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <circle cx="24" cy="24" r="3.4" fill="currentColor" stroke="none"/>
+      <ellipse cx="24" cy="24" rx="19" ry="7.5"/>
+      <ellipse cx="24" cy="24" rx="19" ry="7.5" transform="rotate(60 24 24)"/>
+      <ellipse cx="24" cy="24" rx="19" ry="7.5" transform="rotate(120 24 24)"/>
+    </svg>`;
+  }
+  function _iconoBiologia() {
+    return `<svg viewBox="0 0 48 48" width="46" height="46" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+      <path d="M15 6c0 8 18 8 18 16s-18 8-18 16"/>
+      <path d="M33 6c0 8-18 8-18 16s18 8 18 16"/>
+      <path d="M16.5 14h15M15.3 24h17.4M16.5 34h15"/>
+    </svg>`;
+  }
+
+  function _disciplinaBoton(nombre, iconoSVG, color, estado, destino) {
     return `
         <button class="unit-card-btn" data-disciplina="${destino}"
                 style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);
                        padding:2rem 1.5rem;text-align:center;cursor:pointer;transition:var(--transition-fast)">
-          <div style="font-size:2.6rem;text-shadow:0 0 24px ${color};margin-bottom:.6rem">${icono}</div>
+          <div style="color:${color};filter:drop-shadow(0 0 10px ${color});margin-bottom:.6rem;display:flex;justify-content:center">${iconoSVG}</div>
           <h3 style="margin:0 0 .3rem;color:${color};font-family:var(--font-display);letter-spacing:.03em">${nombre}</h3>
           <p style="color:var(--text-secondary);font-size:.82rem;margin:0">${estado}</p>
         </button>`;
