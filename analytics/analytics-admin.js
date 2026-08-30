@@ -378,15 +378,20 @@
             <td>${esDocente ? '<span class="an-pill" style="background:rgba(123,47,255,.18);color:#c9a8ff">👩‍🏫 Docente</span>' : '<span class="an-pill an-pill-muted">🎓 Estudiante</span>'}</td>
             <td>${x.grupo ? _esc(x.grupo) : (esDocente ? '—' : '<span class="an-pill an-pill-gold">Grupo pendiente</span>')}</td>
             <td>${x.colegio ? _esc(x.colegio) : '<span class="an-pill an-pill-muted">Sin colegio</span>'}</td>
-            <td>${_pillEstadoActividad(estado)}</td>
+            <td>${_pillEstadoActividad(estado)}${x.colaborador ? ' <span class="an-pill" style="background:rgba(249,255,77,.15);color:var(--xp-gold,#F9FF4D)">💙 Apoyando</span>' : ''}</td>
             <td>${esDocente ? '—' : `${x.examenes_10_aprobados} / 9`}</td>
             <td>${esDocente ? '—' : `${x.examenes_11_aprobados} / 4`}</td>
             <td>${esDocente ? '—' : (x.pne_intentos === 0 ? '<span class="an-pill an-pill-muted">No realizada</span>' : x.pne_aprobada ? '<span class="an-pill an-pill-green">Aprobada</span>' : '<span class="an-pill an-pill-red">No aprobada</span>')}</td>
             <td>${esDocente ? '—' : (x.pne_mejor_nota == null ? '—' : Number(x.pne_mejor_nota).toFixed(1) + '%')}</td>
             <td>${esDocente ? '—' : x.pne_intentos}</td>
-            <td>${x.archived
+            <td style="display:flex;gap:.35rem;flex-wrap:wrap">
+              ${x.archived
                 ? `<button class="btn btn-ghost btn-sm" data-restaurar="${_esc(x.profile_id)}">↺ Restaurar</button>`
-                : `<button class="btn btn-ghost btn-sm" data-archivar="${_esc(x.profile_id)}">📦 Archivar</button>`}</td>
+                : `<button class="btn btn-ghost btn-sm" data-archivar="${_esc(x.profile_id)}">📦 Archivar</button>`}
+              ${x.colaborador
+                ? `<button class="btn btn-ghost btn-sm" data-quitar-colaborador="${_esc(x.profile_id)}" style="color:var(--xp-gold,#F9FF4D)">💙 Quitar apoyo</button>`
+                : `<button class="btn btn-ghost btn-sm" data-colaborador="${_esc(x.profile_id)}">💙 Marcar como Apoyando</button>`}
+            </td>
             ${verEliminados ? `<td>${x.eliminado ? '<span class="an-pill an-pill-red">🗑️ Sí</span>' : '—'}</td><td style="font-family:var(--font-code);font-size:.75rem">${_esc(x.profile_id)}</td>` : ''}
           </tr>`; }).join('')}
         </tbody>
@@ -422,6 +427,33 @@
     _bindOrdenSeguimientoHeaders();
   }
 
+  /* Apoya MQC: marcar/desmarcar colaborador (PayPal o SINPE, confirmado
+     a mano por el docente). Mismo mecanismo de seguridad que archivar —
+     solo el admin autenticado puede escribir en profile_admin_state. */
+  async function _marcarColaborador(profileId, esColaborador) {
+    const cfg = _cfg();
+    const url = cfg.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/profile_admin_state';
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': cfg.supabaseAnonKey,
+        'Authorization': 'Bearer ' + (_session && _session.access_token || cfg.supabaseAnonKey),
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        profile_id: profileId,
+        colaborador: esColaborador,
+        colaborador_desde: esColaborador ? new Date().toISOString() : null,
+        updated_at: new Date().toISOString()
+      })
+    });
+    await _cargarTodosLosDatos();
+    document.getElementById('an-tabla-seguimiento-wrap').innerHTML = _filasHtmlSeguimiento();
+    _bindAccionesSeguimiento();
+    _bindOrdenSeguimientoHeaders();
+  }
+
   function _bindAccionesSeguimiento() {
     document.querySelectorAll('[data-archivar]').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -432,6 +464,16 @@
     });
     document.querySelectorAll('[data-restaurar]').forEach(btn => {
       btn.addEventListener('click', () => _archivarPerfil(btn.getAttribute('data-restaurar'), false));
+    });
+    document.querySelectorAll('[data-colaborador]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (confirm('¿Marcar este perfil como "Apoyando MQC"? Confirmá esto solo después de verificar el pago (PayPal o SINPE) vos mismo.')) {
+          _marcarColaborador(btn.getAttribute('data-colaborador'), true);
+        }
+      });
+    });
+    document.querySelectorAll('[data-quitar-colaborador]').forEach(btn => {
+      btn.addEventListener('click', () => _marcarColaborador(btn.getAttribute('data-quitar-colaborador'), false));
     });
   }
 
