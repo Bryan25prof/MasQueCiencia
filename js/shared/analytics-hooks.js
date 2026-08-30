@@ -486,26 +486,41 @@
 
   function _mostrarInsigniaColaborador() {
     // Nombre en el sidebar (#sidebar-user-name lo sigue actualizando
-    // app.js normalmente — cambiar solo el color, no el texto, para
-    // que sobreviva a esas actualizaciones; el badge es un elemento
-    // aparte, así que tampoco se pierde).
+    // app.js normalmente — la clase CSS sobrevive a que se le cambie
+    // el textContent, así que no hace falta reaplicarla después).
     const nameEl = document.getElementById('sidebar-user-name');
     if (nameEl) {
-      nameEl.style.color = 'var(--xp-gold, #F9FF4D)';
+      nameEl.classList.add('mqc-colaborador-holo');
       if (!document.getElementById('mqc-colaborador-badge')) {
         const badge = document.createElement('div');
         badge.id = 'mqc-colaborador-badge';
+        badge.className = 'mqc-colaborador-holo';
         badge.textContent = '💙 Apoyando MQC';
-        badge.style.cssText = 'font-size:.68rem;color:var(--xp-gold,#F9FF4D);font-weight:700;margin-top:.15rem';
+        badge.style.cssText = 'font-size:.68rem;font-weight:700;margin-top:.15rem';
         nameEl.insertAdjacentElement('afterend', badge);
       }
     }
-    // Chip flotante de perfiles (js/shared/profiles-ui.js)
-    const chip = document.getElementById('mqc-chip');
-    if (chip) {
-      chip.style.borderColor = 'var(--xp-gold, #F9FF4D)';
+    // Chip flotante — es donde se toca el nombre para cambiar de perfil
+    // (ver profiles-ui.js: mountChip()/openChipMenu()). No hay garantía
+    // de que ya exista en el DOM en este momento (mountChip() puede
+    // correr antes o después que esta verificación, según la latencia
+    // real de red) — por eso se usa un observador en vez de asumir
+    // orden de carga: si el chip ya existe, se aplica al toque; si no,
+    // se aplica apenas aparezca, una sola vez.
+    function _aplicarAlChip(chip) {
+      chip.style.borderColor = '#F9FF4D';
       const spans = chip.querySelectorAll('span');
-      if (spans[1]) spans[1].style.color = 'var(--xp-gold, #F9FF4D)';
+      if (spans[1]) spans[1].classList.add('mqc-colaborador-holo');
+    }
+    const chipYaPresente = document.getElementById('mqc-chip');
+    if (chipYaPresente) {
+      _aplicarAlChip(chipYaPresente);
+    } else {
+      const obs = new MutationObserver(() => {
+        const chip = document.getElementById('mqc-chip');
+        if (chip) { _aplicarAlChip(chip); obs.disconnect(); }
+      });
+      obs.observe(document.body, { childList: true, subtree: true });
     }
   }
 
