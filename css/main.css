@@ -2706,6 +2706,25 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   50% { box-shadow: 0 0 14px rgba(31,219,255,.35); }
 }
 
+/* Insignia "Apoyando MQC" — efecto holográfico (dorado nacarado en
+   movimiento, "Holo 2" del demo aprobado). Se aplica al nombre del
+   perfil en las 2 zonas donde aparece: #sidebar-user-name (tarjeta
+   del sidebar) y #mqc-chip (el chip flotante donde se toca el nombre
+   para cambiar de perfil) — ver js/shared/analytics-hooks.js. */
+.mqc-colaborador-holo {
+  background: linear-gradient(120deg, #F9FF4D, #FFFFFF, #F9FF4D, #FFB84D, #F9FF4D);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: mqcHoloShift 2.6s linear infinite;
+  filter: drop-shadow(0 0 6px rgba(249,255,77,.5));
+}
+@keyframes mqcHoloShift {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 100% 50%; }
+}
+
 /* Tarjeta completa dentro del modal (#global-modal-content) */
 .mqc-support-body { display: flex; flex-direction: column; gap: 1rem; }
 
