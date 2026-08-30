@@ -280,7 +280,9 @@
         profile_id: profileId,
         alias: (meta && meta.alias) || (data.user && data.user.name) || 'Estudiante',
         grupo: (meta && meta.group) || null,
-        grado: null /* MQC es multigrado por perfil; el grado se infiere del lado del panel a partir de las unidades con progreso */
+        grado: null, /* MQC es multigrado por perfil; el grado se infiere del lado del panel a partir de las unidades con progreso */
+        colegio: (meta && meta.colegio) || null, /* Colegio/Institución + Docente (nuevo) */
+        rol: (meta && meta.rol) || 'estudiante'
       });
     } catch (e) { /* no interrumpir la gestión de perfiles */ }
   }
@@ -340,8 +342,8 @@
   if (typeof window.MQCProfiles !== 'undefined') {
     const _originalCreate = MQCProfiles.create;
     if (typeof _originalCreate === 'function') {
-      MQCProfiles.create = function (alias, group, avatar) {
-        const r = _originalCreate.call(MQCProfiles, alias, group, avatar);
+      MQCProfiles.create = function (alias, group, avatar, colegio, rol) {
+        const r = _originalCreate.call(MQCProfiles, alias, group, avatar, colegio, rol);
         if (r && r.ok) {
           try {
             _registrarPerfilActivo();
@@ -361,6 +363,17 @@
     if (typeof _originalSetGroup === 'function') {
       MQCProfiles.setGroup = function (id, group) {
         const r = _originalSetGroup.call(MQCProfiles, id, group);
+        if (r && r.ok && MQCProfiles.activeId && MQCProfiles.activeId() === id) {
+          try { _registrarPerfilActivo(); } catch (e) {}
+        }
+        return r;
+      };
+    }
+
+    const _originalSetColegio = MQCProfiles.setColegio;
+    if (typeof _originalSetColegio === 'function') {
+      MQCProfiles.setColegio = function (id, colegio) {
+        const r = _originalSetColegio.call(MQCProfiles, id, colegio);
         if (r && r.ok && MQCProfiles.activeId && MQCProfiles.activeId() === id) {
           try { _registrarPerfilActivo(); } catch (e) {}
         }

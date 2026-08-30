@@ -83,8 +83,9 @@ window.MQCProfiles = (function () {
     return _reg;
   }
 
-  function _meta(id, alias, group, avatar){
+  function _meta(id, alias, group, avatar, colegio, rol){
     return { id, alias: alias||'Estudiante', group: group||'', avatar: avatar||'🧪',
+             colegio: (colegio||'').trim(), rol: rol === 'docente' ? 'docente' : 'estudiante',
              created: Date.now(), lastAccess: Date.now() };
   }
 
@@ -119,13 +120,13 @@ window.MQCProfiles = (function () {
   function activeMeta(){ const id = activeId(); return id ? get(id) : null; }
 
   /* ── administración ── */
-  function create(alias, group, avatar){
+  function create(alias, group, avatar, colegio, rol){
     ready();
     if (!canCreate()) return { ok:false, reason:'max', message:`Ya existen ${MAX_PROFILES} perfiles. Elimina uno para crear otro.` };
     const a = (alias||'').trim();
     if (!a) return { ok:false, reason:'alias', message:'El alias no puede estar vacío.' };
     const id = _uid();
-    _reg.profiles[id] = _meta(id, a, group, avatar);
+    _reg.profiles[id] = _meta(id, a, group, avatar, colegio, rol);
     _reg.order.push(id);
     /* progreso inicial con el alias como nombre (para el saludo del hero) */
     const fresh = (typeof Storage !== 'undefined' && Storage.defaults) ? Storage.defaults() : { units:{} };
@@ -170,6 +171,10 @@ window.MQCProfiles = (function () {
       return { ok:false, reason:'identity-locked', message:'Identidad académica protegida: este perfil ya contiene resultados evaluativos. El nombre y el grupo no pueden modificarse para preservar la integridad del progreso.' };
     }
     _reg.profiles[id].group=(group||'').trim(); _saveReg(); return {ok:true};
+  }
+  function setColegio(id, colegio){
+    ready(); if(!_reg.profiles[id]) return {ok:false};
+    _reg.profiles[id].colegio=(colegio||'').trim(); _saveReg(); return {ok:true};
   }
 
   function remove(id){
@@ -436,7 +441,7 @@ window.MQCProfiles = (function () {
     MAX_PROFILES, MQC_VERSION,
     init, ready, count, canCreate, isGuest, activeId, hasActive,
     list, get, activeMeta,
-    create, select, rename, setAvatar, setGroup, remove, resetProgress,
+    create, select, rename, setAvatar, setGroup, setColegio, remove, resetProgress,
     enterGuest, exitGuest,
     exportProfile, validateImport, importProfile, buildBitacora,
     getReflections, saveReflection, REFLECTION_QUESTIONS,

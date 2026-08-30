@@ -183,20 +183,36 @@ window.MQCProfilesUI = (function () {
     const host = ov.querySelector('#mqc-gate-create');
     host.innerHTML = `<div class="mqc-gate-create-panel" style="background:var(--bg-deep,#0d0d24);border-radius:var(--radius-md,12px);padding:1rem;margin:.3rem 0 .8rem;border:1px solid var(--border)">
       <input id="mqc-nf-alias" placeholder="Alias (ej. Bryan)" maxlength="24" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
-      ${_renderSelectorGrupoObligatorio('mqc-nf-group')}
+      <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        <button type="button" data-rol="estudiante" class="mqc-rol-btn active" style="flex:1;padding:.6rem;border-radius:8px;border:1px solid var(--cyan,#1FDBFF);background:rgba(31,219,255,.1);color:var(--cyan,#1FDBFF);cursor:pointer;font-size:.85rem">🎓 Estudiante</button>
+        <button type="button" data-rol="docente" class="mqc-rol-btn" style="flex:1;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.85rem">👩‍🏫 Docente</button>
+      </div>
+      <div id="mqc-nf-group-wrap">${_renderSelectorGrupoObligatorio('mqc-nf-group')}</div>
+      <input id="mqc-nf-colegio" placeholder="Colegio / Institución" maxlength="80" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
       <p style="font-size:.72rem;color:var(--text-muted);margin:0 0 .4rem">Elige tu insignia:</p>
       <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem" id="mqc-nf-avatars">${AVATARS.map((a,i)=>`<button data-av="${a}" class="mqc-avatar-btn${i===0?' active':''}">${a}</button>`).join('')}</div>
       <button id="mqc-nf-go" class="btn btn-primary btn-sm" style="width:100%">Crear y entrar</button>
       <p id="mqc-nf-err" style="color:var(--red,#FF6B6B);font-size:.8rem;margin:.4rem 0 0;min-height:1em"></p>
     </div>`;
     let av = AVATARS[0];
+    let rol = 'estudiante';
     host.querySelectorAll('[data-av]').forEach(b=>b.addEventListener('click',()=>{ av=b.getAttribute('data-av'); host.querySelectorAll('[data-av]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }));
+    host.querySelectorAll('[data-rol]').forEach(b=>b.addEventListener('click',()=>{
+      rol = b.getAttribute('data-rol');
+      host.querySelectorAll('[data-rol]').forEach(x=>{ x.classList.remove('active'); x.style.borderColor='var(--border)'; x.style.background='transparent'; x.style.color='var(--text-secondary)'; });
+      b.classList.add('active'); b.style.borderColor='var(--cyan,#1FDBFF)'; b.style.background='rgba(31,219,255,.1)'; b.style.color='var(--cyan,#1FDBFF)';
+      // Docente no tiene grupo/sección de estudiante — se oculta, no aplica.
+      host.querySelector('#mqc-nf-group-wrap').style.display = (rol === 'docente') ? 'none' : 'block';
+    }));
     host.querySelector('#mqc-nf-go').addEventListener('click',()=>{
       const alias=host.querySelector('#mqc-nf-alias').value;
       const group=host.querySelector('#mqc-nf-group').value;
-      // SPRINT ANALYTICS — PARTE 6: grupo/sección obligatorio para perfiles nuevos.
-      if (!group) { host.querySelector('#mqc-nf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
-      const r=P().create(alias,group,av);
+      const colegio=host.querySelector('#mqc-nf-colegio').value.trim();
+      // SPRINT ANALYTICS — PARTE 6: grupo/sección obligatorio para estudiantes nuevos (no aplica a docentes).
+      if (rol === 'estudiante' && !group) { host.querySelector('#mqc-nf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
+      // Colegio obligatorio para todos los perfiles nuevos (Panorama Global).
+      if (!colegio) { host.querySelector('#mqc-nf-err').textContent = 'Escribí tu colegio/institución para continuar.'; return; }
+      const r=P().create(alias, rol === 'docente' ? '' : group, av, colegio, rol);
       if(!r.ok){ host.querySelector('#mqc-nf-err').textContent=r.message||'No se pudo crear.'; return; }
       location.reload();
     });
@@ -224,23 +240,35 @@ window.MQCProfilesUI = (function () {
   function _mostrarCompletarPerfilSiHaceFalta(){
     const p = P(); if (!p || p.isGuest()) return;
     const meta = p.activeMeta();
-    if (!meta || meta.group) return; // ya tiene grupo, o no hay perfil activo real
+    if (!meta) return;
+    const rol = meta.rol || 'estudiante'; // perfiles legacy sin rol se tratan como estudiante
+    const faltaGrupo = rol === 'estudiante' && !meta.group;
+    const faltaColegio = !meta.colegio;
+    if (!faltaGrupo && !faltaColegio) return; // ya tiene todo lo obligatorio
     if (document.getElementById('mqc-completar-perfil')) return; // ya se está mostrando
 
     const ov=_overlay('mqc-completar-perfil');
     ov.innerHTML=`<div class="modal-card" style="max-width:380px;text-align:center">
       <h2 style="margin:0 0 .3rem;font-family:var(--font-display,inherit);color:var(--cyan,#1FDBFF)">COMPLETA TU PERFIL</h2>
-      <p style="color:var(--text-secondary,#B8B8E0);font-size:.88rem;margin:.3rem 0 1rem">Selecciona tu grupo/sección para continuar.</p>
-      ${_renderSelectorGrupoObligatorio('mqc-cp-group')}
+      <p style="color:var(--text-secondary,#B8B8E0);font-size:.88rem;margin:.3rem 0 1rem">Completá estos datos para continuar.</p>
+      ${faltaGrupo ? _renderSelectorGrupoObligatorio('mqc-cp-group') : ''}
+      ${faltaColegio ? `<input id="mqc-cp-colegio" placeholder="Colegio / Institución" maxlength="80" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">` : ''}
       <button id="mqc-cp-go" class="btn btn-primary btn-sm" style="width:100%;margin-top:.4rem">Guardar y continuar</button>
       <p id="mqc-cp-err" style="color:var(--red,#FF6B6B);font-size:.8rem;margin:.4rem 0 0;min-height:1em"></p>
     </div>`;
     // Sin botón de cerrar ni clic-afuera-para-cerrar: es obligatorio, a propósito.
     ov.querySelector('#mqc-cp-go').addEventListener('click', () => {
-      const group = ov.querySelector('#mqc-cp-group').value;
-      if (!group) { ov.querySelector('#mqc-cp-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
       const activeId = p.activeId ? p.activeId() : null;
-      if (activeId) p.setGroup(activeId, group); // reutiliza la función ya existente (local + sync a Supabase, ver analytics-hooks.js)
+      if (faltaGrupo) {
+        const group = ov.querySelector('#mqc-cp-group').value;
+        if (!group) { ov.querySelector('#mqc-cp-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
+        if (activeId) p.setGroup(activeId, group); // reutiliza la función ya existente (local + sync a Supabase)
+      }
+      if (faltaColegio) {
+        const colegio = ov.querySelector('#mqc-cp-colegio').value.trim();
+        if (!colegio) { ov.querySelector('#mqc-cp-err').textContent = 'Escribí tu colegio/institución para continuar.'; return; }
+        if (activeId) p.setColegio(activeId, colegio);
+      }
       ov.remove();
     });
   }
@@ -360,17 +388,31 @@ window.MQCProfilesUI = (function () {
     const host = ov.querySelector('#mqc-mgr-create');
     host.innerHTML = `<div style="background:var(--bg-deep,#0d0d24);border-radius:var(--radius-md,12px);padding:.9rem;margin:.5rem 0">
       <input id="mqc-cf-alias" placeholder="Alias" maxlength="24" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
-      ${_renderSelectorGrupoObligatorio('mqc-cf-group')}
+      <div style="display:flex;gap:.5rem;margin-bottom:.5rem">
+        <button type="button" data-rol="estudiante" class="mqc-rol-btn active" style="flex:1;padding:.5rem;border-radius:8px;border:1px solid var(--cyan,#1FDBFF);background:rgba(31,219,255,.1);color:var(--cyan,#1FDBFF);cursor:pointer;font-size:.8rem">🎓 Estudiante</button>
+        <button type="button" data-rol="docente" class="mqc-rol-btn" style="flex:1;padding:.5rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.8rem">👩‍🏫 Docente</button>
+      </div>
+      <div id="mqc-cf-group-wrap">${_renderSelectorGrupoObligatorio('mqc-cf-group')}</div>
+      <input id="mqc-cf-colegio" placeholder="Colegio / Institución" maxlength="80" class="qi-overlay-input" style="width:100%;margin:0 0 .5rem">
       <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.6rem">${AVATARS.map((a,i)=>`<button data-av="${a}" style="font-size:1.3rem;background:${i===0?_accent():'var(--bg-elevated,#1e1e4a)'};border:none;border-radius:8px;padding:.2rem .4rem;cursor:pointer">${a}</button>`).join('')}</div>
       <button id="mqc-cf-go" class="btn btn-primary btn-sm" style="width:100%">Crear</button>
       <p id="mqc-cf-err" style="color:var(--red,#FF6B6B);font-size:.8rem;margin:.4rem 0 0"></p></div>`;
     let av=AVATARS[0];
+    let rol='estudiante';
     host.querySelectorAll('[data-av]').forEach(b=>b.addEventListener('click',()=>{av=b.getAttribute('data-av');host.querySelectorAll('[data-av]').forEach(x=>x.style.background='var(--bg-elevated,#1e1e4a)');b.style.background=_accent();}));
+    host.querySelectorAll('[data-rol]').forEach(b=>b.addEventListener('click',()=>{
+      rol = b.getAttribute('data-rol');
+      host.querySelectorAll('[data-rol]').forEach(x=>{ x.style.borderColor='var(--border)'; x.style.background='transparent'; x.style.color='var(--text-secondary)'; });
+      b.style.borderColor='var(--cyan,#1FDBFF)'; b.style.background='rgba(31,219,255,.1)'; b.style.color='var(--cyan,#1FDBFF)';
+      host.querySelector('#mqc-cf-group-wrap').style.display = (rol === 'docente') ? 'none' : 'block';
+    }));
     host.querySelector('#mqc-cf-go').addEventListener('click',()=>{
       const group = host.querySelector('#mqc-cf-group').value;
-      // SPRINT ANALYTICS — PARTE 6: grupo/sección obligatorio para perfiles nuevos.
-      if (!group) { host.querySelector('#mqc-cf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
-      const r=P().create(host.querySelector('#mqc-cf-alias').value,group,av);
+      const colegio = host.querySelector('#mqc-cf-colegio').value.trim();
+      // SPRINT ANALYTICS — PARTE 6: grupo/sección obligatorio para estudiantes nuevos.
+      if (rol === 'estudiante' && !group) { host.querySelector('#mqc-cf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
+      if (!colegio) { host.querySelector('#mqc-cf-err').textContent = 'Escribí tu colegio/institución para continuar.'; return; }
+      const r=P().create(host.querySelector('#mqc-cf-alias').value, rol === 'docente' ? '' : group, av, colegio, rol);
       if(!r.ok){host.querySelector('#mqc-cf-err').textContent=r.message||'No se pudo crear.';return;}
       location.reload();
     });
