@@ -381,6 +381,17 @@
       };
     }
 
+    const _originalSetRol = MQCProfiles.setRol;
+    if (typeof _originalSetRol === 'function') {
+      MQCProfiles.setRol = function (id, rol) {
+        const r = _originalSetRol.call(MQCProfiles, id, rol);
+        if (r && r.ok && MQCProfiles.activeId && MQCProfiles.activeId() === id) {
+          try { _registrarPerfilActivo(); } catch (e) {}
+        }
+        return r;
+      };
+    }
+
     const _originalRename = MQCProfiles.rename;
     if (typeof _originalRename === 'function') {
       MQCProfiles.rename = function (id, alias) {
@@ -447,7 +458,59 @@
   }
 
   /* ================================================================
-     6. EJECUTAR LA SINCRONIZACIÓN INICIAL — una vez por carga de página
+     6. INSIGNIA "APOYANDO MQC" — lectura desde Supabase
+     ================================================================
+     Consulta de solo lectura contra profile_admin_state (ver
+     SUPABASE_MIGRATION_colaborador_apoyo.sql — RLS ahí permite SELECT
+     público, nunca escritura, al rol anon). No es en tiempo real: se
+     revisa una vez por carga de página, igual que el resto de la
+     sincronización — si un docente marca a alguien como colaborador,
+     ese estudiante lo va a ver reflejado en su PRÓXIMA visita, no
+     mientras tiene la pestaña abierta en ese momento. */
+  async function _verificarColaborador() {
+    try {
+      const data = Storage.load();
+      const profileId = data.profileMeta && data.profileMeta.profileId;
+      if (!profileId) return;
+      const cfg = window.MQC_ANALYTICS_CONFIG;
+      if (!cfg || !cfg.enabled || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return;
+      const url = cfg.supabaseUrl.replace(/\/+$/, '') +
+        '/rest/v1/profile_admin_state?profile_id=eq.' + encodeURIComponent(profileId) + '&select=colaborador';
+      const resp = await fetch(url, { headers: { apikey: cfg.supabaseAnonKey } });
+      if (!resp.ok) return;
+      const filas = await resp.json();
+      const esColaborador = !!(filas && filas[0] && filas[0].colaborador === true);
+      if (esColaborador) _mostrarInsigniaColaborador();
+    } catch (e) { /* sin conexión, o Analytics deshabilitado: simplemente no se muestra esta vez */ }
+  }
+
+  function _mostrarInsigniaColaborador() {
+    // Nombre en el sidebar (#sidebar-user-name lo sigue actualizando
+    // app.js normalmente — cambiar solo el color, no el texto, para
+    // que sobreviva a esas actualizaciones; el badge es un elemento
+    // aparte, así que tampoco se pierde).
+    const nameEl = document.getElementById('sidebar-user-name');
+    if (nameEl) {
+      nameEl.style.color = 'var(--xp-gold, #F9FF4D)';
+      if (!document.getElementById('mqc-colaborador-badge')) {
+        const badge = document.createElement('div');
+        badge.id = 'mqc-colaborador-badge';
+        badge.textContent = '💙 Apoyando MQC';
+        badge.style.cssText = 'font-size:.68rem;color:var(--xp-gold,#F9FF4D);font-weight:700;margin-top:.15rem';
+        nameEl.insertAdjacentElement('afterend', badge);
+      }
+    }
+    // Chip flotante de perfiles (js/shared/profiles-ui.js)
+    const chip = document.getElementById('mqc-chip');
+    if (chip) {
+      chip.style.borderColor = 'var(--xp-gold, #F9FF4D)';
+      const spans = chip.querySelectorAll('span');
+      if (spans[1]) spans[1].style.color = 'var(--xp-gold, #F9FF4D)';
+    }
+  }
+
+  /* ================================================================
+     7. EJECUTAR LA SINCRONIZACIÓN INICIAL — una vez por carga de página
      ================================================================
      Cubre tanto "un perfil ya existía y Analytics se activó después"
      como "el estudiante cambió a otro perfil ya existente" — el
@@ -457,5 +520,6 @@
      necesitar envolver MQCProfiles.select() por separado. */
   try { _sincronizacionInicial(); } catch (e) { /* nunca debe interrumpir la carga de la app */ }
   try { _registrarLatidoSesion(); } catch (e) { /* nunca debe interrumpir la carga de la app */ }
+  _verificarColaborador(); /* async, con su propio try/catch interno */
 
 })();
