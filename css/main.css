@@ -2673,28 +2673,37 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 ---------------------------------------------------------------- */
 
 /* Acceso discreto en el sidebar — por debajo de toda la navegación
-   académica, mismo ancho que el pie de página, tipografía pequeña */
+   académica, mismo ancho que el pie de página. Ahora con un poco más
+   de presencia visual (pedido explícito): degradado sutil + glow
+   suave, sin ser publicidad agresiva ni parpadeante. */
 .sidebar-support-link {
   display: block;
   width: calc(100% - 2rem);
-  margin: 0.4rem 1rem 0;
-  padding: 0.5rem 0.75rem;
-  background: transparent;
-  border: 1px solid var(--border);
+  margin: 0.6rem 1rem 0;
+  padding: 0.6rem 0.75rem;
+  background: linear-gradient(90deg, rgba(31,219,255,.1), rgba(123,47,255,.1));
+  border: 1px solid rgba(31,219,255,.35);
   border-radius: var(--radius-sm);
-  color: var(--text-muted);
+  color: var(--cyan);
   font-family: var(--font-body);
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 700;
   text-align: center;
   cursor: pointer;
   transition: var(--transition-fast);
+  animation: sidebarSupportGlow 3.2s ease-in-out infinite;
 }
 .sidebar-support-link:hover,
 .sidebar-support-link:focus-visible {
-  color: var(--orange);
-  border-color: var(--orange);
-  background: rgba(255, 107, 0, 0.08);
+  color: #04141c;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  border-color: var(--cyan);
+  animation: none;
+  transform: translateY(-1px);
+}
+@keyframes sidebarSupportGlow {
+  0%, 100% { box-shadow: 0 0 0 rgba(31,219,255,0); }
+  50% { box-shadow: 0 0 14px rgba(31,219,255,.35); }
 }
 
 /* Tarjeta completa dentro del modal (#global-modal-content) */
