@@ -19,7 +19,10 @@ Router.register('grade-select', (() => {
           se navega directo al placeholder "en desarrollo" ya existente
           (el mismo que usa el sidebar) — nunca abre contenido
           inexistente. */
-  let _vista = 'hub'; // 'hub' | 'quimica'
+  /* FIX10-U01: Física ya tiene contenido real en 10.º, así que ahora
+     también tiene su propia "elegí tu año" (mismo patrón que Química),
+     en vez de ir directo al placeholder "en desarrollo". */
+  let _vista = 'hub'; // 'hub' | 'quimica' | 'fisica'
 
   function _unlockStatus(data) {
     const examsPassed = (typeof UNIDADES_DATA !== 'undefined') ? UNIDADES_DATA.filter(u => {
@@ -39,7 +42,7 @@ Router.register('grade-select', (() => {
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;max-width:1000px;margin-top:1.5rem">
         ${_disciplinaBoton('Química', _iconoQuimica(), 'var(--cyan)', 'Disponible', 'quimica')}
-        ${_disciplinaBoton('Física', _iconoFisica(), 'var(--violet)', 'En desarrollo', 'fisica-proximamente')}
+        ${_disciplinaBoton('Física', _iconoFisica(), 'var(--violet)', _fisica10VistaPreviaActiva() ? 'Disponible' : 'En desarrollo', 'fisica')}
         ${_disciplinaBoton('Biología', _iconoBiologia(), 'var(--green)', 'En desarrollo', 'biologia-proximamente')}
       </div>
     `;
@@ -146,20 +149,68 @@ Router.register('grade-select', (() => {
     `;
   }
 
+  /* FIX10-U01: "elegí tu año" de Física — mismo patrón que Química,
+     pero más simple: Física no tiene desbloqueo por examen (10.º y
+     11.º son independientes entre sí), y Física 11.º sigue sin
+     construirse (regla explícita del sprint). */
+  function _fisica10VistaPreviaActiva() {
+    try { return localStorage.getItem('mqc_fisica10_preview') === '1'; } catch (e) { return false; }
+  }
+
+  function _renderFisica() {
+    const habilitado = _fisica10VistaPreviaActiva();
+    const pct10 = habilitado && typeof Storage !== 'undefined' && Storage.getFisica10UnitProgress
+      ? Storage.getFisica10UnitProgress('fix10-u01') : 0;
+    const bodyF10 = habilitado ? `
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">FIX10-U01 disponible — las siguientes unidades se irán incorporando.</p>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de FIX10-U01: ${pct10}%</div>
+          <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct10}%;background:var(--violet)"></div></div>
+          <button class="btn btn-primary" data-action="go-fisica10">Continuar en Física 10.º</button>` : `
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
+          <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>`;
+    return `
+      <div class="section-header">
+        <button class="btn btn-ghost btn-sm" data-action="volver-hub" style="margin-bottom:.8rem">← Volver</button>
+        <p class="section-title">⚛️ Física</p>
+        <h2 class="section-heading">Elegí tu año</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;max-width:900px;margin-top:1.5rem">
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem${habilitado ? '' : ';opacity:.85'}">
+          <div class="unit-number">DÉCIMO AÑO</div>
+          <div class="unit-symbol" style="color:${habilitado ? 'var(--violet)' : 'var(--text-muted)'}${habilitado ? ';text-shadow:0 0 20px var(--violet)' : ''}">⚛️</div>
+          <h3 style="margin:.3rem 0">Física 10.º</h3>
+          ${bodyF10}
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;opacity:.85">
+          <div class="unit-number">UNDÉCIMO AÑO</div>
+          <div class="unit-symbol" style="color:var(--text-muted)">🔒</div>
+          <h3 style="margin:.3rem 0">Física 11.º</h3>
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
+          <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>
+        </div>
+
+      </div>
+    `;
+  }
+
   function _rerender() {
     const content = document.getElementById('content');
     if (!content) return;
-    content.innerHTML = _vista === 'quimica' ? _renderQuimica() : _renderHub();
+    content.innerHTML = _vista === 'quimica' ? _renderQuimica() : _vista === 'fisica' ? _renderFisica() : _renderHub();
     _bind();
   }
 
   function _bind() {
-    /* Nivel 1 → Nivel 2 (o navegación directa para Física/Biología) */
+    /* Nivel 1 → Nivel 2 (o navegación directa para Biología, que
+       todavía no tiene "elegí tu año" propio, sigue yendo directo
+       al placeholder "en desarrollo") */
     document.querySelectorAll('[data-disciplina]').forEach(btn => {
       btn.addEventListener('click', () => {
         const destino = btn.getAttribute('data-disciplina');
-        if (destino === 'quimica') { _vista = 'quimica'; _rerender(); }
-        else Router.navigate(destino); // fisica-proximamente / biologia-proximamente
+        if (destino === 'quimica' || destino === 'fisica') { _vista = destino; _rerender(); }
+        else Router.navigate(destino); // biologia-proximamente
       });
     });
     const volver = document.querySelector('[data-action="volver-hub"]');
@@ -169,6 +220,8 @@ Router.register('grade-select', (() => {
     if (goG10) goG10.addEventListener('click', () => Router.navigate('home'));
     const goG11 = document.querySelector('[data-action="go-grade11"]');
     if (goG11) goG11.addEventListener('click', () => Router.navigate('grade11'));
+    const goF10 = document.querySelector('[data-action="go-fisica10"]');
+    if (goF10) goF10.addEventListener('click', () => Router.navigate('fisica10'));
   }
 
   function init() {
