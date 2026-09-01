@@ -88,6 +88,7 @@ const Gamification = (() => {
        patrón que _submitInformeOnce() del Proyecto Integrador
        (HOTFIX-06), no acá. */
     'grade11-mission-done': 100,  // entrega de la misión de cierre de una unidad de 11.º, una sola vez
+    'fisica10-mission-done': 100, // FIX10-U01: entrega de la misión de cierre "Tecnología bajo la lupa", una sola vez
 
     /* Periódica */
     'element-explored':     5,   // abrir ficha de un elemento
@@ -176,6 +177,12 @@ const Gamification = (() => {
       name: 'Campeón',
       icon: '🎮',
       desc: 'Ganaste todos los minijuegos de una unidad'
+    },
+    {
+      id:   'explorador-fisica',
+      name: 'Explorador de la Física',
+      icon: '🔭',
+      desc: 'Completaste FIX10-U01 — La Física en el contexto histórico y actual'
     },
     {
       id:   'xp-1000',
@@ -542,6 +549,26 @@ const Gamification = (() => {
         const missionDone = !!u.missionDone;
         if (allTopics && allSims && gamePlayed && examPassed && missionDone) {
           newBadges.push('primera-gota');
+        }
+      }
+    }
+
+    /* FIX10-U01 — 'explorador-fisica': mismo principio anti-farming
+       exacto que 'primera-gota' — exige finalización real de las 5
+       partes (teoría/simuladores/juego/examen/misión), no solo
+       "visitar" la unidad. La misión de cierre se marca aparte, en
+       data.fisica10['fix10-u01'].missionDone (ver fix10-u01.js). */
+    if (typeof FISICA10_UNIDADES_DATA !== 'undefined' && data.fisica10 && !data.badges.includes('explorador-fisica')) {
+      const uf = data.fisica10['fix10-u01'];
+      const metaf = FISICA10_UNIDADES_DATA.find(x => x.id === 'fix10-u01');
+      if (uf && metaf) {
+        const allTopicsF = (uf.topicsRead || []).length >= (metaf.topics || []).length;
+        const allSimsF = (uf.simsDone || []).length >= (metaf.simulators || []).length;
+        const gamePlayedF = (uf.gameScore || 0) > 0;
+        const examPassedF = (uf.examBest || 0) >= (metaf.exam && metaf.exam.pass || 70);
+        const missionDoneF = !!uf.missionDone;
+        if (allTopicsF && allSimsF && gamePlayedF && examPassedF && missionDoneF) {
+          newBadges.push('explorador-fisica');
         }
       }
     }

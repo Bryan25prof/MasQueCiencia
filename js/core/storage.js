@@ -228,6 +228,21 @@ const Storage = (() => {
       'g11-u03': _emptyUnit(),
       'g11-u04': _emptyUnit()
     },
+    /* FIX10-U01 — Progreso propio de Física 10.º. Carril paralelo,
+       independiente de data.units (Química 10.º) y data.grade11
+       (Química 11.º) — misma razón: nunca mezclar porcentajes ni
+       XP entre disciplinas/niveles distintos. Solo fix10-u01 tiene
+       contenido real por ahora; fix10-u02..u07 quedan vacías,
+       reservadas para cuando se construyan ("PRÓXIMAMENTE"). */
+    fisica10: {
+      'fix10-u01': _emptyUnit(),
+      'fix10-u02': _emptyUnit(),
+      'fix10-u03': _emptyUnit(),
+      'fix10-u04': _emptyUnit(),
+      'fix10-u05': _emptyUnit(),
+      'fix10-u06': _emptyUnit(),
+      'fix10-u07': _emptyUnit()
+    },
     /* IMP-11-U04 — Atlas Químico MQC: registro persistente de qué
        grupos funcionales y biomoléculas ya identificó el estudiante.
        No otorga XP (registro de evidencia de aprendizaje, no un
@@ -550,6 +565,64 @@ const Storage = (() => {
     return _computePctG11(unit, unitId);
   }
 
+  /* ================================================================
+     FIX10-U01 — Progreso de Física 10.º (paralelo, no reemplaza)
+     ================================================================
+     Mismo patrón exacto que el bloque de Química 11.º de arriba, pero
+     apuntando a data.fisica10 y FISICA10_UNIDADES_DATA. Se duplica en
+     vez de generalizar, por la misma razón ya documentada: nunca
+     arriesgar el comportamiento ya probado de una disciplina al
+     tocar el de otra. */
+  function _computePctFisica10(unit, unitId) {
+    let meta = null;
+    if (typeof FISICA10_UNIDADES_DATA !== 'undefined') {
+      meta = FISICA10_UNIDADES_DATA.find(u => u.id === unitId);
+    }
+    const totalTopics = (meta && meta.topics) ? meta.topics.length : 0;
+    const totalSims   = (meta && meta.simulators) ? meta.simulators.length : 0;
+    const totalLevels = (meta && meta.game && meta.game.levels) ? meta.game.levels : 0;
+    const pass        = (meta && meta.exam && meta.exam.pass) ? meta.exam.pass : 70;
+
+    function ratio(done, total) { return total > 0 ? Math.min(1, done / total) : 0; }
+
+    const rTeoria = ratio((unit.topicsRead || []).length, totalTopics);
+    const rSims   = ratio((unit.simsDone || []).length, totalSims);
+    const rJuego  = totalLevels > 0
+      ? ratio((unit.gameLevels || []).length, totalLevels)
+      : ((unit.gameScore || 0) > 0 ? 1 : 0);
+    const rExamen = (unit.examBest || 0) > 0 ? Math.min(1, unit.examBest / pass) : 0;
+
+    const pct = Math.round(25 * (rTeoria + rSims + rJuego + rExamen));
+    return Math.max(0, Math.min(100, pct));
+  }
+  function _refreshCompletedFisica10(unit, unitId) {
+    if (!unit) return;
+    unit.completed = unit.completed || _computePctFisica10(unit, unitId) === 100;
+  }
+  function updateFisica10Unit(unitId, update) {
+    const data = load();
+    if (!data.fisica10[unitId]) data.fisica10[unitId] = _emptyUnit();
+    data.fisica10[unitId] = Object.assign({}, data.fisica10[unitId], update);
+    data.fisica10[unitId].started = true;
+    _refreshCompletedFisica10(data.fisica10[unitId], unitId);
+    save(data);
+  }
+  function markFisica10TopicRead(unitId, topicId) {
+    const data = load();
+    if (!data.fisica10[unitId]) data.fisica10[unitId] = _emptyUnit();
+    const unit = data.fisica10[unitId];
+    if (!unit.topicsRead.includes(topicId)) unit.topicsRead.push(topicId);
+    unit.started = true;
+    _refreshCompletedFisica10(unit, unitId);
+    save(data);
+  }
+  function getFisica10UnitProgress(unitId) {
+    const data = load();
+    const unit = data.fisica10[unitId];
+    if (!unit || !unit.started) return 0;
+    return _computePctFisica10(unit, unitId);
+  }
+
   /**
    * Borra TODOS los datos del estudiante (reset total).
    * ⚠️ Irreversible. Mostrar confirmación antes de llamar.
@@ -598,6 +671,9 @@ const Storage = (() => {
     updateGrade11Unit,
     markGrade11TopicRead,
     getGrade11UnitProgress,
+    updateFisica10Unit,
+    markFisica10TopicRead,
+    getFisica10UnitProgress,
     hasUser,
     reset,
     /* Perfiles Locales MQC (EOP-008) */
