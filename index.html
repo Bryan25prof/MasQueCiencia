@@ -340,11 +340,30 @@
              detalle 10.º/11.º ya vive en "Inicio académico", así se evita
              duplicar esa granularidad acá y el sidebar queda liviano). -->
         <li class="nav-separator" role="separator"><span>⚛️ Física</span></li>
-        <li class="nav-item nav-item-soon" data-section="fisica-proximamente" role="button" tabindex="0">
+        <li class="nav-item nav-item-soon" data-section="fisica10" id="nav-fisica10" role="button" tabindex="0">
           <span class="nav-icon" aria-hidden="true">⚛️</span>
-          <span class="nav-label">Física</span>
-          <span class="nav-badge soon">Pronto</span>
+          <span class="nav-label" id="nav-fisica10-label">Física</span>
+          <span class="nav-badge soon" id="nav-fisica10-badge">Pronto</span>
         </li>
+        <script>
+          /* FIX10-U01: la etiqueta del sidebar refleja la bandera de
+             publicación de js/modules/fisica10.js (misma lógica, ver
+             ese archivo). Mientras no esté habilitado, dice "Física /
+             Pronto" para todos; con la vista previa activada en este
+             navegador, dice "Física 10.º" sin insignia — pero SIEMPRE
+             apunta a la misma ruta 'fisica10', que internamente decide
+             si mostrar la unidad real o "en desarrollo". */
+          (function () {
+            try {
+              if (localStorage.getItem('mqc_fisica10_preview') === '1') {
+                document.getElementById('nav-fisica10-label').textContent = 'Física 10.º';
+                var badge = document.getElementById('nav-fisica10-badge');
+                if (badge) badge.remove();
+                document.getElementById('nav-fisica10').classList.remove('nav-item-soon');
+              }
+            } catch (e) {}
+          })();
+        </script>
 
         <li class="nav-separator" role="separator"><span>🧬 Biología</span></li>
         <li class="nav-item nav-item-soon" data-section="biologia-proximamente" role="button" tabindex="0">
@@ -591,6 +610,14 @@
 
 <!-- IMP-11-U04: cuarta y última unidad de contenido de Química 11.º -->
 <script src="js/units/grade11/g11-u04.js"></script>
+
+<!-- FIX10-U01: primera unidad real de Física 10.º — carril paralelo,
+     nunca se mezcla con Química 10.º/11.º (ver data.fisica10 en
+     storage.js). Banco de preguntas provisional, pendiente del libro
+     fuente — ver cabecera de cada archivo. -->
+<script src="js/modules/fisica10.js"></script>
+<script src="js/data/banco-fix10-u01.js"></script>
+<script src="js/units/fisica10/fix10-u01.js"></script>
 
 <!-- HOTFIX-02: Desafío Final (Química 10.º) — depende de las 9 unidades y sus bancos ya cargados -->
 <script src="js/modules/pne-final.js"></script>
