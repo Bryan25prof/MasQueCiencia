@@ -93,6 +93,68 @@ No se modificó la arquitectura de Analytics. El progreso de Física 10.º vive 
 - El simulador 2 podría ampliarse con una representación visual (mapa/escena) en vez de solo botones, si se quiere más adelante.
 - FIX10-U02 a FIX10-U07 quedan sin construir, tal como pedía el sprint.
 
-## 13. NO se inició FIX10-U02
+## 14. NO se inició FIX10-U02 antes de esta validación
 
-Tal como pedía el sprint, se detiene acá para revisión docente antes de continuar con la siguiente unidad.
+Tal como pedía el sprint, se detuvo acá para revisión docente antes de continuar con la siguiente unidad.
+
+---
+
+## HOTFIX PEDAGÓGICO FINAL (aplicado después de la primera entrega)
+
+**Regla de esta vuelta:** no se tocó navegación, Storage, XP, Supabase, Analytics, Química, Biología, PNE, ni **FIX10-U02** (que ya se había construido antes de recibir este hotfix, y quedó exactamente igual).
+
+### 1-2. Juego "Detective de la Física" — corregido
+
+**Antes:** cada escenario tenía un botón "Revelar área de la Física" que, con un solo clic, revelaba la respuesta, marcaba el nivel completado y otorgaba XP — sin exigir ninguna respuesta real.
+
+**Ahora:** cada uno de los 5 escenarios (puente, GPS, láser, maglev, CERN) presenta una pregunta con 4 opciones mezcladas. Si el estudiante falla, ve una retroalimentación ("Volvé a leer la pista y probá otra opción") y el nivel **no** se marca completado ni otorga XP — puede reintentar. Solo si acierta, se marca `gameLevels.push(...)` y se otorga XP.
+
+Las 5 pistas se reescribieron para **orientar sin nombrar la respuesta** (ejemplo: la pista del puente pasó de "pensá en qué disciplina diseña estructuras" a "pensá en fuerzas, equilibrio, peso y resistencia").
+
+**Probado con Chromium real:** se verificó que fallar deliberadamente no completa el nivel ni suma XP, y que acertar sí lo hace.
+
+### 3. Misión final "Tecnología bajo la lupa" — corregida
+
+**Antes:** mostraba 4 preguntas de reflexión sin ningún campo de respuesta — el botón "Entregar misión" daba XP con solo pulsarlo.
+
+**Ahora:** la misión tiene 4 componentes verificables:
+- **A.** Área(s) física(s) — casillas de selección múltiple (correcto: Relatividad + Electromagnetismo, ninguna otra marcada).
+- **B.** Fenómeno principal — selección única entre 4 opciones.
+- **C.** Relación teoría-experimento — selección única entre 4 opciones.
+- **D.** Impacto social — respuesta corta, validada entre 30 y 250 caracteres.
+
+El botón "Entregar misión" permanece deshabilitado hasta que los 3 componentes objetivos sean correctos y la respuesta corta tenga la longitud válida. Solo entonces se marca `missionDone = true` y se otorga XP.
+
+**Probado con Chromium real:** confirmado que el botón sigue deshabilitado con la misión vacía, con A parcialmente marcada, con B/C sin elegir, y con D demasiado corta — y que se habilita solo cuando los 4 componentes están completos y correctos.
+
+### 4. Simulador 2 — mejorado
+
+Se agregó una 6.ª ronda a la Fase 2 ("Demuestra") — ahora son GPS, puente, tren maglev, microscopio, CERN y satélite de comunicaciones. Se corrigió además un bug real: las opciones de cada ronda **no se mezclaban** (la respuesta correcta quedaba siempre en la misma posición) — ya se mezclan en cada ronda.
+
+**Probado con Chromium real:** las 2 fases funcionan, y el simulador se marca completado solo al terminar las 6 rondas de la fase evaluativa.
+
+### 5. Teoría — fragmentación visual
+
+Los 6 temas se reorganizaron en 5 bloques cortos y con color propio: 💡 IDEA CLAVE, 📘 EXPLICACIÓN, 🔎 EJEMPLO, 🌐 APLICACIÓN REAL, y ❓ COMPRUEBA (una pregunta de reflexión). **No se agregó contenido nuevo** — es el mismo texto de antes, reorganizado para que se lea más fácil, especialmente en Relatividad y Física moderna (los temas más densos).
+
+### 6. Examen — auditoría de contenido
+
+Se revisaron las 50 preguntas. Los temas más delicados (agujeros de gusano, gravitón, teletransportación cuántica, teoría de cuerdas) ya estaban correctamente calificados como "hipótesis sin comprobación experimental" desde el diseño original — no fue necesario corregir ninguna. El motor del examen (banco de 50, selecciona 30, mezcla preguntas y opciones, aprobación ≥70, anti-farming) **no se tocó**.
+
+### 7. Pruebas realizadas (Chromium real)
+
+| Prueba | Resultado |
+|---|---|
+| Juego: responder incorrecto no completa el nivel ni da XP | ✅ |
+| Juego: responder correcto sí completa y da XP | ✅ |
+| Misión: no se puede entregar vacía | ✅ |
+| Misión: no se puede entregar con A parcial (1 de 2 correctas) | ✅ |
+| Misión: no se puede entregar sin B, C, o con D muy corta | ✅ |
+| Misión: se habilita y entrega solo con los 4 componentes completos y correctos | ✅ |
+| Simulador 2: fase Explorar + fase Demuestra (6 rondas) + opciones mezcladas | ✅ |
+| Teoría: los 5 bloques se ven correctamente fragmentados | ✅ |
+| Responsive: Android e iPhone sin errores | ✅ |
+| No regresión: FIX10-U02 sigue disponible e intacto | ✅ |
+| No regresión general: Química, PNE, Analytics, Apoyo, modo desarrollador | ✅ Sin errores de consola |
+
+Al terminar, se detiene acá — FIX10-U01 queda lista para congelación.
