@@ -31,39 +31,46 @@
 
   const TEMAS = [
     { id: 't1', icon: '🔭', titulo: '¿Qué es la Física?',
-      texto: `La Física estudia las propiedades de la materia y la energía, sus transformaciones, y las fuerzas que actúan entre ellas. Es la ciencia que se ocupa de las leyes más básicas de la naturaleza: por qué cae un objeto, cómo se propaga la luz, qué hace que un imán atraiga a otro.<br><br>
-      A diferencia de la Filosofía o la Religión, la Física exige que sus descubrimientos se sometan al método científico: se observa, se mide, se propone una explicación, y esa explicación se pone a prueba una y otra vez. Cuando una relación matemática logra predecir correctamente nuevas mediciones que todavía no se habían hecho, decimos que encontramos un <strong>modelo</strong> — y si ese modelo se confirma una y otra vez, puede llegar a llamarse una <strong>ley de la naturaleza</strong>.<br><br>
-      Dentro de la Física hay físicos que se especializan en distintas áreas: quien estudia las partículas subatómicas es un <strong>físico nuclear</strong>; quien estudia la energía en las estrellas es un <strong>astrofísico</strong>; quien estudia las reacciones químicas desde su energía es un <strong>fisicoquímico</strong>. Todos comparten el mismo objetivo: entender las reglas por las que se rige el universo.` },
+      ideaClave: 'La Física estudia las propiedades de la materia y la energía, sus transformaciones, y las fuerzas que actúan entre ellas.',
+      explicacion: 'Es la ciencia que se ocupa de las leyes más básicas de la naturaleza: por qué cae un objeto, cómo se propaga la luz, qué hace que un imán atraiga a otro. A diferencia de la Filosofía o la Religión, la Física exige que sus descubrimientos se sometan al método científico: se observa, se mide, se propone una explicación, y esa explicación se pone a prueba una y otra vez.',
+      ejemplo: 'Cuando una relación matemática logra predecir correctamente nuevas mediciones que todavía no se habían hecho, decimos que encontramos un <strong>modelo</strong> — y si ese modelo se confirma una y otra vez, puede llegar a llamarse una <strong>ley de la naturaleza</strong>.',
+      aplicacion: 'Dentro de la Física hay físicos que se especializan en distintas áreas: quien estudia las partículas subatómicas es un <strong>físico nuclear</strong>; quien estudia la energía en las estrellas es un <strong>astrofísico</strong>; quien estudia las reacciones químicas desde su energía es un <strong>fisicoquímico</strong>.',
+      compruebra: '¿Podrías explicar con tus propias palabras qué diferencia a la Física de otras formas de conocimiento, como la Filosofía?' },
 
     { id: 't2', icon: '🔬', titulo: 'Física teórica y experimental',
-      texto: `La Física se practica de dos maneras que se necesitan mutuamente. La <strong>física experimental</strong> mide con cuidado magnitudes reales — cuánto calor libera una reacción, cómo se desintegra una partícula — y confía en la observación directa. La <strong>física teórica</strong>, en cambio, busca relaciones matemáticas (modelos) que expliquen esas mediciones y permitan predecir otras nuevas.<br><br>
-      Hay físicos brillantes en cada camino: <strong>Albert A. Michelson</strong> fue un físico experimental que inventó el interferómetro y midió la velocidad de la luz con una precisión extraordinaria para su época. <strong>Albert Einstein</strong>, en cambio, fue sobre todo un físico teórico: construyó la teoría de la relatividad casi enteramente con razonamiento matemático. Y hubo físicos como <strong>Enrico Fermi</strong> que dominaron ambos caminos a la vez, aportando tanto al desarrollo del primer reactor nuclear como a la teoría cuántica.<br><br>
-      Ninguno de los dos caminos vale más que el otro: la ciencia avanza cuando una predicción teórica se contrasta con la observación o el experimento, y cuando una medición experimental encuentra un modelo que la explique.` },
+      ideaClave: 'La Física se practica de dos maneras que se necesitan mutuamente: la teórica y la experimental.',
+      explicacion: 'La <strong>física experimental</strong> mide con cuidado magnitudes reales — cuánto calor libera una reacción, cómo se desintegra una partícula — y confía en la observación directa. La <strong>física teórica</strong>, en cambio, busca relaciones matemáticas (modelos) que expliquen esas mediciones y permitan predecir otras nuevas.',
+      ejemplo: '<strong>Albert A. Michelson</strong> fue un físico experimental que inventó el interferómetro y midió la velocidad de la luz con una precisión extraordinaria. <strong>Albert Einstein</strong>, en cambio, fue sobre todo un físico teórico: construyó la teoría de la relatividad casi enteramente con razonamiento matemático. <strong>Enrico Fermi</strong> dominó ambos caminos a la vez.',
+      aplicacion: 'Ninguno de los dos caminos vale más que el otro: la ciencia avanza cuando una predicción teórica se contrasta con la observación o el experimento, y cuando una medición experimental encuentra un modelo que la explique.',
+      compruebra: '¿Michelson o Einstein: cuál de los dos se parece más a cómo trabajás vos cuando resolvés un problema de física?' },
 
     { id: 't3', icon: '⏱️', titulo: 'Del universo clásico a la relatividad',
-      texto: `Durante siglos, el tiempo se consideró una magnitud absoluta: igual para todos, sin importar dónde estuvieran ni qué tan rápido se movieran. En 1905, Albert Einstein propuso la <strong>teoría especial de la relatividad</strong>, que cambió esa idea para siempre, a partir de dos postulados: (1) las leyes de la física son las mismas en cualquier sistema de referencia que se mueva a velocidad constante, y (2) la velocidad de la luz (c ≈ 3×10⁸ m/s) es siempre la misma para cualquier observador, sin importar qué tan rápido se mueva la fuente que la emite.<br><br>
-      De ese segundo postulado se desprende algo muy extraño pero real: el <strong>tiempo pasa distinto</strong> según el movimiento del observador. A esto se le llama <strong>dilatación del tiempo</strong>. El ejemplo más conocido es la <strong>paradoja de los gemelos</strong>: si uno de dos hermanos gemelos viaja al espacio a una velocidad cercana a la de la luz y el otro se queda en la Tierra, al regresar el viajero habrá envejecido menos que su hermano.<br><br>
-      Einstein no se detuvo ahí: en 1916 publicó la <strong>teoría general de la relatividad</strong>, donde explica la gravedad no como una fuerza, sino como la curvatura que la materia produce en el espacio-tiempo. La Tierra no gira alrededor del Sol "empujada" por una fuerza — simplemente sigue el camino más recto posible en un espacio-tiempo curvado por la masa del Sol.<br><br>
-      Un ejemplo cotidiano y real de todo esto es el <strong>GPS</strong>: los satélites que orbitan la Tierra experimentan el tiempo de forma distinta que un receptor en la superficie (por su velocidad y por estar en un campo gravitatorio más débil). Si los ingenieros no corrigieran ese efecto usando la relatividad, el sistema GPS acumularía errores de varios kilómetros por día, y dejaría de ser útil casi de inmediato.<br><br>
-      <em>Nota importante:</em> algunas ideas derivadas matemáticamente de la relatividad general, como los <strong>agujeros de gusano</strong> (túneles hipotéticos entre dos puntos del espacio-tiempo), son posibles según las ecuaciones pero <strong>nunca se han observado</strong> — son modelos teóricos, no hechos comprobados experimentalmente.` },
+      ideaClave: 'El tiempo no es igual para todos: pasa distinto según el movimiento del observador.',
+      explicacion: 'Durante siglos, el tiempo se consideró una magnitud absoluta. En 1905, Einstein propuso la <strong>teoría especial de la relatividad</strong>, a partir de dos postulados: (1) las leyes de la física son las mismas en cualquier sistema de referencia que se mueva a velocidad constante, y (2) la velocidad de la luz (c ≈ 3×10⁸ m/s) es siempre la misma para cualquier observador. De ahí se desprende la <strong>dilatación del tiempo</strong>.',
+      ejemplo: 'La <strong>paradoja de los gemelos</strong>: si uno de dos hermanos gemelos viaja al espacio a velocidad cercana a la de la luz y el otro se queda en la Tierra, al regresar el viajero habrá envejecido menos que su hermano. En 1916, Einstein publicó además la <strong>teoría general de la relatividad</strong>, donde explica la gravedad como la curvatura que la materia produce en el espacio-tiempo.',
+      aplicacion: 'El <strong>GPS</strong> es un ejemplo cotidiano y real: los satélites experimentan el tiempo distinto que un receptor en la superficie. Si los ingenieros no corrigieran ese efecto usando la relatividad, el sistema acumularía errores de varios kilómetros por día.<br><br><em>Nota:</em> ideas como los <strong>agujeros de gusano</strong> son posibles según las ecuaciones de la relatividad general, pero <strong>nunca se han observado</strong> — son modelos teóricos, no hechos comprobados.',
+      compruebra: 'Si viajaras al espacio a una velocidad cercana a la de la luz y volvieras, ¿envejecerías más, menos, o igual que alguien que se quedó en la Tierra?' },
 
     { id: 't4', icon: '⚛️', titulo: 'Física moderna',
-      texto: `A comienzos del siglo XX, los modelos de la física clásica (mecánica, electromagnetismo, termodinámica) dejaron de explicar ciertos fenómenos del mundo subatómico. De ahí nació la <strong>física moderna</strong>, que incluye la física cuántica, la física de partículas y la física relativista.<br><br>
-      La <strong>física de partículas</strong> estudia los componentes más básicos del universo: 12 partículas elementales y 4 interacciones fundamentales (electromagnetismo, fuerza nuclear fuerte, fuerza nuclear débil y gravedad), cada una con su propia "partícula mediadora" (el fotón para el electromagnetismo, el glúon para la fuerza fuerte, etc.). Protones y neutrones, que alguna vez se creyeron elementales, en realidad están hechos de partículas más pequeñas llamadas <strong>quarks</strong>.<br><br>
-      Una de las piezas más buscadas de este modelo fue el <strong>bosón de Higgs</strong>: la partícula asociada a un campo que llena todo el espacio y que es responsable de que otras partículas tengan masa. Se confirmó su existencia en 2012 gracias al <strong>LHC (Large Hadron Collider)</strong>, el acelerador de partículas más grande del mundo, ubicado en el <strong>CERN</strong> (frontera franco-suiza), donde se hacen chocar haces de protones a velocidades cercanas a la de la luz para recrear, por fracciones de segundo, condiciones similares a las del Big Bang.<br><br>
-      La física cuántica también permite fenómenos sorprendentes, como la <strong>teletransportación cuántica</strong>: ya se ha logrado "teletransportar" el estado de partículas como fotones (nunca objetos complejos ni seres vivos) aprovechando una propiedad llamada entrelazamiento cuántico. Y en el terreno más especulativo, la <strong>teoría de cuerdas</strong> propone que las partículas elementales en realidad serían diminutos filamentos de energía en vibración — una idea matemáticamente atractiva, pero que todavía no se ha podido comprobar experimentalmente.` },
+      ideaClave: 'A comienzos del siglo XX nació la física moderna, porque hay fenómenos del mundo subatómico que los modelos clásicos no explican.',
+      explicacion: 'La <strong>física de partículas</strong> estudia los componentes más básicos del universo: 12 partículas elementales y 4 interacciones fundamentales (electromagnetismo, fuerza nuclear fuerte, fuerza nuclear débil y gravedad). Protones y neutrones, que alguna vez se creyeron elementales, en realidad están hechos de <strong>quarks</strong>.',
+      ejemplo: 'El <strong>bosón de Higgs</strong> es la partícula asociada a un campo responsable de que otras partículas tengan masa. Se confirmó su existencia en 2012 gracias al <strong>LHC</strong>, el acelerador de partículas más grande del mundo, en el <strong>CERN</strong>, donde se hacen chocar protones a velocidades cercanas a la de la luz.',
+      aplicacion: 'La física cuántica también permite la <strong>teletransportación cuántica</strong>: ya se ha "teletransportado" el estado de partículas como fotones (nunca objetos complejos) usando el entrelazamiento cuántico. La <strong>teoría de cuerdas</strong>, más especulativa, propone que las partículas serían diminutos filamentos de energía en vibración — todavía sin comprobación experimental.',
+      compruebra: '¿Por qué creés que hizo falta construir un acelerador tan grande como el LHC solo para confirmar la existencia de UNA partícula?' },
 
     { id: 't5', icon: '📍', titulo: '¿Dónde está la Física?',
-      texto: `La Física no vive solo en un laboratorio — está detrás de casi cualquier fenómeno o tecnología que usamos a diario. Reconocer en qué área de la Física se ubica cada fenómeno ayuda a entender mejor cómo funciona el mundo.<br><br>
-      La <strong>astrofísica</strong>, por ejemplo, aplica las leyes de la física al estudio de los astros: desde las leyes del movimiento planetario de Newton y Kepler, hasta la teoría del campo electromagnético de Maxwell, que permitió entender fenómenos como la luz de las estrellas o los agujeros negros (regiones donde ni siquiera la luz puede escapar, una vez que se cruza su "horizonte de sucesos").<br><br>
-      La <strong>mecánica y la ingeniería</strong> aplican esas mismas leyes para diseñar soluciones tecnológicas reales: desde los acueductos de la antigua Roma hasta los rascacielos, puentes colgantes y satélites actuales. Un ingeniero necesita dominar la física, pero también la creatividad para resolver problemas con los recursos disponibles.<br><br>
-      Fenómenos tan distintos como un GPS (relatividad + electromagnetismo), un puente colgante (mecánica), un láser en un consultorio médico (óptica y física cuántica) o un microscopio (óptica) tienen todos una explicación física detrás — solo hay que aprender a reconocer cuál.` },
+      ideaClave: 'La Física no vive solo en un laboratorio — está detrás de casi cualquier fenómeno o tecnología que usamos a diario.',
+      explicacion: 'La <strong>astrofísica</strong> aplica las leyes de la física al estudio de los astros: desde las leyes de Newton y Kepler, hasta la teoría del campo electromagnético de Maxwell, que ayudó a entender fenómenos como los agujeros negros (regiones donde ni la luz puede escapar, tras cruzar su "horizonte de sucesos").',
+      ejemplo: 'La <strong>mecánica y la ingeniería</strong> aplican esas mismas leyes para diseñar soluciones tecnológicas reales: desde los acueductos romanos hasta los puentes colgantes y satélites actuales.',
+      aplicacion: 'Un GPS combina relatividad + electromagnetismo; un puente colgante es mecánica; un láser médico usa óptica y física cuántica; un microscopio usa óptica. Reconocer el área detrás de cada fenómeno ayuda a entender mejor cómo funciona el mundo.',
+      compruebra: 'Elegí un objeto que tengas cerca ahora mismo: ¿qué área de la Física explica cómo funciona?' },
 
     { id: 't6', icon: '🌐', titulo: 'Física, tecnología y sociedad',
-      texto: `Comprender mejor las leyes de la naturaleza casi siempre termina transformando la vida cotidiana de la sociedad. Un buen ejemplo son los <strong>superconductores</strong>: materiales que, a temperaturas muy bajas, dejan pasar la corriente eléctrica sin ninguna resistencia y expulsan los campos magnéticos (efecto Meissner), lo que permite fenómenos como la levitación magnética. Esta propiedad ya se usa en generadores de energía más eficientes y en <strong>trenes maglev</strong>, que literalmente flotan sobre sus vías gracias a imanes superconductores.<br><br>
-      La <strong>ingeniería</strong>, en todas sus ramas (civil, mecánica, eléctrica, biomédica), es la disciplina que convierte el conocimiento físico en soluciones reales para necesidades sociales, industriales o médicas — desde una prótesis hasta un puente.<br><br>
-      Un ejemplo ambicioso de hacia dónde puede llevar la ingeniería y la física aplicadas es la <strong>exploración espacial</strong>: proyectos como "Mars One" plantearon el reto de enviar y sostener una colonia humana permanente en Marte, algo que exige resolver simultáneamente problemas de física, ingeniería, medicina y logística a una escala nunca antes intentada. Sea que estos proyectos concretos tengan éxito o no, muestran cómo la física impulsa a la sociedad a imaginar y perseguir metas cada vez más ambiciosas.<br><br>
-      <strong>¿Cómo cambia la sociedad cuando comprendemos mejor las leyes de la naturaleza?</strong> Cada avance — del GPS a los superconductores — nació de entender un poco mejor cómo funciona realmente el universo.` }
+      ideaClave: 'Comprender mejor las leyes de la naturaleza casi siempre termina transformando la vida cotidiana de la sociedad.',
+      explicacion: 'Los <strong>superconductores</strong> son materiales que, a temperaturas muy bajas, dejan pasar la corriente eléctrica sin resistencia y expulsan los campos magnéticos (efecto Meissner). La <strong>ingeniería</strong> (civil, mecánica, eléctrica, biomédica) convierte el conocimiento físico en soluciones reales.',
+      ejemplo: 'Los <strong>trenes maglev</strong> literalmente flotan sobre sus vías gracias a imanes superconductores, aprovechando esa propiedad ya en generadores de energía más eficientes.',
+      aplicacion: 'Proyectos como "Mars One" plantearon el reto de sostener una colonia humana en Marte, exigiendo resolver a la vez problemas de física, ingeniería, medicina y logística — muestra de cómo la física impulsa a la sociedad a perseguir metas cada vez más ambiciosas.',
+      compruebra: '¿Cómo cambia la sociedad cuando comprendemos mejor las leyes de la naturaleza? Pensá en un ejemplo distinto al GPS o los superconductores.' }
   ];
 
   const SITUACIONES_SIM1 = [
@@ -118,10 +125,12 @@
     { fenomeno: 'Un puente colgante distribuye el peso de los vehículos entre sus cables y torres, sin colapsar.', opciones: ['Mecánica', 'Óptica', 'Física cuántica', 'Astrofísica'], correcta: 0 },
     { fenomeno: 'Un tren se desliza sin tocar sus vías gracias a imanes que expulsan el campo magnético al enfriarse mucho.', opciones: ['Electromagnetismo (superconductores)', 'Acústica', 'Óptica', 'Mecánica exclusivamente'], correcta: 0 },
     { fenomeno: 'Un microscopio permite ver estructuras diminutas ampliando la trayectoria de la luz que las atraviesa.', opciones: ['Óptica', 'Relatividad', 'Termodinámica', 'Física de partículas'], correcta: 0 },
-    { fenomeno: 'En el CERN, se hacen chocar protones a velocidades cercanas a la de la luz para estudiar partículas subatómicas.', opciones: ['Física de partículas', 'Acústica', 'Óptica geométrica', 'Mecánica clásica exclusivamente'], correcta: 0 }
+    { fenomeno: 'En el CERN, se hacen chocar protones a velocidades cercanas a la de la luz para estudiar partículas subatómicas.', opciones: ['Física de partículas', 'Acústica', 'Óptica geométrica', 'Mecánica clásica exclusivamente'], correcta: 0 },
+    { fenomeno: 'Un satélite de comunicaciones mantiene una órbita estable mientras retransmite señales de radio hacia distintos puntos de la Tierra.', opciones: ['Mecánica orbital + Electromagnetismo', 'Acústica', 'Óptica geométrica', 'Termodinámica exclusivamente'], correcta: 0 }
   ];
   let _sim2Fase = 'explorar'; // 'explorar' | 'quiz'
   let _sim2RondaIdx = 0;
+  let _sim2OpcionesMezcladas = [];
 
   function renderSim2() {
     if (_sim2Fase === 'quiz') return renderSim2Quiz();
@@ -143,6 +152,9 @@
       return `<div style="text-align:center"><h3>✅ ¡Completaste el simulador!</h3><button class="btn btn-primary btn-sm" data-sim-cerrar="sim2">← Volver a Simuladores</button></div>`;
     }
     const r = RONDAS_SIM2[_sim2RondaIdx];
+    // HOTFIX PEDAGÓGICO — Parte 4: opciones mezcladas en cada ronda
+    // (antes la correcta quedaba siempre en la misma posición).
+    if (!_sim2OpcionesMezcladas.length) _sim2OpcionesMezcladas = _mezclarConCorrecta(r.opciones, r.correcta);
     return `
       <div>
         <button class="btn btn-ghost btn-sm" data-sim-cerrar="sim2" style="margin-bottom:.8rem">← Volver a Simuladores</button>
@@ -150,10 +162,15 @@
         <p style="margin-bottom:1rem">${r.fenomeno}</p>
         <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.5rem">¿Qué área de la Física interviene principalmente?</p>
         <div style="display:grid;gap:.5rem">
-          ${r.opciones.map((op, i) => `<button class="btn btn-ghost" data-sim2q-opcion="${i}">${op}</button>`).join('')}
+          ${_sim2OpcionesMezcladas.opciones.map((op, i) => `<button class="btn btn-ghost" data-sim2q-opcion="${i}">${op}</button>`).join('')}
         </div>
         <p id="sim2q-feedback" style="margin-top:.8rem;font-size:.85rem"></p>
       </div>`;
+  }
+  function _mezclarConCorrecta(opciones, correctaIdx) {
+    const indices = opciones.map((_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [indices[i], indices[j]] = [indices[j], indices[i]]; }
+    return { opciones: indices.map(i => opciones[i]), correcta: indices.indexOf(correctaIdx) };
   }
 
   /* ================================================================
@@ -230,6 +247,19 @@
      XP solo la primera vez que se lee cada tema (topicsRead ya
      deduplica en Storage; acá solo se consulta antes de otorgar).
      ================================================================ */
+  /* HOTFIX PEDAGÓGICO — Parte 5: fragmentación visual de la teoría en
+     bloques cortos (IDEA CLAVE / EXPLICACIÓN / EJEMPLO / APLICACIÓN
+     REAL / COMPRUEBA), sin agregar contenido nuevo — solo reorganiza
+     el mismo texto que ya existía en un único párrafo largo. */
+  function _bloqueTema(etiqueta, texto, color, esPregunta) {
+    if (!texto) return '';
+    return `
+      <div style="margin-bottom:.9rem;padding-left:.7rem;border-left:2px solid ${color}">
+        <p style="font-size:.68rem;font-weight:800;letter-spacing:.04em;color:${color};margin:0 0 .25rem">${etiqueta}</p>
+        <p style="margin:0;${esPregunta ? 'font-style:italic' : ''}">${texto}</p>
+      </div>`;
+  }
+
   function renderTeoria(unit, uData) {
     const leidos = uData.topicsRead || [];
     const total = TEMAS.length;
@@ -254,8 +284,12 @@
             <span class="fix10-acc-caret" style="transition:transform .25s;color:var(--text-muted)">▾</span>
           </button>
           <div class="fix10-acc-body" data-acc-body="${i}"
-               style="display:none;padding:0 1rem 1rem;color:var(--text-secondary);line-height:1.65">
-            <p>${t.texto}</p>
+               style="display:none;padding:0 1rem 1rem;color:var(--text-secondary);line-height:1.6">
+            ${_bloqueTema('💡 IDEA CLAVE', t.ideaClave, 'var(--xp-gold,#F9FF4D)')}
+            ${_bloqueTema('📘 EXPLICACIÓN', t.explicacion, C)}
+            ${_bloqueTema('🔎 EJEMPLO', t.ejemplo, 'var(--cyan)')}
+            ${_bloqueTema('🌐 APLICACIÓN REAL', t.aplicacion, 'var(--green)')}
+            ${_bloqueTema('❓ COMPRUEBA', t.compruebra, 'var(--text-muted)', true)}
             <div style="margin-top:1rem;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
               <button class="btn btn-primary btn-sm" data-read="${i}" data-tema="${t.id}" ${isRead ? 'disabled' : ''}>
                 ${isRead ? '✓ Tema leído' : '📖 Marcar como leído (+15 XP)'}
@@ -358,7 +392,7 @@
       btn.addEventListener('click', () => {
         _simActivo = btn.getAttribute('data-sim-abrir');
         // Reiniciar el estado interno de cada simulador al entrar de nuevo.
-        _sim1Idx = 0; _sim2Fase = 'explorar'; _sim2RondaIdx = 0; _sim3Paso = 0;
+        _sim1Idx = 0; _sim2Fase = 'explorar'; _sim2RondaIdx = 0; _sim2OpcionesMezcladas = []; _sim3Paso = 0;
         _rerenderSimTab(unit);
       });
     });
@@ -398,7 +432,7 @@
       });
     });
     const irQuiz = document.getElementById('sim2-ir-quiz');
-    if (irQuiz) irQuiz.addEventListener('click', () => { _sim2Fase = 'quiz'; _sim2RondaIdx = 0; _rerenderSimTab(unit); });
+    if (irQuiz) irQuiz.addEventListener('click', () => { _sim2Fase = 'quiz'; _sim2RondaIdx = 0; _sim2OpcionesMezcladas = []; _rerenderSimTab(unit); });
 
     /* Sim2 — Fase 2: quiz real (MQC da el fenómeno, el estudiante elige el área) */
     document.querySelectorAll('[data-sim2q-opcion]').forEach(btn => {
@@ -406,13 +440,16 @@
         const idx = parseInt(btn.getAttribute('data-sim2q-opcion'), 10);
         const r = RONDAS_SIM2[_sim2RondaIdx];
         const fb = document.getElementById('sim2q-feedback');
-        const ok = idx === r.correcta;
+        // HOTFIX PEDAGÓGICO — Parte 4: comparar contra el índice YA
+        // mezclado (_sim2OpcionesMezcladas.correcta), no r.correcta.
+        const ok = idx === _sim2OpcionesMezcladas.correcta;
         if (fb) {
           fb.style.color = ok ? 'var(--green)' : 'var(--gold)';
-          fb.textContent = ok ? '✅ ¡Correcto!' : `💡 El área correcta era: ${r.opciones[r.correcta]}`;
+          fb.textContent = ok ? '✅ ¡Correcto!' : `💡 El área correcta era: ${_sim2OpcionesMezcladas.opciones[_sim2OpcionesMezcladas.correcta]}`;
         }
         setTimeout(() => {
           _sim2RondaIdx++;
+          _sim2OpcionesMezcladas = [];
           if (_sim2RondaIdx >= RONDAS_SIM2.length) markSimDone('sim2');
           _rerenderSimTab(unit);
         }, 1300);
@@ -456,46 +493,106 @@
      unit-01.js: SIN XP al solo iniciar un nivel, y game-won/game-played
      UNA sola vez por nivel (no por intento).
      ================================================================ */
+  /* HOTFIX PEDAGÓGICO — Partes 1 y 2: cada escenario ahora exige una
+     respuesta real (4 opciones mezcladas). Si falla, se muestra
+     retroalimentación y el nivel NO se marca completado ni otorga XP
+     — puede reintentar. Solo si acierta se marca gameLevels.push(...)
+     y se otorga XP. Las pistas se reescribieron para ORIENTAR sin
+     nombrar directamente la disciplina/área esperada como respuesta. */
   const NIVELES_JUEGO = [
-    { id: 'nivel1', escenario: 'Un puente colgante que soporta el paso de cientos de vehículos por día.', pista: 'Pensá en qué disciplina se encarga de diseñar estructuras que resistan fuerzas y peso.', area: 'Mecánica / Ingeniería' },
-    { id: 'nivel2', escenario: 'Un teléfono que puede indicar tu ubicación exacta en cualquier parte del planeta.', pista: 'Pensá en cómo varios satélites, con relojes muy precisos, permiten calcular una posición.', area: 'Relatividad + Electromagnetismo' },
-    { id: 'nivel3', escenario: 'Un láser capaz de realizar cirugías oculares con precisión milimétrica.', pista: 'Pensá en cómo se puede concentrar luz de una manera muy controlada.', area: 'Óptica + Física cuántica' },
-    { id: 'nivel4', escenario: 'Un tren que se desliza sin tocar sus vías, casi sin fricción.', pista: 'Pensá en qué materiales especiales expulsan los campos magnéticos al enfriarse mucho.', area: 'Electromagnetismo (superconductores)' },
-    { id: 'nivel5', escenario: 'Un experimento que hace chocar partículas a velocidades cercanas a la de la luz para recrear condiciones del universo temprano.', pista: 'Pensá en el laboratorio europeo donde se confirmó la existencia del bosón de Higgs.', area: 'Física de partículas' }
+    { id: 'nivel1', escenario: 'Un puente colgante que soporta el paso de cientos de vehículos por día.',
+      pista: 'Pensá en fuerzas, equilibrio, peso y resistencia de materiales.',
+      correcta: 'Mecánica', opciones: ['Mecánica', 'Óptica', 'Astrofísica', 'Física cuántica'] },
+    { id: 'nivel2', escenario: 'Un teléfono que puede indicar tu ubicación exacta en cualquier parte del planeta.',
+      pista: 'Pensá en señales que viajan desde el espacio, y en cómo el tiempo puede pasar distinto según la velocidad.',
+      correcta: 'Relatividad + Electromagnetismo', opciones: ['Relatividad + Electromagnetismo', 'Acústica', 'Termodinámica', 'Física de partículas'] },
+    { id: 'nivel3', escenario: 'Un láser capaz de realizar cirugías oculares con precisión milimétrica.',
+      pista: 'Pensá en cómo se puede concentrar y controlar un haz de luz.',
+      correcta: 'Óptica + Física cuántica', opciones: ['Óptica + Física cuántica', 'Mecánica clásica', 'Astrofísica', 'Termodinámica'] },
+    { id: 'nivel4', escenario: 'Un tren que se desliza sin tocar sus vías, casi sin fricción.',
+      pista: 'Pensá en imanes, campos magnéticos, y materiales enfriados a temperaturas extremas.',
+      correcta: 'Electromagnetismo (superconductores)', opciones: ['Electromagnetismo (superconductores)', 'Óptica', 'Acústica', 'Astrofísica'] },
+    { id: 'nivel5', escenario: 'Un experimento que hace chocar partículas a velocidades cercanas a la de la luz para recrear condiciones del universo temprano.',
+      pista: 'Pensá en colisiones a gran velocidad y en los componentes más pequeños del universo.',
+      correcta: 'Física de partículas', opciones: ['Física de partículas', 'Óptica geométrica', 'Mecánica clásica', 'Acústica'] }
   ];
+  let _juegoNivelActivo = null;
+  let _juegoOpcionesMezcladas = [];
+  let _juegoFeedback = null; // { texto, correcto } | null
+
   function renderJuego(unit, uData) {
     const nivelesHechos = uData.gameLevels || [];
+    if (_juegoNivelActivo) {
+      const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+      return `
+        <div class="juego-panel">
+          <button class="btn btn-ghost btn-sm" data-juego-volver style="margin-bottom:.8rem">← Volver a los escenarios</button>
+          <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
+          <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">¿Qué área de la Física interviene principalmente?</p>
+          <div style="display:grid;gap:.5rem">
+            ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
+          </div>
+          ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
+        </div>`;
+    }
     return `
       <div class="juego-panel">
         <h3>🔎 Misión: Detective de la Física</h3>
-        <p style="color:var(--text-secondary);font-size:.85rem">Leé cada escenario y descubrí qué área de la Física está detrás.</p>
+        <p style="color:var(--text-secondary);font-size:.85rem">Leé cada escenario y respondé qué área de la Física está detrás.</p>
         <div style="display:grid;gap:.8rem;margin-top:1rem">
           ${NIVELES_JUEGO.map((n, i) => `
             <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem">
               <p style="margin:0 0 .4rem"><strong>${n.escenario}</strong></p>
-              <p style="color:var(--text-muted);font-size:.82rem">💡 ${n.pista}</p>
-              ${nivelesHechos.includes(n.id) ? `<p style="color:var(--green);font-size:.85rem;margin-top:.4rem">✅ ${n.area}</p>` : `<button class="btn btn-primary btn-sm" data-nivel="${n.id}">Revelar área de la Física</button>`}
+              ${nivelesHechos.includes(n.id) ? `<p style="color:var(--green);font-size:.85rem;margin-top:.4rem">✅ ${n.correcta}</p>` : `<button class="btn btn-primary btn-sm" data-nivel="${n.id}">Resolver</button>`}
             </div>
           `).join('')}
         </div>
       </div>`;
   }
+  function _mezclar(arr) {
+    const a = arr.slice();
+    for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+    return a;
+  }
   function bindJuego(unit, uData) {
     document.querySelectorAll('[data-nivel]').forEach(btn => {
       btn.addEventListener('click', () => {
-        const nivelId = btn.getAttribute('data-nivel');
-        const u = loadUnitData();
-        const done = Array.isArray(u.gameLevels) ? u.gameLevels.slice() : [];
-        const yaResuelto = done.includes(nivelId);
-        if (!yaResuelto) done.push(nivelId);
-        patchUnit({ gameLevels: done, gameScore: done.length });
-        if (!yaResuelto) awardXP(done.length >= NIVELES_JUEGO.length ? 'game-won' : 'game-played');
-        const fresh = loadUnitData();
-        const container = document.querySelector('.juego-panel').parentElement;
-        container.innerHTML = renderJuego(unit, fresh);
-        bindJuego(unit, fresh);
+        _juegoNivelActivo = btn.getAttribute('data-nivel');
+        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+        _juegoOpcionesMezcladas = _mezclar(n.opciones);
+        _juegoFeedback = null;
+        _rerenderJuego(unit);
       });
     });
+    const volver = document.querySelector('[data-juego-volver]');
+    if (volver) volver.addEventListener('click', () => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); });
+    document.querySelectorAll('[data-juego-opcion]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const elegida = btn.getAttribute('data-juego-opcion');
+        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+        const acierto = elegida === n.correcta;
+        if (acierto) {
+          // Solo si ACIERTA: se marca completado y se otorga XP. Nunca antes.
+          const u = loadUnitData();
+          const done = Array.isArray(u.gameLevels) ? u.gameLevels.slice() : [];
+          const yaResuelto = done.includes(n.id);
+          if (!yaResuelto) done.push(n.id);
+          patchUnit({ gameLevels: done, gameScore: done.length });
+          if (!yaResuelto) awardXP(done.length >= NIVELES_JUEGO.length ? 'game-won' : 'game-played');
+          _juegoFeedback = { texto: `✅ ¡Correcto! Es ${n.correcta}.`, correcto: true };
+          setTimeout(() => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); }, 1500);
+        } else {
+          // Falla: retroalimentación, NO se marca completado, NO hay XP. Puede reintentar.
+          _juegoFeedback = { texto: '💡 No es esa. Volvé a leer la pista y probá otra opción.', correcto: false };
+        }
+        _rerenderJuego(unit);
+      });
+    });
+  }
+  function _rerenderJuego(unit) {
+    const tc = document.getElementById('tab-content');
+    if (tc) { tc.innerHTML = renderJuego(unit, loadUnitData()); bindJuego(unit, loadUnitData()); }
   }
 
   /* ================================================================
@@ -595,33 +692,144 @@
      MISIÓN FINAL — "Tecnología bajo la lupa" (mismo patrón g11-u01.js:
      awardXP('fisica10-mission-done') UNA sola vez, vía missionDone).
      ================================================================ */
+  /* HOTFIX PEDAGÓGICO — Parte 3: misión mixta y verificable, con 4
+     componentes objetivos + una respuesta corta validada por
+     longitud. El botón "Entregar misión" permanece deshabilitado
+     hasta que los 3 componentes objetivos sean CORRECTOS y la
+     respuesta corta tenga entre 30 y 250 caracteres. Solo entonces
+     se marca missionDone=true y se otorga XP — nunca antes. */
+  const MISION_A_OPCIONES = ['Relatividad', 'Electromagnetismo', 'Acústica', 'Termodinámica', 'Física de partículas'];
+  const MISION_A_CORRECTAS = ['Relatividad', 'Electromagnetismo'];
+  const MISION_B_OPCIONES = [
+    'Los satélites emiten señales que los receptores usan para triangular la posición, corrigiendo los efectos relativistas del tiempo',
+    'Los satélites GPS usan ondas sonoras para calcular distancias',
+    'El GPS funciona exclusivamente con corriente eléctrica, sin ninguna señal',
+    'El GPS mide directamente la temperatura del receptor'
+  ];
+  const MISION_B_CORRECTA = 0;
+  const MISION_C_OPCIONES = [
+    'La relatividad (teoría) predijo el desfase del tiempo en los satélites, y las mediciones satelitales (experimento) confirmaron que había que corregirlo',
+    'La física experimental no tuvo ningún papel en el desarrollo del GPS',
+    'La física teórica se opone a la física experimental, por eso el GPS solo usa una de las dos',
+    'El GPS se diseñó sin ninguna relación con la física teórica'
+  ];
+  const MISION_C_CORRECTA = 0;
+  const MISION_D_MIN = 30, MISION_D_MAX = 250;
+
+  let _misionA = []; // ids seleccionados (checkboxes)
+  let _misionB = null;
+  let _misionC = null;
+  let _misionD = '';
+
+  function _misionValida() {
+    const aOk = _misionA.length === MISION_A_CORRECTAS.length && MISION_A_CORRECTAS.every(x => _misionA.includes(x));
+    const bOk = _misionB === MISION_B_CORRECTA;
+    const cOk = _misionC === MISION_C_CORRECTA;
+    const dOk = _misionD.trim().length >= MISION_D_MIN && _misionD.trim().length <= MISION_D_MAX;
+    return aOk && bOk && cOk && dOk;
+  }
+
   function renderMision(unit, uData) {
     if (uData.missionDone) {
       return `<div style="max-width:520px;text-align:center"><h3>✅ Misión completada</h3><p style="color:var(--text-secondary)">Ya entregaste "Tecnología bajo la lupa".</p></div>`;
     }
+    const dLen = _misionD.trim().length;
     return `
-      <div style="max-width:560px">
+      <div style="max-width:600px">
         <h3>🔎 Misión: Tecnología bajo la lupa</h3>
-        <p style="color:var(--text-secondary)">Tecnología a analizar: <strong>el GPS</strong>. Respondé, con tus propias palabras, apoyándote en lo que viste en esta unidad:</p>
-        <ol style="color:var(--text-secondary);font-size:.9rem;line-height:1.8">
-          <li>¿Qué área(s) de la Física intervienen en el funcionamiento del GPS?</li>
-          <li>¿Qué fenómeno físico permite que un GPS calcule tu ubicación?</li>
-          <li>¿Por qué fueron necesarias tanto la Física teórica (relatividad) como la experimental (mediciones satelitales) para desarrollarlo?</li>
-          <li>¿Qué impacto tecnológico y social tiene el GPS hoy en día?</li>
-        </ol>
-        <button class="btn btn-primary" id="fix10-entregar-mision">Entregar misión</button>
+        <p style="color:var(--text-secondary)">Tecnología a analizar: <strong>el GPS</strong>.</p>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:.9rem">
+          <p style="font-weight:700;margin:0 0 .5rem">A. ¿Qué área(s) de la Física intervienen? <span style="color:var(--text-muted);font-weight:400;font-size:.78rem">(marcá todas las que correspondan)</span></p>
+          ${MISION_A_OPCIONES.map(op => `
+            <label style="display:flex;align-items:center;gap:.5rem;font-size:.88rem;margin-bottom:.35rem;cursor:pointer">
+              <input type="checkbox" data-mision-a="${op}" ${_misionA.includes(op) ? 'checked' : ''}> ${op}
+            </label>`).join('')}
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:.9rem">
+          <p style="font-weight:700;margin:0 0 .5rem">B. ¿Qué fenómeno físico permite que un GPS calcule tu ubicación?</p>
+          ${MISION_B_OPCIONES.map((op, i) => `
+            <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.88rem;margin-bottom:.4rem;cursor:pointer">
+              <input type="radio" name="mision-b" data-mision-b="${i}" ${_misionB === i ? 'checked' : ''}> ${op}
+            </label>`).join('')}
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:.9rem">
+          <p style="font-weight:700;margin:0 0 .5rem">C. ¿Cuál describe mejor la relación entre Física teórica y experimental en el GPS?</p>
+          ${MISION_C_OPCIONES.map((op, i) => `
+            <label style="display:flex;align-items:flex-start;gap:.5rem;font-size:.88rem;margin-bottom:.4rem;cursor:pointer">
+              <input type="radio" name="mision-c" data-mision-c="${i}" ${_misionC === i ? 'checked' : ''}> ${op}
+            </label>`).join('')}
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem;margin-bottom:.9rem">
+          <p style="font-weight:700;margin:0 0 .5rem">D. ¿Qué impacto tecnológico y social tiene el GPS hoy en día?</p>
+          <textarea id="mision-d" rows="3" maxlength="${MISION_D_MAX}" placeholder="Escribí tu respuesta (mínimo ${MISION_D_MIN} caracteres)..." style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);padding:.6rem;font-family:inherit;font-size:.88rem">${_misionD}</textarea>
+          <p style="font-size:.72rem;color:${dLen >= MISION_D_MIN ? 'var(--green)' : 'var(--text-muted)'};margin:.3rem 0 0">${dLen}/${MISION_D_MAX} caracteres (mínimo ${MISION_D_MIN})</p>
+        </div>
+
+        <button class="btn btn-primary" id="fix10-entregar-mision" ${_misionValida() ? '' : 'disabled'} style="${_misionValida() ? '' : 'opacity:.5;cursor:not-allowed'}">Entregar misión</button>
+        <p id="mision-feedback" style="margin-top:.6rem;font-size:.85rem;color:var(--gold)"></p>
       </div>`;
   }
+
   function bindMision(unit, uData) {
+    document.querySelectorAll('[data-mision-a]').forEach(chk => {
+      chk.addEventListener('change', () => {
+        const val = chk.getAttribute('data-mision-a');
+        if (chk.checked) { if (!_misionA.includes(val)) _misionA.push(val); }
+        else { _misionA = _misionA.filter(x => x !== val); }
+        _rerenderMision(unit);
+      });
+    });
+    document.querySelectorAll('[data-mision-b]').forEach(rad => {
+      rad.addEventListener('change', () => { _misionB = parseInt(rad.getAttribute('data-mision-b'), 10); _rerenderMision(unit); });
+    });
+    document.querySelectorAll('[data-mision-c]').forEach(rad => {
+      rad.addEventListener('change', () => { _misionC = parseInt(rad.getAttribute('data-mision-c'), 10); _rerenderMision(unit); });
+    });
+    const dArea = document.getElementById('mision-d');
+    if (dArea) {
+      dArea.addEventListener('input', () => {
+        _misionD = dArea.value;
+        // Actualización ligera: solo el contador y el botón, sin perder el foco del textarea.
+        const contador = dArea.parentElement.querySelector('p');
+        const len = _misionD.trim().length;
+        if (contador) {
+          contador.textContent = `${len}/${MISION_D_MAX} caracteres (mínimo ${MISION_D_MIN})`;
+          contador.style.color = len >= MISION_D_MIN ? 'var(--green)' : 'var(--text-muted)';
+        }
+        const btn = document.getElementById('fix10-entregar-mision');
+        if (btn) {
+          const valido = _misionValida();
+          btn.disabled = !valido;
+          btn.style.opacity = valido ? '' : '.5';
+          btn.style.cursor = valido ? '' : 'not-allowed';
+        }
+      });
+    }
     const btn = document.getElementById('fix10-entregar-mision');
     if (btn) {
       btn.addEventListener('click', () => {
+        // HOTFIX PEDAGÓGICO — Parte 3: validación objetiva final antes
+        // de marcar missionDone. Si por algún motivo no es válida
+        // (ej. el botón se habilitó indebidamente), no se entrega.
+        if (!_misionValida()) {
+          const fb = document.getElementById('mision-feedback');
+          if (fb) fb.textContent = 'Todavía falta completar o corregir alguna parte de la misión.';
+          return;
+        }
         patchUnit({ missionDone: true });
         awardXP('fisica10-mission-done');
         const tc = document.getElementById('tab-content');
         if (tc) tc.innerHTML = renderMision(unit, loadUnitData());
       });
     }
+  }
+  function _rerenderMision(unit) {
+    const tc = document.getElementById('tab-content');
+    if (tc) { tc.innerHTML = renderMision(unit, loadUnitData()); bindMision(unit, loadUnitData()); }
   }
 
   /* ── Registro en el sistema de pestañas (mismo mecanismo que
