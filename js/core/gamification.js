@@ -185,6 +185,12 @@ const Gamification = (() => {
       desc: 'Completaste FIX10-U01 — La Física en el contexto histórico y actual'
     },
     {
+      id:   'dominio-vectorial',
+      name: 'Dominio Vectorial',
+      icon: '🧭',
+      desc: 'Completaste FIX10-U02 — Cantidades escalares y vectoriales'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -569,6 +575,26 @@ const Gamification = (() => {
         const missionDoneF = !!uf.missionDone;
         if (allTopicsF && allSimsF && gamePlayedF && examPassedF && missionDoneF) {
           newBadges.push('explorador-fisica');
+        }
+      }
+    }
+
+    /* FIX10-U02 — 'dominio-vectorial': mismo principio anti-farming
+       exacto que 'explorador-fisica' — exige finalización real de las
+       5 partes (teoría/simuladores/juego/examen/misión Ruta de
+       Rescate), nunca solo "abrir componentes" (regla explícita del
+       sprint). */
+    if (typeof FISICA10_UNIDADES_DATA !== 'undefined' && data.fisica10 && !data.badges.includes('dominio-vectorial')) {
+      const uv = data.fisica10['fix10-u02'];
+      const metav = FISICA10_UNIDADES_DATA.find(x => x.id === 'fix10-u02');
+      if (uv && metav) {
+        const allTopicsV = (uv.topicsRead || []).length >= (metav.topics || []).length;
+        const allSimsV = (uv.simsDone || []).length >= (metav.simulators || []).length;
+        const gamePlayedV = (uv.gameScore || 0) > 0;
+        const examPassedV = (uv.examBest || 0) >= (metav.exam && metav.exam.pass || 70);
+        const missionDoneV = !!uv.missionDone;
+        if (allTopicsV && allSimsV && gamePlayedV && examPassedV && missionDoneV) {
+          newBadges.push('dominio-vectorial');
         }
       }
     }
