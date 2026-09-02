@@ -105,6 +105,14 @@
     _datos = { seguimiento, porSeccion, porCiencia, items, distribucion, pneAttemptsCrudo, panoramaColegios };
   }
 
+  /* HOTFIX CATÁLOGO DE COLEGIOS — Parte 9: perfiles legacy sin
+     school_id, para la herramienta "Gestión de Colegios". Se carga
+     aparte (no en el Promise.all principal) porque solo hace falta
+     al abrir esa pestaña específica. */
+  async function _cargarColegiosLegacy() {
+    return _restGet('students?select=colegio&school_id=is.null&colegio=not.is.null');
+  }
+
   /* ================================================================
      RENDER — GATE (acceso restringido / login)
      ================================================================ */
@@ -177,6 +185,7 @@
         <div class="an-tabs">
           <button class="an-tab" data-tab="resumen">Resumen</button>
           <button class="an-tab" data-tab="panorama">🏫 Panorama Global</button>
+          <button class="an-tab" data-tab="colegios">🗂️ Gestión de Colegios</button>
           <button class="an-tab" data-tab="seguimiento">Seguimiento académico</button>
           <button class="an-tab" data-tab="pne">PNE 11.º — Analítica</button>
           <button class="an-tab" data-tab="items">Análisis de ítems</button>
@@ -193,9 +202,106 @@
     const cont = document.getElementById('an-contenido');
     if (_vista === 'resumen') cont.innerHTML = _htmlResumen();
     else if (_vista === 'panorama') cont.innerHTML = _htmlPanorama();
+    else if (_vista === 'colegios') {
+      cont.innerHTML = _htmlColegios();
+      if (_colegiosLegacy === null) {
+        _cargarColegiosLegacy().then(r => { _colegiosLegacy = r; if (_vista === 'colegios') { cont.innerHTML = _htmlColegios(); _bindColegios(); } });
+      } else {
+        _bindColegios();
+      }
+    }
     else if (_vista === 'seguimiento') { cont.innerHTML = _htmlSeguimiento(); _bindSeguimiento(); }
     else if (_vista === 'pne') { cont.innerHTML = _htmlPNE(); _bindOrdenTabla('an-tabla-seccion', _ordenSeccion, _htmlFilasSeccion); }
     else if (_vista === 'items') { cont.innerHTML = _htmlItems(); _bindItems(); }
+  }
+
+  /* ================================================================
+     SECCIÓN: GESTIÓN DE COLEGIOS (Parte 9 del hotfix de catálogo)
+     ================================================================
+     Lista los nombres de colegio LEGACY (sin school_id) con su
+     conteo de perfiles, y permite "Unificar con →" un colegio real
+     del catálogo — esto escribe en school_alias_map (protegida, solo
+     admin), sin tocar ningún dato académico de los perfiles.
+     ================================================================ */
+  let _colegiosLegacy = null;
+
+  function _htmlColegios() {
+    if (_colegiosLegacy === null) {
+      return `<div class="an-empty">Cargando nombres de colegio pendientes de unificar…</div>`;
+    }
+    if (!_colegiosLegacy.length) {
+      return `<div class="an-empty">✅ No hay colegios legacy pendientes de unificar — todos los perfiles ya tienen un centro educativo del catálogo.</div>`;
+    }
+    // Agrupar client-side por texto de colegio (case/espacios ya
+    // vienen tal cual del estudiante — la unificación real ocurre acá).
+    const conteos = {};
+    _colegiosLegacy.forEach(r => {
+      const nombre = (r.colegio || '').trim();
+      if (!nombre) return;
+      conteos[nombre] = (conteos[nombre] || 0) + 1;
+    });
+    const filas = Object.keys(conteos).sort((a, b) => conteos[b] - conteos[a]);
+    const catalogo = (typeof CATALOGO_COLEGIOS !== 'undefined' ? CATALOGO_COLEGIOS.slice() : [])
+      .sort((a, b) => a.school_name.localeCompare(b.school_name, 'es'));
+    return `
+      <h2 class="an-section-title">🗂️ Gestión de Colegios</h2>
+      <p class="an-note" style="margin-bottom:1rem">Nombres de colegio escritos antes de que existiera el catálogo. Unificalos con el centro educativo real para que dejen de aparecer separados en Panorama Global.</p>
+      <div class="an-table-wrap"><table class="an-table">
+        <thead><tr><th>Nombre legacy</th><th>Perfiles</th><th>Unificar con →</th></tr></thead>
+        <tbody>${filas.map(nombre => `
+          <tr>
+            <td>${_esc(nombre)}</td>
+            <td>${conteos[nombre]}</td>
+            <td>
+              <select data-unificar-select="${_esc(nombre)}" style="margin-right:.4rem">
+                <option value="">— Elegir colegio —</option>
+                ${catalogo.map(c => `<option value="${c.school_id}">${_esc(c.school_name)}</option>`).join('')}
+              </select>
+              <button class="btn btn-primary btn-sm" data-unificar-btn="${_esc(nombre)}">Unificar</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>`;
+  }
+
+  async function _unificarColegio(nombreLegacy, schoolId) {
+    const colegio = (typeof buscarColegioPorId === 'function') ? buscarColegioPorId(schoolId) : null;
+    if (!colegio) return;
+    const cfg = _cfg();
+    const url = cfg.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/school_alias_map';
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': cfg.supabaseAnonKey,
+        'Authorization': 'Bearer ' + (_session && _session.access_token || cfg.supabaseAnonKey),
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({
+        alias_normalizado: nombreLegacy.toLowerCase().trim().replace(/\s+/g, ' '),
+        school_id: colegio.school_id,
+        school_name: colegio.school_name,
+        school_region: colegio.school_region
+      })
+    });
+    _colegiosLegacy = await _cargarColegiosLegacy();
+    await _cargarTodosLosDatos(); // refresca Panorama Global con la nueva unificación
+    document.getElementById('an-contenido').innerHTML = _htmlColegios();
+    _bindColegios();
+  }
+
+  function _bindColegios() {
+    document.querySelectorAll('[data-unificar-btn]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nombre = btn.getAttribute('data-unificar-btn');
+        const select = document.querySelector(`[data-unificar-select="${CSS.escape(nombre)}"]`);
+        const schoolId = select ? select.value : '';
+        if (!schoolId) { alert('Elegí primero el colegio real con el que querés unificar.'); return; }
+        if (confirm(`¿Unificar "${nombre}" con el colegio elegido? Esto no borra ningún dato, solo corrige la agrupación en Panorama Global.`)) {
+          _unificarColegio(nombre, schoolId);
+        }
+      });
+    });
   }
 
   /* ================================================================
