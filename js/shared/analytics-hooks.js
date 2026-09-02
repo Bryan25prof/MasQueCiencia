@@ -281,8 +281,10 @@
         alias: (meta && meta.alias) || (data.user && data.user.name) || 'Estudiante',
         grupo: (meta && meta.group) || null,
         grado: null, /* MQC es multigrado por perfil; el grado se infiere del lado del panel a partir de las unidades con progreso */
-        colegio: (meta && meta.colegio) || null, /* Colegio/Institución + Docente (nuevo) */
-        rol: (meta && meta.rol) || 'estudiante'
+        colegio: (meta && meta.colegio) || null, /* texto visible — se mantiene por compatibilidad (ver HOTFIX catálogo de colegios) */
+        rol: (meta && meta.rol) || 'estudiante',
+        school_id: (meta && meta.schoolId) || null, /* HOTFIX CATÁLOGO DE COLEGIOS: identificador estable, nunca el texto libre */
+        school_region: (meta && meta.schoolRegion) || null
       });
     } catch (e) { /* no interrumpir la gestión de perfiles */ }
   }
@@ -342,8 +344,8 @@
   if (typeof window.MQCProfiles !== 'undefined') {
     const _originalCreate = MQCProfiles.create;
     if (typeof _originalCreate === 'function') {
-      MQCProfiles.create = function (alias, group, avatar, colegio, rol) {
-        const r = _originalCreate.call(MQCProfiles, alias, group, avatar, colegio, rol);
+      MQCProfiles.create = function (alias, group, avatar, colegio, rol, schoolId, schoolRegion) {
+        const r = _originalCreate.call(MQCProfiles, alias, group, avatar, colegio, rol, schoolId, schoolRegion);
         if (r && r.ok) {
           try {
             _registrarPerfilActivo();
@@ -374,6 +376,19 @@
     if (typeof _originalSetColegio === 'function') {
       MQCProfiles.setColegio = function (id, colegio) {
         const r = _originalSetColegio.call(MQCProfiles, id, colegio);
+        if (r && r.ok && MQCProfiles.activeId && MQCProfiles.activeId() === id) {
+          try { _registrarPerfilActivo(); } catch (e) {}
+        }
+        return r;
+      };
+    }
+
+    /* HOTFIX CATÁLOGO DE COLEGIOS: mismo envoltorio, para setEscuela
+       (colegio + school_id + school_region a la vez). */
+    const _originalSetEscuela = MQCProfiles.setEscuela;
+    if (typeof _originalSetEscuela === 'function') {
+      MQCProfiles.setEscuela = function (id, schoolId, schoolName, schoolRegion) {
+        const r = _originalSetEscuela.call(MQCProfiles, id, schoolId, schoolName, schoolRegion);
         if (r && r.ok && MQCProfiles.activeId && MQCProfiles.activeId() === id) {
           try { _registrarPerfilActivo(); } catch (e) {}
         }
@@ -485,21 +500,30 @@
   }
 
   function _mostrarInsigniaColaborador() {
-    // Nombre en el sidebar (#sidebar-user-name lo sigue actualizando
-    // app.js normalmente — la clase CSS sobrevive a que se le cambie
-    // el textContent, así que no hace falta reaplicarla después).
+    // Tema ambiental de bordes en TODA la página (misma técnica que el
+    // modo de alto contraste — variables de color a nivel de <body>).
+    document.body.classList.add('mqc-apoyo-tema');
+
+    // Nombre en el sidebar: efecto holográfico (Holo 2, ya aprobado).
+    // La clase CSS sobrevive a que app.js le cambie el textContent
+    // después, así que no hace falta reaplicarla.
     const nameEl = document.getElementById('sidebar-user-name');
-    if (nameEl) {
-      nameEl.classList.add('mqc-colaborador-holo');
-      if (!document.getElementById('mqc-colaborador-badge')) {
-        const badge = document.createElement('div');
-        badge.id = 'mqc-colaborador-badge';
-        badge.className = 'mqc-colaborador-holo';
-        badge.textContent = '💙 Apoyando MQC';
-        badge.style.cssText = 'font-size:.68rem;font-weight:700;margin-top:.15rem';
-        nameEl.insertAdjacentElement('afterend', badge);
+    if (nameEl) nameEl.classList.add('mqc-colaborador-holo');
+
+    // Tarjeta completa del sidebar (Opción 3, elegida): fondo/borde
+    // dorado suave + cinta "APOYA" en la esquina — reemplaza a la
+    // etiqueta de texto suelta de la versión anterior.
+    const card = document.querySelector('.sidebar-user-card');
+    if (card) {
+      card.classList.add('mqc-apoyo-tarjeta');
+      if (!card.querySelector('.mqc-apoyo-ribbon')) {
+        const ribbon = document.createElement('div');
+        ribbon.className = 'mqc-apoyo-ribbon';
+        ribbon.textContent = 'APOYA';
+        card.appendChild(ribbon);
       }
     }
+
     // Chip flotante — es donde se toca el nombre para cambiar de perfil
     // (ver profiles-ui.js: mountChip()/openChipMenu()). No hay garantía
     // de que ya exista en el DOM en este momento (mountChip() puede

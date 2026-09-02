@@ -83,9 +83,10 @@ window.MQCProfiles = (function () {
     return _reg;
   }
 
-  function _meta(id, alias, group, avatar, colegio, rol){
+  function _meta(id, alias, group, avatar, colegio, rol, schoolId, schoolRegion){
     return { id, alias: alias||'Estudiante', group: group||'', avatar: avatar||'🧪',
              colegio: (colegio||'').trim(), rol: rol === 'docente' ? 'docente' : 'estudiante',
+             schoolId: schoolId || '', schoolRegion: schoolRegion || '',
              created: Date.now(), lastAccess: Date.now() };
   }
 
@@ -120,13 +121,13 @@ window.MQCProfiles = (function () {
   function activeMeta(){ const id = activeId(); return id ? get(id) : null; }
 
   /* ── administración ── */
-  function create(alias, group, avatar, colegio, rol){
+  function create(alias, group, avatar, colegio, rol, schoolId, schoolRegion){
     ready();
     if (!canCreate()) return { ok:false, reason:'max', message:`Ya existen ${MAX_PROFILES} perfiles. Elimina uno para crear otro.` };
     const a = (alias||'').trim();
     if (!a) return { ok:false, reason:'alias', message:'El alias no puede estar vacío.' };
     const id = _uid();
-    _reg.profiles[id] = _meta(id, a, group, avatar, colegio, rol);
+    _reg.profiles[id] = _meta(id, a, group, avatar, colegio, rol, schoolId, schoolRegion);
     _reg.order.push(id);
     /* progreso inicial con el alias como nombre (para el saludo del hero) */
     const fresh = (typeof Storage !== 'undefined' && Storage.defaults) ? Storage.defaults() : { units:{} };
@@ -175,6 +176,23 @@ window.MQCProfiles = (function () {
   function setColegio(id, colegio){
     ready(); if(!_reg.profiles[id]) return {ok:false};
     _reg.profiles[id].colegio=(colegio||'').trim(); _saveReg(); return {ok:true};
+  }
+  /* HOTFIX CATÁLOGO DE COLEGIOS: reemplaza el ingreso libre por el
+     selector con catálogo oficial (school_id estable). colegio sigue
+     siendo el texto visible (para compatibilidad con todo lo que ya
+     lee meta.colegio); schoolId/schoolRegion son el identificador
+     real, usado por Analytics para agrupar sin fragmentarse por
+     diferencias de escritura (ver Parte 2 y 10 del sprint). */
+  function setEscuela(id, schoolId, schoolName, schoolRegion){
+    ready(); if(!_reg.profiles[id]) return {ok:false};
+    _reg.profiles[id].colegio = (schoolName||'').trim();
+    _reg.profiles[id].schoolId = schoolId || '';
+    _reg.profiles[id].schoolRegion = schoolRegion || '';
+    _saveReg(); return {ok:true};
+  }
+  function setRol(id, rol){
+    ready(); if(!_reg.profiles[id]) return {ok:false};
+    _reg.profiles[id].rol = rol === 'docente' ? 'docente' : 'estudiante'; _saveReg(); return {ok:true};
   }
 
   function remove(id){
@@ -441,7 +459,7 @@ window.MQCProfiles = (function () {
     MAX_PROFILES, MQC_VERSION,
     init, ready, count, canCreate, isGuest, activeId, hasActive,
     list, get, activeMeta,
-    create, select, rename, setAvatar, setGroup, setColegio, remove, resetProgress,
+    create, select, rename, setAvatar, setGroup, setColegio, setEscuela, setRol, remove, resetProgress,
     enterGuest, exitGuest,
     exportProfile, validateImport, importProfile, buildBitacora,
     getReflections, saveReflection, REFLECTION_QUESTIONS,
