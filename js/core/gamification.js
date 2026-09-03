@@ -191,6 +191,12 @@ const Gamification = (() => {
       desc: 'Completaste FIX10-U02 — Cantidades escalares y vectoriales'
     },
     {
+      id:   'dominio-relativo',
+      name: 'Dominio Relativo',
+      icon: '👁️',
+      desc: 'Completaste FIX10-U03 — Movimiento Relativo'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -595,6 +601,23 @@ const Gamification = (() => {
         const missionDoneV = !!uv.missionDone;
         if (allTopicsV && allSimsV && gamePlayedV && examPassedV && missionDoneV) {
           newBadges.push('dominio-vectorial');
+        }
+      }
+    }
+
+    /* FIX10-U03 — 'dominio-relativo': mismo principio anti-farming
+       exacto que las anteriores. */
+    if (typeof FISICA10_UNIDADES_DATA !== 'undefined' && data.fisica10 && !data.badges.includes('dominio-relativo')) {
+      const ur = data.fisica10['fix10-u03'];
+      const metar = FISICA10_UNIDADES_DATA.find(x => x.id === 'fix10-u03');
+      if (ur && metar) {
+        const allTopicsR = (ur.topicsRead || []).length >= (metar.topics || []).length;
+        const allSimsR = (ur.simsDone || []).length >= (metar.simulators || []).length;
+        const gamePlayedR = (ur.gameScore || 0) > 0;
+        const examPassedR = (ur.examBest || 0) >= (metar.exam && metar.exam.pass || 70);
+        const missionDoneR = !!ur.missionDone;
+        if (allTopicsR && allSimsR && gamePlayedR && examPassedR && missionDoneR) {
+          newBadges.push('dominio-relativo');
         }
       }
     }
