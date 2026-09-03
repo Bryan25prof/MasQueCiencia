@@ -110,7 +110,17 @@
      aparte (no en el Promise.all principal) porque solo hace falta
      al abrir esa pestaña específica. */
   async function _cargarColegiosLegacy() {
-    return _restGet('students?select=colegio&school_id=is.null&colegio=not.is.null');
+    // CORRECCIÓN: antes consultaba la tabla `students` cruda (que
+    // guarda una fila por cada evento, no una por perfil, y cuyo
+    // school_id nunca se actualiza después de "Unificar" — por diseño,
+    // esa tabla es de solo inserción). Eso hacía que un mismo perfil
+    // apareciera contado varias veces, y que un colegio ya unificado
+    // siguiera apareciendo en la lista para siempre. La vista
+    // v_students_latest sí tiene una fila por perfil (la más
+    // reciente) y sí refleja school_id_efectivo (colegio propio O
+    // resuelto por school_alias_map) — por eso hay que consultar esa
+    // vista, no la tabla cruda.
+    return _restGet('v_students_latest?select=colegio&school_id_efectivo=is.null&colegio=not.is.null');
   }
 
   /* ================================================================
