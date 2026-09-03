@@ -38,7 +38,16 @@ const FISICA10_UNIDADES_DATA = [
     game: { levels: 5 },
     exam: { perExam: 30, pass: 70 }
   },
-  { id: 'fix10-u02', num: 2, status: 'development', icon: '📏', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
+  { id: 'fix10-u02', num: 2, status: 'active',
+    icon: '📐', color: 'var(--violet)',
+    title: 'Cantidades escalares y vectoriales',
+    subtitle: null,
+    description: 'Diferencia entre magnitudes escalares y vectoriales, distancia/desplazamiento, rapidez/velocidad, suma de vectores y su relación con el GPS.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 5 },
+    exam: { perExam: 30, pass: 70 }
+  },
   { id: 'fix10-u03', num: 3, status: 'development', icon: '🎯', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
   { id: 'fix10-u04', num: 4, status: 'development', icon: '⚡', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
   { id: 'fix10-u05', num: 5, status: 'development', icon: '🌊', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
