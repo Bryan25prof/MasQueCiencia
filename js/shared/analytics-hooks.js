@@ -281,10 +281,8 @@
         alias: (meta && meta.alias) || (data.user && data.user.name) || 'Estudiante',
         grupo: (meta && meta.group) || null,
         grado: null, /* MQC es multigrado por perfil; el grado se infiere del lado del panel a partir de las unidades con progreso */
-        colegio: (meta && meta.colegio) || null, /* texto visible — se mantiene por compatibilidad (ver HOTFIX catálogo de colegios) */
-        rol: (meta && meta.rol) || 'estudiante',
-        school_id: (meta && meta.schoolId) || null, /* HOTFIX CATÁLOGO DE COLEGIOS: identificador estable, nunca el texto libre */
-        school_region: (meta && meta.schoolRegion) || null
+        colegio: (meta && meta.colegio) || null, /* Colegio/Institución + Docente (nuevo) */
+        rol: (meta && meta.rol) || 'estudiante'
       });
     } catch (e) { /* no interrumpir la gestión de perfiles */ }
   }
@@ -344,8 +342,8 @@
   if (typeof window.MQCProfiles !== 'undefined') {
     const _originalCreate = MQCProfiles.create;
     if (typeof _originalCreate === 'function') {
-      MQCProfiles.create = function (alias, group, avatar, colegio, rol, schoolId, schoolRegion) {
-        const r = _originalCreate.call(MQCProfiles, alias, group, avatar, colegio, rol, schoolId, schoolRegion);
+      MQCProfiles.create = function (alias, group, avatar, colegio, rol) {
+        const r = _originalCreate.call(MQCProfiles, alias, group, avatar, colegio, rol);
         if (r && r.ok) {
           try {
             _registrarPerfilActivo();
@@ -376,19 +374,6 @@
     if (typeof _originalSetColegio === 'function') {
       MQCProfiles.setColegio = function (id, colegio) {
         const r = _originalSetColegio.call(MQCProfiles, id, colegio);
-        if (r && r.ok && MQCProfiles.activeId && MQCProfiles.activeId() === id) {
-          try { _registrarPerfilActivo(); } catch (e) {}
-        }
-        return r;
-      };
-    }
-
-    /* HOTFIX CATÁLOGO DE COLEGIOS: mismo envoltorio, para setEscuela
-       (colegio + school_id + school_region a la vez). */
-    const _originalSetEscuela = MQCProfiles.setEscuela;
-    if (typeof _originalSetEscuela === 'function') {
-      MQCProfiles.setEscuela = function (id, schoolId, schoolName, schoolRegion) {
-        const r = _originalSetEscuela.call(MQCProfiles, id, schoolId, schoolName, schoolRegion);
         if (r && r.ok && MQCProfiles.activeId && MQCProfiles.activeId() === id) {
           try { _registrarPerfilActivo(); } catch (e) {}
         }
