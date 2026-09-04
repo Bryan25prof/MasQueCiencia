@@ -2725,6 +2725,43 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   100% { background-position: 100% 50%; }
 }
 
+/* SPRINT APOYA MQC — v2 (Opción 3 elegida): la tarjeta completa del
+   sidebar (.sidebar-user-card), no solo el texto, con fondo/borde
+   dorado suave + cinta "APOYA" en la esquina. Se agrega SOLO cuando
+   el perfil activo está marcado como colaborador (ver
+   analytics-hooks.js). */
+.mqc-apoyo-tarjeta {
+  position: relative;
+  background: linear-gradient(135deg, rgba(249,255,77,.14), rgba(30,35,80,.9)) !important;
+  border-bottom-color: rgba(249,255,77,.5) !important;
+  box-shadow: 0 0 14px rgba(249,255,77,.15);
+}
+.mqc-apoyo-ribbon {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #F9FF4D;
+  color: #04141c;
+  font-size: 0.56rem;
+  font-weight: 800;
+  padding: 0.08rem 0.4rem;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,.4);
+  letter-spacing: .03em;
+  z-index: 2;
+}
+
+/* SPRINT APOYA MQC — v2: tema ambiental de bordes en TODA la página
+   (misma técnica que el modo de alto contraste del sistema de
+   accesibilidad — variables de color a nivel de <body> — pero acá
+   solo se tiñe el color de los bordes, nunca el contraste del texto,
+   para no arriesgar la legibilidad en ninguna pantalla). Intensidad
+   "Nivel 4" del demo aprobado. Se activa agregando la clase
+   "mqc-apoyo-tema" al <body> (ver analytics-hooks.js). */
+body.mqc-apoyo-tema {
+  --border: rgba(249, 255, 77, .6);
+}
+
 /* Tarjeta completa dentro del modal (#global-modal-content) */
 .mqc-support-body { display: flex; flex-direction: column; gap: 1rem; }
 
