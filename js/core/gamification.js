@@ -197,6 +197,12 @@ const Gamification = (() => {
       desc: 'Completaste FIX10-U03 — Movimiento Relativo'
     },
     {
+      id:   'maestro-movimiento',
+      name: 'Maestro del Movimiento',
+      icon: '🏎️',
+      desc: 'Completaste FIX10-U04 — Cinemática'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -618,6 +624,23 @@ const Gamification = (() => {
         const missionDoneR = !!ur.missionDone;
         if (allTopicsR && allSimsR && gamePlayedR && examPassedR && missionDoneR) {
           newBadges.push('dominio-relativo');
+        }
+      }
+    }
+
+    /* FIX10-U04 — 'maestro-movimiento': mismo principio anti-farming
+       exacto que las anteriores. */
+    if (typeof FISICA10_UNIDADES_DATA !== 'undefined' && data.fisica10 && !data.badges.includes('maestro-movimiento')) {
+      const um = data.fisica10['fix10-u04'];
+      const metam = FISICA10_UNIDADES_DATA.find(x => x.id === 'fix10-u04');
+      if (um && metam) {
+        const allTopicsM = (um.topicsRead || []).length >= (metam.topics || []).length;
+        const allSimsM = (um.simsDone || []).length >= (metam.simulators || []).length;
+        const gamePlayedM = (um.gameScore || 0) > 0;
+        const examPassedM = (um.examBest || 0) >= (metam.exam && metam.exam.pass || 70);
+        const missionDoneM = !!um.missionDone;
+        if (allTopicsM && allSimsM && gamePlayedM && examPassedM && missionDoneM) {
+          newBadges.push('maestro-movimiento');
         }
       }
     }
