@@ -58,7 +58,16 @@ const FISICA10_UNIDADES_DATA = [
     game: { levels: 6 },
     exam: { perExam: 20, pass: 70 }
   },
-  { id: 'fix10-u04', num: 4, status: 'development', icon: '⚡', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
+  { id: 'fix10-u04', num: 4, status: 'active',
+    icon: '⚡', color: 'var(--violet)',
+    title: 'Cinemática — Describiendo el movimiento',
+    subtitle: null,
+    description: 'MRU, aceleración y MRUA, movimiento vertical y una introducción al movimiento parabólico.',
+    topics: ['t1', 't2', 't3', 't4', 't5'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 6 },
+    exam: { perExam: 30, pass: 70 }
+  },
   { id: 'fix10-u05', num: 5, status: 'development', icon: '🌊', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
   { id: 'fix10-u06', num: 6, status: 'development', icon: '🔥', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
   { id: 'fix10-u07', num: 7, status: 'development', icon: '🧲', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] }
