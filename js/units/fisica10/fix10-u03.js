@@ -51,6 +51,12 @@
     if (typeof Gamification !== 'undefined' && Gamification && typeof Gamification.addXP === 'function') {
       try { Gamification.addXP(source); } catch (e) {}
     }
+    /* Puente hacia La Curiosidad (mismo patrón exacto que las 9
+       unidades de Química). */
+    if (typeof Photon !== 'undefined' && Photon.react) {
+      var _pmap = {'topic-read':'topic-read','exam-done':'exam-passed','game-won':'game-won','game-played':'simulator-commit','simulator-done':'simulator-commit','fisica10-mission-done':'exam-passed'};
+      if (_pmap[source]) { try { Photon.react(_pmap[source]); } catch (e) {} }
+    }
   }
   function loadUnitData() {
     if (typeof Storage !== 'undefined' && Storage && Storage.load) {
@@ -244,6 +250,7 @@
           <input type="number" id="lab-mag" placeholder="Magnitud (km/h)" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:.5rem">
           <select id="lab-dir" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:.5rem">
             <option value="Este">Este</option><option value="Oeste">Oeste</option><option value="Norte">Norte</option><option value="Sur">Sur</option>
+            <option value="—">Sin dirección (velocidad cero)</option>
           </select>
         </div>
         <button class="btn btn-primary btn-sm" id="lab-comprobar" style="margin-top:1rem">Comprobar</button>
@@ -584,7 +591,7 @@
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;max-width:520px">
         <h3>📝 Examen — FIX10-U03</h3>
         <p style="color:var(--text-secondary);font-size:.88rem">Mejor nota: ${uData.examBest || 0}% · Intentos: ${uData.examAttempts || 0}</p>
-        <p style="color:var(--text-muted);font-size:.78rem">Banco de ${banco.length} preguntas — cada intento toma 30 al azar.</p>
+        <p style="color:var(--text-muted);font-size:.78rem">Banco de ${banco.length} preguntas — cada intento toma 20 al azar.</p>
         <button class="btn btn-primary" id="fix10-iniciar-examen">Iniciar examen</button>
       </div>`;
   }
@@ -594,9 +601,10 @@
       <div style="max-width:560px">
         <p style="color:var(--text-muted);font-size:.78rem">Pregunta ${_examEnCurso.i + 1} de ${_examEnCurso.preguntas.length}</p>
         <h3>${q.pregunta}</h3>
-        <div style="display:grid;gap:.5rem;margin-top:1rem">
+        <div id="fix10-exam-opts" style="display:grid;gap:.5rem;margin-top:1rem">
           ${q.opciones.map((op, idx) => `<button class="btn btn-ghost" data-opcion="${idx}">${op}</button>`).join('')}
         </div>
+        <div id="fix10-exam-fb" style="margin-top:1rem"></div>
       </div>`;
   }
   function bindExamen(unit, uData) {
@@ -605,7 +613,7 @@
       startBtn.addEventListener('click', () => {
         const banco = _bancoDisponible().slice();
         for (let i = banco.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [banco[i], banco[j]] = [banco[j], banco[i]]; }
-        const seleccionadas = banco.slice(0, Math.min(30, banco.length));
+        const seleccionadas = banco.slice(0, Math.min(20, banco.length));
         const preguntasMezcladas = seleccionadas.map(q => {
           const indices = q.opciones.map((_, idx) => idx);
           for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [indices[i], indices[j]] = [indices[j], indices[i]]; }
@@ -615,14 +623,39 @@
         _rerenderExamen(unit);
       });
     }
+    /* HOTFIX RETROALIMENTACIÓN — mismo patrón que Química. */
     document.querySelectorAll('[data-opcion]').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.getAttribute('data-opcion'), 10);
         const q = _examEnCurso.preguntas[_examEnCurso.i];
-        if (idx === q.correcta) _examEnCurso.correctas++;
-        _examEnCurso.i++;
-        if (_examEnCurso.i >= _examEnCurso.preguntas.length) _finalizarExamen(unit);
-        else _rerenderExamen(unit);
+        const ok = idx === q.correcta;
+        if (ok) _examEnCurso.correctas++;
+
+        const opts = document.getElementById('fix10-exam-opts');
+        opts.querySelectorAll('[data-opcion]').forEach(b => {
+          const k = parseInt(b.getAttribute('data-opcion'), 10);
+          b.disabled = true;
+          if (k === q.correcta) b.style.borderColor = 'var(--green)';
+          if (k === idx && !ok) b.style.borderColor = 'var(--red)';
+        });
+
+        if (typeof Photon !== 'undefined' && Photon.react) { try { Photon.react(ok ? 'topic-read' : 'answer-wrong'); } catch (e) {} }
+
+        const esUltima = _examEnCurso.i >= _examEnCurso.preguntas.length - 1;
+        document.getElementById('fix10-exam-fb').innerHTML = `
+          <div style="border-left:4px solid ${ok ? 'var(--green)' : 'var(--red)'};background:var(--bg-elevated);
+                      border-radius:0 var(--radius-md) var(--radius-md) 0;padding:.7rem 1rem;font-size:.88rem;line-height:1.55">
+            <strong style="color:${ok ? 'var(--green)' : 'var(--red)'}">${ok ? '✓ ¡Correcto!' : '✗ Incorrecto'}</strong>
+            <p style="margin:.35rem 0 0;color:var(--text-secondary)">${q.explicacion || ''}</p>
+          </div>
+          <button class="btn btn-primary btn-sm" id="fix10-exam-next" style="margin-top:.8rem">
+            ${esUltima ? 'Finalizar examen' : 'Siguiente pregunta →'}
+          </button>`;
+        document.getElementById('fix10-exam-next').addEventListener('click', () => {
+          _examEnCurso.i++;
+          if (_examEnCurso.i >= _examEnCurso.preguntas.length) _finalizarExamen(unit);
+          else _rerenderExamen(unit);
+        });
       });
     });
   }
