@@ -203,6 +203,12 @@ const Gamification = (() => {
       desc: 'Completaste FIX10-U04 — Cinemática'
     },
     {
+      id:   'interprete-movimiento',
+      name: 'Intérprete del Movimiento',
+      icon: '📈',
+      desc: 'Completaste FIX10-U05 — Análisis Gráfico de Movimientos'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -641,6 +647,23 @@ const Gamification = (() => {
         const missionDoneM = !!um.missionDone;
         if (allTopicsM && allSimsM && gamePlayedM && examPassedM && missionDoneM) {
           newBadges.push('maestro-movimiento');
+        }
+      }
+    }
+
+    /* FIX10-U05 — 'interprete-movimiento': mismo principio anti-farming
+       exacto que las anteriores. */
+    if (typeof FISICA10_UNIDADES_DATA !== 'undefined' && data.fisica10 && !data.badges.includes('interprete-movimiento')) {
+      const ug = data.fisica10['fix10-u05'];
+      const metag = FISICA10_UNIDADES_DATA.find(x => x.id === 'fix10-u05');
+      if (ug && metag) {
+        const allTopicsG = (ug.topicsRead || []).length >= (metag.topics || []).length;
+        const allSimsG = (ug.simsDone || []).length >= (metag.simulators || []).length;
+        const gamePlayedG = (ug.gameScore || 0) > 0;
+        const examPassedG = (ug.examBest || 0) >= (metag.exam && metag.exam.pass || 70);
+        const missionDoneG = !!ug.missionDone;
+        if (allTopicsG && allSimsG && gamePlayedG && examPassedG && missionDoneG) {
+          newBadges.push('interprete-movimiento');
         }
       }
     }
