@@ -68,7 +68,16 @@ const FISICA10_UNIDADES_DATA = [
     game: { levels: 6 },
     exam: { perExam: 30, pass: 70 }
   },
-  { id: 'fix10-u05', num: 5, status: 'development', icon: '🌊', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
+  { id: 'fix10-u05', num: 5, status: 'active',
+    icon: '📈', color: 'var(--violet)',
+    title: 'Análisis Gráfico de Movimientos',
+    subtitle: null,
+    description: 'Aprendé a leer el movimiento directamente en gráficas: posición-tiempo, velocidad-tiempo, pendiente y área bajo la curva.',
+    topics: ['t1', 't2', 't3', 't4', 't5'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 6 },
+    exam: { perExam: 30, pass: 70 }
+  },
   { id: 'fix10-u06', num: 6, status: 'development', icon: '🔥', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
   { id: 'fix10-u07', num: 7, status: 'development', icon: '🧲', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] }
 ];
@@ -155,7 +164,7 @@ Router.register('fisica10', (() => {
         <p class="section-title">Décimo Año</p><h2 class="section-heading">⚛️ Física 10.º</h2>
       </div>
       <p style="color:var(--text-secondary);margin-bottom:1.5rem;max-width:60ch">
-        La primera unidad ya está disponible. Las siguientes se irán incorporando gradualmente.
+        Física 10.° está en desarrollo progresivo. Explorá las unidades disponibles y continuá construyendo tu dominio de la Física.
       </p>
       <div class="units-grid">${cards}</div>
     `;
