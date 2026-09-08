@@ -88,7 +88,16 @@ const FISICA10_UNIDADES_DATA = [
     game: { levels: 8 },
     exam: { perExam: 20, pass: 70 }
   },
-  { id: 'fix10-u07', num: 7, status: 'development', icon: '🧲', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] }
+  { id: 'fix10-u07', num: 7, status: 'active',
+    icon: '🌌', color: 'var(--violet)',
+    title: 'Gravitación Universal y Movimiento Satelital',
+    subtitle: null,
+    description: 'La Ley de Gravitación Universal, el campo gravitacional, cómo orbitan los satélites, los efectos de la Luna sobre la Tierra, y el ciclo de vida de las estrellas.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 9 },
+    exam: { perExam: 20, pass: 70 }
+  }
 ];
 
 /* ================================================================
