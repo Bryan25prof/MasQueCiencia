@@ -78,7 +78,16 @@ const FISICA10_UNIDADES_DATA = [
     game: { levels: 6 },
     exam: { perExam: 20, pass: 70 }
   },
-  { id: 'fix10-u06', num: 6, status: 'development', icon: '🔥', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
+  { id: 'fix10-u06', num: 6, status: 'active',
+    icon: '🔥', color: 'var(--violet)',
+    title: 'Dinámica y las Leyes de Newton',
+    subtitle: null,
+    description: 'Fuerza, masa, inercia, las 3 Leyes de Newton, fricción, normal, peso, y la Ley de Hooke — identificá las fuerzas detrás de cada movimiento.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 8 },
+    exam: { perExam: 20, pass: 70 }
+  },
   { id: 'fix10-u07', num: 7, status: 'development', icon: '🧲', color: 'var(--violet)', title: 'Próxima unidad de Física', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] }
 ];
 
