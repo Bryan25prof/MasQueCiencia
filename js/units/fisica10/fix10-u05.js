@@ -24,29 +24,66 @@
      juego y examen. Recibe una lista de puntos {t,y} conectados en
      orden, y dibuja ejes + línea con escalas fieles a los valores.
      ================================================================ */
+  /* ================================================================
+     GENERADOR DE GRÁFICAS SVG — HOTFIX DE AUTOSUFICIENCIA (ver
+     PROMPT MAESTRO UNIFICADO, Parte B): antes, los ticks de los ejes
+     eran opcionales (cfg.marcasT) y casi ninguna llamada los pasaba
+     — el estudiante nunca veía los valores numéricos reales en la
+     gráfica y tenía que "confiar" en el texto de las opciones. Ahora
+     el generador DERIVA AUTOMÁTICAMENTE los ticks de tiempo y de
+     valor Y a partir de los propios puntos de la gráfica (que ya son,
+     por definición, los tiempos y valores críticos) — así ninguna
+     gráfica puede quedar sin sus datos visibles, sin tener que tocar
+     cada una de las ~100 llamadas existentes una por una.
+     ================================================================ */
   function _svgGrafica(puntos, cfg) {
     cfg = cfg || {};
-    const w = cfg.w || 280, h = cfg.h || 170;
-    const padL = 34, padB = 22, padT = 10, padR = 10;
+    const w = cfg.w || 280, h = cfg.h || 190;
+    const padL = 40, padB = 26, padT = 14, padR = 14;
     const tMax = cfg.tMax !== undefined ? cfg.tMax : Math.max.apply(null, puntos.map(function (p) { return p.t; }));
     const ys = puntos.map(function (p) { return p.y; });
-    const yMin = cfg.yMin !== undefined ? cfg.yMin : Math.min(0, Math.min.apply(null, ys));
-    const yMax = cfg.yMax !== undefined ? cfg.yMax : Math.max(0.001, Math.max.apply(null, ys));
+    const yMinData = Math.min.apply(null, ys);
+    const yMaxData = Math.max.apply(null, ys);
+    // Regla 9/10: si hay valores negativos, reservar espacio VISIBLE
+    // debajo de cero (nunca dejar v=0 pegado al borde inferior).
+    const margen = Math.max(1, (yMaxData - Math.min(0, yMinData)) * 0.18);
+    const yMin = cfg.yMin !== undefined ? cfg.yMin : (yMinData < 0 ? yMinData - margen : Math.min(0, yMinData));
+    const yMax = cfg.yMax !== undefined ? cfg.yMax : Math.max(yMaxData + margen, yMinData < 0 ? margen : 0.001);
     function xScale(t) { return padL + (t / (tMax || 1)) * (w - padL - padR); }
     function yScale(y) { return (h - padB) - ((y - yMin) / (yMax - yMin || 1)) * (h - padB - padT); }
     const y0 = yScale(0);
     const pathD = puntos.map(function (p, i) { return (i === 0 ? 'M' : 'L') + ' ' + xScale(p.t).toFixed(1) + ' ' + yScale(p.y).toFixed(1); }).join(' ');
-    const marcasT = cfg.marcasT || [];
+    // Regla 3/6: ticks derivados AUTOMÁTICAMENTE de los puntos reales
+    // de la gráfica (tiempos y valores Y), a menos que se pase un
+    // override explícito — así ningún tiempo ni valor crítico queda
+    // "solo en el código".
+    function _unicosOrdenados(arr) {
+      return arr.filter(function (v, i) { return arr.indexOf(v) === i; }).sort(function (a, b) { return a - b; });
+    }
+    const xTicks = cfg.xTicks || cfg.marcasT || _unicosOrdenados(puntos.map(function (p) { return p.t; }));
+    const yTicksBase = puntos.map(function (p) { return p.y; }).concat([0]);
+    const yTicks = cfg.yTicks || _unicosOrdenados(yTicksBase);
     const etiquetas = (cfg.etiquetas || []).map(function (e) {
       return '<text x="' + xScale(e.t).toFixed(1) + '" y="' + (yScale(e.y) - 8).toFixed(1) + '" font-size="8" fill="' + (e.color || '#F9FF4D') + '" text-anchor="middle" font-weight="700">' + e.texto + '</text>';
+    }).join('');
+    // Intervalos etiquetados (Regla 4) — franjas verticales con su
+    // nombre, cuando cfg.intervalos viene definido: [{t0,t1,nombre}]
+    const intervalos = (cfg.intervalos || []).map(function (iv, idx) {
+      const xm = (xScale(iv.t0) + xScale(iv.t1)) / 2;
+      return '<text x="' + xm.toFixed(1) + '" y="' + (padT + 8) + '" font-size="7" fill="#8888B0" text-anchor="middle">' + iv.nombre + '</text>' +
+        (idx > 0 ? '<line x1="' + xScale(iv.t0).toFixed(1) + '" y1="' + padT + '" x2="' + xScale(iv.t0).toFixed(1) + '" y2="' + (h - padB) + '" stroke="#2a2f5c" stroke-width="1" stroke-dasharray="2,2"/>' : '');
     }).join('');
     return '<svg viewBox="0 0 ' + w + ' ' + h + '" style="background:#161a3d;border-radius:8px;width:100%;max-width:320px;display:block;margin:.6rem auto">' +
       '<line x1="' + padL + '" y1="' + padT + '" x2="' + padL + '" y2="' + (h - padB) + '" stroke="#2a2f5c" stroke-width="1"/>' +
       '<line x1="' + padL + '" y1="' + y0.toFixed(1) + '" x2="' + (w - padR) + '" y2="' + y0.toFixed(1) + '" stroke="#2a2f5c" stroke-width="1"/>' +
       '<path d="' + pathD + '" fill="none" stroke="' + (cfg.color || '#7B2FFF') + '" stroke-width="2.5"/>' +
-      '<text x="' + (w - padR - 10) + '" y="' + (h - padB - 4) + '" font-size="8" fill="#8888B0">t (s)</text>' +
+      '<text x="' + (w - padR - 12) + '" y="' + (h - padB - 4) + '" font-size="8" fill="#8888B0">t (s)</text>' +
       '<text x="4" y="' + (padT + 8) + '" font-size="8" fill="#8888B0">' + (cfg.yLabel || 'y') + '</text>' +
-      marcasT.map(function (mt) { return '<text x="' + xScale(mt).toFixed(1) + '" y="' + (h - padB + 12) + '" font-size="7" fill="#8888B0" text-anchor="middle">' + mt + '</text>'; }).join('') +
+      // Ticks de tiempo (eje X) — CADA tiempo crítico, siempre visible.
+      xTicks.map(function (mt) { return '<line x1="' + xScale(mt).toFixed(1) + '" y1="' + (h - padB) + '" x2="' + xScale(mt).toFixed(1) + '" y2="' + (h - padB + 3) + '" stroke="#8888B0" stroke-width="1"/><text x="' + xScale(mt).toFixed(1) + '" y="' + (h - padB + 13) + '" font-size="7.5" fill="#B8B8E0" text-anchor="middle">' + mt + '</text>'; }).join('') +
+      // Ticks de valor (eje Y) — CADA valor crítico, incluyendo el cero.
+      yTicks.map(function (my) { return '<line x1="' + (padL - 3) + '" y1="' + yScale(my).toFixed(1) + '" x2="' + padL + '" y2="' + yScale(my).toFixed(1) + '" stroke="#8888B0" stroke-width="1"/><text x="' + (padL - 5) + '" y="' + (yScale(my) + 2.5).toFixed(1) + '" font-size="7" fill="#B8B8E0" text-anchor="end">' + my + '</text>'; }).join('') +
+      intervalos +
       etiquetas +
       '</svg>';
   }
@@ -56,12 +93,17 @@
     cfg = cfg || {};
     const base = _svgGrafica(puntos, cfg);
     // Insertar el polígono de la región justo antes de </svg>, reutilizando la misma escala.
-    const w = cfg.w || 280, h = cfg.h || 170;
-    const padL = 34, padB = 22, padT = 10, padR = 10;
+    // HOTFIX: mismos márgenes que _svgGrafica (padL/padB/padT/padR),
+    // para que el área sombreada quede alineada con los ejes reales.
+    const w = cfg.w || 280, h = cfg.h || 190;
+    const padL = 40, padB = 26, padT = 14, padR = 14;
     const tMax = cfg.tMax !== undefined ? cfg.tMax : Math.max.apply(null, puntos.map(function (p) { return p.t; }));
     const ys = puntos.map(function (p) { return p.y; });
-    const yMin = cfg.yMin !== undefined ? cfg.yMin : Math.min(0, Math.min.apply(null, ys));
-    const yMax = cfg.yMax !== undefined ? cfg.yMax : Math.max(0.001, Math.max.apply(null, ys));
+    const yMinData = Math.min.apply(null, ys);
+    const yMaxData = Math.max.apply(null, ys);
+    const margen = Math.max(1, (yMaxData - Math.min(0, yMinData)) * 0.18);
+    const yMin = cfg.yMin !== undefined ? cfg.yMin : (yMinData < 0 ? yMinData - margen : Math.min(0, yMinData));
+    const yMax = cfg.yMax !== undefined ? cfg.yMax : Math.max(yMaxData + margen, yMinData < 0 ? margen : 0.001);
     function xScale(t) { return padL + (t / (tMax || 1)) * (w - padL - padR); }
     function yScale(y) { return (h - padB) - ((y - yMin) / (yMax - yMin || 1)) * (h - padB - padT); }
     const y0 = yScale(0);
@@ -627,7 +669,7 @@
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;text-align:center;max-width:520px">
         <h3>📝 Examen — FIX10-U05</h3>
         <p style="color:var(--text-secondary);font-size:.88rem">Mejor nota: ${uData.examBest || 0}% · Intentos: ${uData.examAttempts || 0}</p>
-        <p style="color:var(--text-muted);font-size:.78rem">Banco de ${banco.length} preguntas — cada intento toma 30 al azar.</p>
+        <p style="color:var(--text-muted);font-size:.78rem">Banco de ${banco.length} preguntas — cada intento toma 20 al azar.</p>
         <button class="btn btn-primary" id="fix10-iniciar-examen">Iniciar examen</button>
       </div>`;
   }
@@ -649,7 +691,7 @@
       startBtn.addEventListener('click', () => {
         const banco = _bancoDisponible().slice();
         for (let i = banco.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [banco[i], banco[j]] = [banco[j], banco[i]]; }
-        const seleccionadas = banco.slice(0, Math.min(30, banco.length));
+        const seleccionadas = banco.slice(0, Math.min(20, banco.length));
         const preguntasMezcladas = seleccionadas.map(q => {
           const indices = q.opciones.map((_, idx) => idx);
           for (let i = indices.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [indices[i], indices[j]] = [indices[j], indices[i]]; }
