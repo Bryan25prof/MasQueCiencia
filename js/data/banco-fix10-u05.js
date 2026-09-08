@@ -7,23 +7,41 @@
    del banco usa mini-gráficas SVG generadas en código (nunca
    imágenes externas), con escalas matemáticamente coherentes.
 ================================================================ */
+/* ================================================================
+   HOTFIX AUTOSUFICIENCIA (ver PROMPT MAESTRO UNIFICADO, Parte B):
+   antes esta función no dibujaba NINGÚN valor numérico en los ejes
+   — el estudiante debía "confiar" en el texto de las opciones para
+   saber qué representaba la gráfica. Ahora deriva automáticamente
+   los ticks de tiempo y de valor Y a partir de los propios puntos
+   de cada gráfica (sus tiempos y valores son, por definición, los
+   datos críticos), y reserva espacio visible bajo cero cuando hay
+   valores negativos.
+================================================================ */
 function _svgGraf(puntos, cfg) {
   cfg = cfg || {};
-  const w = 220, h = 140, padL = 30, padB = 20, padT = 8, padR = 8;
+  const w = 240, h = 160, padL = 34, padB = 24, padT = 12, padR = 12;
   const tMax = cfg.tMax !== undefined ? cfg.tMax : Math.max.apply(null, puntos.map(function(p){return p.t;}));
   const ys = puntos.map(function(p){return p.y;});
-  const yMin = cfg.yMin !== undefined ? cfg.yMin : Math.min(0, Math.min.apply(null, ys));
-  const yMax = cfg.yMax !== undefined ? cfg.yMax : Math.max(0.001, Math.max.apply(null, ys));
+  const yMinData = Math.min.apply(null, ys);
+  const yMaxData = Math.max.apply(null, ys);
+  const margen = Math.max(1, (yMaxData - Math.min(0, yMinData)) * 0.18);
+  const yMin = cfg.yMin !== undefined ? cfg.yMin : (yMinData < 0 ? yMinData - margen : Math.min(0, yMinData));
+  const yMax = cfg.yMax !== undefined ? cfg.yMax : Math.max(yMaxData + margen, yMinData < 0 ? margen : 0.001);
   function xS(t){ return padL + (t/(tMax||1))*(w-padL-padR); }
   function yS(y){ return (h-padB) - ((y-yMin)/((yMax-yMin)||1))*(h-padB-padT); }
   const y0 = yS(0);
   const d = puntos.map(function(p,i){ return (i===0?'M':'L')+' '+xS(p.t).toFixed(1)+' '+yS(p.y).toFixed(1); }).join(' ');
+  function unicos(arr){ return arr.filter(function(v,i){return arr.indexOf(v)===i;}).sort(function(a,b){return a-b;}); }
+  const xTicks = cfg.xTicks || unicos(puntos.map(function(p){return p.t;}));
+  const yTicks = cfg.yTicks || unicos(puntos.map(function(p){return p.y;}).concat([0]));
   return '<svg viewBox="0 0 '+w+' '+h+'" style="background:#161a3d;border-radius:8px;width:100%;max-width:260px;display:block;margin:.5rem auto">' +
     '<line x1="'+padL+'" y1="'+padT+'" x2="'+padL+'" y2="'+(h-padB)+'" stroke="#2a2f5c" stroke-width="1"/>' +
     '<line x1="'+padL+'" y1="'+y0.toFixed(1)+'" x2="'+(w-padR)+'" y2="'+y0.toFixed(1)+'" stroke="#2a2f5c" stroke-width="1"/>' +
     '<path d="'+d+'" fill="none" stroke="'+(cfg.color||'#7B2FFF')+'" stroke-width="2.5"/>' +
     '<text x="4" y="'+(padT+8)+'" font-size="8" fill="#8888B0">'+(cfg.yLabel||'x (m)')+'</text>' +
     '<text x="'+(w-padR-14)+'" y="'+(h-padB-4)+'" font-size="8" fill="#8888B0">t (s)</text>' +
+    xTicks.map(function(mt){ return '<line x1="'+xS(mt).toFixed(1)+'" y1="'+(h-padB)+'" x2="'+xS(mt).toFixed(1)+'" y2="'+(h-padB+3)+'" stroke="#8888B0" stroke-width="1"/><text x="'+xS(mt).toFixed(1)+'" y="'+(h-padB+13)+'" font-size="7.5" fill="#B8B8E0" text-anchor="middle">'+mt+'</text>'; }).join('') +
+    yTicks.map(function(my){ return '<line x1="'+(padL-3)+'" y1="'+yS(my).toFixed(1)+'" x2="'+padL+'" y2="'+yS(my).toFixed(1)+'" stroke="#8888B0" stroke-width="1"/><text x="'+(padL-5)+'" y="'+(yS(my)+2.5).toFixed(1)+'" font-size="7" fill="#B8B8E0" text-anchor="end">'+my+'</text>'; }).join('') +
     '</svg>';
 }
 
