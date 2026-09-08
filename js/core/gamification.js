@@ -209,6 +209,12 @@ const Gamification = (() => {
       desc: 'Completaste FIX10-U05 — Análisis Gráfico de Movimientos'
     },
     {
+      id:   'dominio-fuerzas',
+      name: 'Dominio de las Fuerzas',
+      icon: '⚖️',
+      desc: 'Completaste FIX10-U06 — Dinámica y las Leyes de Newton'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -664,6 +670,23 @@ const Gamification = (() => {
         const missionDoneG = !!ug.missionDone;
         if (allTopicsG && allSimsG && gamePlayedG && examPassedG && missionDoneG) {
           newBadges.push('interprete-movimiento');
+        }
+      }
+    }
+
+    /* FIX10-U06 — 'dominio-fuerzas': mismo principio anti-farming
+       exacto que las anteriores. */
+    if (typeof FISICA10_UNIDADES_DATA !== 'undefined' && data.fisica10 && !data.badges.includes('dominio-fuerzas')) {
+      const uf6 = data.fisica10['fix10-u06'];
+      const metaf6 = FISICA10_UNIDADES_DATA.find(x => x.id === 'fix10-u06');
+      if (uf6 && metaf6) {
+        const allTopicsF6 = (uf6.topicsRead || []).length >= (metaf6.topics || []).length;
+        const allSimsF6 = (uf6.simsDone || []).length >= (metaf6.simulators || []).length;
+        const gamePlayedF6 = (uf6.gameScore || 0) > 0;
+        const examPassedF6 = (uf6.examBest || 0) >= (metaf6.exam && metaf6.exam.pass || 70);
+        const missionDoneF6 = !!uf6.missionDone;
+        if (allTopicsF6 && allSimsF6 && gamePlayedF6 && examPassedF6 && missionDoneF6) {
+          newBadges.push('dominio-fuerzas');
         }
       }
     }
