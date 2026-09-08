@@ -215,6 +215,12 @@ const Gamification = (() => {
       desc: 'Completaste FIX10-U06 — Dinámica y las Leyes de Newton'
     },
     {
+      id:   'dominio-gravitacional',
+      name: 'Dominio Gravitacional',
+      icon: '🌌',
+      desc: 'Completaste FIX10-U07 — Gravitación Universal y Movimiento Satelital'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -687,6 +693,23 @@ const Gamification = (() => {
         const missionDoneF6 = !!uf6.missionDone;
         if (allTopicsF6 && allSimsF6 && gamePlayedF6 && examPassedF6 && missionDoneF6) {
           newBadges.push('dominio-fuerzas');
+        }
+      }
+    }
+
+    /* FIX10-U07 — 'dominio-gravitacional': mismo principio anti-farming
+       exacto que las anteriores. */
+    if (typeof FISICA10_UNIDADES_DATA !== 'undefined' && data.fisica10 && !data.badges.includes('dominio-gravitacional')) {
+      const uf7 = data.fisica10['fix10-u07'];
+      const metaf7 = FISICA10_UNIDADES_DATA.find(x => x.id === 'fix10-u07');
+      if (uf7 && metaf7) {
+        const allTopicsF7 = (uf7.topicsRead || []).length >= (metaf7.topics || []).length;
+        const allSimsF7 = (uf7.simsDone || []).length >= (metaf7.simulators || []).length;
+        const gamePlayedF7 = (uf7.gameScore || 0) > 0;
+        const examPassedF7 = (uf7.examBest || 0) >= (metaf7.exam && metaf7.exam.pass || 70);
+        const missionDoneF7 = !!uf7.missionDone;
+        if (allTopicsF7 && allSimsF7 && gamePlayedF7 && examPassedF7 && missionDoneF7) {
+          newBadges.push('dominio-gravitacional');
         }
       }
     }
