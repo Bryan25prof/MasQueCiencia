@@ -221,6 +221,12 @@ const Gamification = (() => {
       desc: 'Completaste FIX10-U07 — Gravitación Universal y Movimiento Satelital'
     },
     {
+      id:   'maestro-energia',
+      name: 'Maestro de la Energía',
+      icon: '⚡',
+      desc: 'Completaste FIX10-U08 — Trabajo Mecánico y Energía (¡Física 10.° completa!)'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -710,6 +716,23 @@ const Gamification = (() => {
         const missionDoneF7 = !!uf7.missionDone;
         if (allTopicsF7 && allSimsF7 && gamePlayedF7 && examPassedF7 && missionDoneF7) {
           newBadges.push('dominio-gravitacional');
+        }
+      }
+    }
+
+    /* FIX10-U08 — 'maestro-energia': mismo principio anti-farming
+       exacto que las anteriores. */
+    if (typeof FISICA10_UNIDADES_DATA !== 'undefined' && data.fisica10 && !data.badges.includes('maestro-energia')) {
+      const uf8 = data.fisica10['fix10-u08'];
+      const metaf8 = FISICA10_UNIDADES_DATA.find(x => x.id === 'fix10-u08');
+      if (uf8 && metaf8) {
+        const allTopicsF8 = (uf8.topicsRead || []).length >= (metaf8.topics || []).length;
+        const allSimsF8 = (uf8.simsDone || []).length >= (metaf8.simulators || []).length;
+        const gamePlayedF8 = (uf8.gameScore || 0) > 0;
+        const examPassedF8 = (uf8.examBest || 0) >= (metaf8.exam && metaf8.exam.pass || 70);
+        const missionDoneF8 = !!uf8.missionDone;
+        if (allTopicsF8 && allSimsF8 && gamePlayedF8 && examPassedF8 && missionDoneF8) {
+          newBadges.push('maestro-energia');
         }
       }
     }
