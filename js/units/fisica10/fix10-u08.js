@@ -56,12 +56,26 @@
       aplicacion: 'Este teorema tiene enormes implicaciones tecnológicas: nos dice que, disponiendo de energía y de un mecanismo apropiado, siempre podemos obtener un trabajo útil a partir de ella — es la base de toda la ingeniería energética.',
       compruebra: 'Si el trabajo neto sobre un objeto es negativo, ¿qué le está pasando a su energía cinética: aumenta o disminuye?' },
 
-    { id: 't6', icon: '♻️', titulo: 'Ley de Conservación de la Energía Mecánica',
+    { id: 't6', icon: '🔁', titulo: 'Fuerzas conservativas y no conservativas',
+      ideaClave: 'Una fuerza es "conservativa" si no le importa qué camino tomaste — solo le importa dónde empezaste y dónde terminaste.',
+      explicacion: 'Una fuerza es <strong>conservativa</strong> si el trabajo que realiza depende ÚNICAMENTE de las posiciones inicial y final, sin importar la trayectoria seguida (W₁=W₂=W₃ para cualquier camino de A a B) — y su trabajo en un recorrido de ida y vuelta al mismo punto es siempre cero. Ejemplos: fuerza gravitatoria, fuerza elástica, fuerza eléctrica. Una fuerza es <strong>no conservativa (o disipativa)</strong> si su trabajo SÍ depende del camino recorrido — la fricción es el ejemplo central.',
+      ejemplo: 'Subir una lata de pintura al techo de una casa: amarrada a una cuerda, por una escalera, o lanzándola — en los tres casos el trabajo de la gravedad es el mismo, porque solo depende de la altura final (W=-ΔEp). En cambio, mover un armario por distintos caminos dentro de un cuarto SÍ cambia el trabajo de la fricción según la distancia real recorrida en cada camino.',
+      aplicacion: 'Esta es la razón exacta por la que la Ley de Conservación de la Energía Mecánica "falla" cuando hay fricción: la fricción es no conservativa, así que "roba" energía mecánica del sistema (la convierte en calor), y EM_A ya no es igual a EM_B.',
+      compruebra: '¿Por qué la fuerza de fricción se llama también "fuerza disipativa"?' },
+
+    { id: 't7', icon: '♻️', titulo: 'Ley de Conservación de la Energía Mecánica',
       ideaClave: 'Cuando no hay fricción, la energía mecánica total de un sistema NUNCA cambia — solo se transforma entre cinética y potencial.',
       explicacion: 'En movimientos de caída libre, péndulos, planos inclinados, rampas, o sistemas con resortes (despreciando la fricción), la energía mecánica se conserva: EM_A = EM_B = EM_C en cualquier punto del recorrido.',
       ejemplo: 'Una pelota de 1 kg se deja caer desde 20 m de altura (EM = mgh = 196 J). A mitad de camino (10 m), Ec=98J y Ep=98J (suman 196J). Justo antes de tocar el suelo, Ec=196J y Ep=0J — la energía total SIEMPRE es 196 J, solo cambia la "forma" en que se reparte entre cinética y potencial.',
       aplicacion: 'Esta ley también aplica a sistemas elásticos (resortes comprimidos o estirados): en cualquier punto del recorrido de un objeto conectado a un resorte, la energía mecánica total del sistema permanece constante.',
-      compruebra: 'Una pelota cae desde cierta altura. Justo cuando sale de la mano (Ec=0, toda la energía es potencial) hasta justo antes de tocar el suelo (Ep=0, toda la energía es cinética), ¿qué le pasa a la energía mecánica total?' }
+      compruebra: 'Una pelota cae desde cierta altura. Justo cuando sale de la mano (Ec=0, toda la energía es potencial) hasta justo antes de tocar el suelo (Ep=0, toda la energía es cinética), ¿qué le pasa a la energía mecánica total?' },
+
+    { id: 't8', icon: '🌍', titulo: 'Aplicaciones del cálculo de la energía',
+      ideaClave: 'Desde un temblor hasta el viento de un huracán, todos esos fenómenos se pueden describir en términos de energía transformada.',
+      explicacion: 'La ciencia mide la energía liberada o transformada en distintos fenómenos naturales. La <strong>energía sísmica</strong> de un temblor se mide con la escala de Richter (una escala logarítmica). La <strong>energía mareomotriz</strong> aprovecha el movimiento ascendente y descendente del mar para generar electricidad mediante turbinas. La <strong>energía eólica</strong> aprovecha la intensidad (velocidad) y dirección del viento.',
+      ejemplo: 'Para igualar la energía de la bomba nuclear de Hiroshima (≈13 kilotones) harían falta 13.000 toneladas de TNT. La detonación de 1.000 kg de TNT libera 4.000 veces más energía que la necesaria para alzar un auto de 1.000 kg hasta 100 m de altura — una comparación real que ayuda a dimensionar esas cantidades de energía.',
+      aplicacion: 'La energía mareomotriz funciona como un "molino de agua" submarino: grandes turbinas bajo el mar giran por la fuerza de las mareas, y esa rotación se convierte en electricidad mediante alternadores. La energía eólica se mide con la escala de Beaufort (de 0, calma absoluta, a 12, huracán).',
+      compruebra: '¿Por qué creés que se usa una escala logarítmica (como la de Richter) para medir la energía sísmica, en vez de una escala lineal común?' }
   ];
 
   /* ── Helpers defensivos (mismo patrón que fix10-u01 a u07.js) ──── */
