@@ -97,6 +97,16 @@ const FISICA10_UNIDADES_DATA = [
     simulators: ['sim1', 'sim2', 'sim3'],
     game: { levels: 9 },
     exam: { perExam: 20, pass: 70 }
+  },
+  { id: 'fix10-u08', num: 8, status: 'active',
+    icon: '⚡', color: 'var(--violet)',
+    title: 'Trabajo Mecánico y Energía',
+    subtitle: null,
+    description: 'Trabajo mecánico, potencia, energía cinética y potencial, el Teorema del Trabajo y la Energía, y la Ley de Conservación de la Energía Mecánica — la última unidad de Física 10.°.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 7 },
+    exam: { perExam: 20, pass: 70 }
   }
 ];
 
