@@ -227,6 +227,12 @@ const Gamification = (() => {
       desc: 'Completaste FIX10-U08 — Trabajo Mecánico y Energía (¡Física 10.° completa!)'
     },
     {
+      id:   'maestro-hidrostatica',
+      name: 'Maestro de la Hidrostática',
+      icon: '🌊',
+      desc: 'Completaste FIX11-U01 — Hidrostática'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -733,6 +739,24 @@ const Gamification = (() => {
         const missionDoneF8 = !!uf8.missionDone;
         if (allTopicsF8 && allSimsF8 && gamePlayedF8 && examPassedF8 && missionDoneF8) {
           newBadges.push('maestro-energia');
+        }
+      }
+    }
+
+    /* RUTA DE CIERRE — FIX11-U01 — 'maestro-hidrostatica': mismo
+       principio anti-farming exacto que las de Física 10.º, pero
+       apuntando a data.fisica11 / FISICA11_UNIDADES_DATA. */
+    if (typeof FISICA11_UNIDADES_DATA !== 'undefined' && data.fisica11 && !data.badges.includes('maestro-hidrostatica')) {
+      const ug1 = data.fisica11['fix11-u01'];
+      const metag1 = FISICA11_UNIDADES_DATA.find(x => x.id === 'fix11-u01');
+      if (ug1 && metag1) {
+        const allTopicsG1 = (ug1.topicsRead || []).length >= (metag1.topics || []).length;
+        const allSimsG1 = (ug1.simsDone || []).length >= (metag1.simulators || []).length;
+        const gamePlayedG1 = (ug1.gameScore || 0) > 0;
+        const examPassedG1 = (ug1.examBest || 0) >= (metag1.exam && metag1.exam.pass || 70);
+        const missionDoneG1 = !!ug1.missionDone;
+        if (allTopicsG1 && allSimsG1 && gamePlayedG1 && examPassedG1 && missionDoneG1) {
+          newBadges.push('maestro-hidrostatica');
         }
       }
     }

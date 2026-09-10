@@ -241,7 +241,20 @@ const Storage = (() => {
       'fix10-u04': _emptyUnit(),
       'fix10-u05': _emptyUnit(),
       'fix10-u06': _emptyUnit(),
-      'fix10-u07': _emptyUnit()
+      'fix10-u07': _emptyUnit(),
+      'fix10-u08': _emptyUnit()
+    },
+    /* RUTA DE CIERRE — Física 11.º. Mismo carril paralelo exacto que
+       fisica10, mismo motivo: nunca mezclar disciplinas/niveles.
+       Solo fix11-u01 (Hidrostática) tiene contenido real por ahora;
+       fix11-u02..u06 quedan reservadas. */
+    fisica11: {
+      'fix11-u01': _emptyUnit(),
+      'fix11-u02': _emptyUnit(),
+      'fix11-u03': _emptyUnit(),
+      'fix11-u04': _emptyUnit(),
+      'fix11-u05': _emptyUnit(),
+      'fix11-u06': _emptyUnit()
     },
     /* IMP-11-U04 — Atlas Químico MQC: registro persistente de qué
        grupos funcionales y biomoléculas ya identificó el estudiante.
@@ -623,6 +636,62 @@ const Storage = (() => {
     return _computePctFisica10(unit, unitId);
   }
 
+  /* ================================================================
+     RUTA DE CIERRE — Física 11.º
+     ================================================================
+     Mismo patrón exacto que el bloque de Física 10.º de arriba, pero
+     apuntando a data.fisica11 y FISICA11_UNIDADES_DATA. Se duplica
+     por la misma razón ya documentada en todo el archivo. */
+  function _computePctFisica11(unit, unitId) {
+    let meta = null;
+    if (typeof FISICA11_UNIDADES_DATA !== 'undefined') {
+      meta = FISICA11_UNIDADES_DATA.find(u => u.id === unitId);
+    }
+    const totalTopics = (meta && meta.topics) ? meta.topics.length : 0;
+    const totalSims   = (meta && meta.simulators) ? meta.simulators.length : 0;
+    const totalLevels = (meta && meta.game && meta.game.levels) ? meta.game.levels : 0;
+    const pass        = (meta && meta.exam && meta.exam.pass) ? meta.exam.pass : 70;
+
+    function ratio(done, total) { return total > 0 ? Math.min(1, done / total) : 0; }
+
+    const rTeoria = ratio((unit.topicsRead || []).length, totalTopics);
+    const rSims   = ratio((unit.simsDone || []).length, totalSims);
+    const rJuego  = totalLevels > 0
+      ? ratio((unit.gameLevels || []).length, totalLevels)
+      : ((unit.gameScore || 0) > 0 ? 1 : 0);
+    const rExamen = (unit.examBest || 0) > 0 ? Math.min(1, unit.examBest / pass) : 0;
+
+    const pct = Math.round(25 * (rTeoria + rSims + rJuego + rExamen));
+    return Math.max(0, Math.min(100, pct));
+  }
+  function _refreshCompletedFisica11(unit, unitId) {
+    if (!unit) return;
+    unit.completed = unit.completed || _computePctFisica11(unit, unitId) === 100;
+  }
+  function updateFisica11Unit(unitId, update) {
+    const data = load();
+    if (!data.fisica11[unitId]) data.fisica11[unitId] = _emptyUnit();
+    data.fisica11[unitId] = Object.assign({}, data.fisica11[unitId], update);
+    data.fisica11[unitId].started = true;
+    _refreshCompletedFisica11(data.fisica11[unitId], unitId);
+    save(data);
+  }
+  function markFisica11TopicRead(unitId, topicId) {
+    const data = load();
+    if (!data.fisica11[unitId]) data.fisica11[unitId] = _emptyUnit();
+    const unit = data.fisica11[unitId];
+    if (!unit.topicsRead.includes(topicId)) unit.topicsRead.push(topicId);
+    unit.started = true;
+    _refreshCompletedFisica11(unit, unitId);
+    save(data);
+  }
+  function getFisica11UnitProgress(unitId) {
+    const data = load();
+    const unit = data.fisica11[unitId];
+    if (!unit || !unit.started) return 0;
+    return _computePctFisica11(unit, unitId);
+  }
+
   /**
    * Borra TODOS los datos del estudiante (reset total).
    * ⚠️ Irreversible. Mostrar confirmación antes de llamar.
@@ -674,6 +743,9 @@ const Storage = (() => {
     updateFisica10Unit,
     markFisica10TopicRead,
     getFisica10UnitProgress,
+    updateFisica11Unit,
+    markFisica11TopicRead,
+    getFisica11UnitProgress,
     hasUser,
     reset,
     /* Perfiles Locales MQC (EOP-008) */
