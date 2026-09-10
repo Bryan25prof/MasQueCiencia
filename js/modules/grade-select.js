@@ -156,16 +156,30 @@ Router.register('grade-select', (() => {
   function _fisica10VistaPreviaActiva() {
     try { return localStorage.getItem('mqc_fisica10_preview') === '1'; } catch (e) { return false; }
   }
+  /* RUTA DE CIERRE — misma lógica para Física 11.º, independiente. */
+  function _fisica11VistaPreviaActiva() {
+    try { return localStorage.getItem('mqc_fisica11_preview') === '1'; } catch (e) { return false; }
+  }
 
   function _renderFisica() {
     const habilitado = _fisica10VistaPreviaActiva();
+    const habilitado11 = _fisica11VistaPreviaActiva();
     const pct10 = habilitado && typeof Storage !== 'undefined' && Storage.getFisica10UnitProgress
       ? Storage.getFisica10UnitProgress('fix10-u01') : 0;
+    const pct11 = habilitado11 && typeof Storage !== 'undefined' && Storage.getFisica11UnitProgress
+      ? Storage.getFisica11UnitProgress('fix11-u01') : 0;
     const bodyF10 = habilitado ? `
           <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">FIX10-U01 disponible — las siguientes unidades se irán incorporando.</p>
           <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de FIX10-U01: ${pct10}%</div>
           <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct10}%;background:var(--violet)"></div></div>
           <button class="btn btn-primary" data-action="go-fisica10">Continuar en Física 10.º</button>` : `
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
+          <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>`;
+    const bodyF11 = habilitado11 ? `
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">FIX11-U01 (Hidrostática) disponible — las siguientes unidades se irán incorporando.</p>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de FIX11-U01: ${pct11}%</div>
+          <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct11}%;background:var(--violet)"></div></div>
+          <button class="btn btn-primary" data-action="go-fisica11">Continuar en Física 11.º</button>` : `
           <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
           <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>`;
     return `
@@ -183,12 +197,11 @@ Router.register('grade-select', (() => {
           ${bodyF10}
         </div>
 
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;opacity:.85">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem${habilitado11 ? '' : ';opacity:.85'}">
           <div class="unit-number">UNDÉCIMO AÑO</div>
-          <div class="unit-symbol" style="color:var(--text-muted)">🔒</div>
+          <div class="unit-symbol" style="color:${habilitado11 ? 'var(--violet)' : 'var(--text-muted)'}${habilitado11 ? ';text-shadow:0 0 20px var(--violet)' : ''}">⚛️</div>
           <h3 style="margin:.3rem 0">Física 11.º</h3>
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
-          <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>
+          ${bodyF11}
         </div>
 
       </div>
@@ -222,6 +235,8 @@ Router.register('grade-select', (() => {
     if (goG11) goG11.addEventListener('click', () => Router.navigate('grade11'));
     const goF10 = document.querySelector('[data-action="go-fisica10"]');
     if (goF10) goF10.addEventListener('click', () => Router.navigate('fisica10'));
+    const goF11 = document.querySelector('[data-action="go-fisica11"]');
+    if (goF11) goF11.addEventListener('click', () => Router.navigate('fisica11'));
   }
 
   function init() {

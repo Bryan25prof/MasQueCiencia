@@ -191,9 +191,10 @@ Router.register('fisica10', (() => {
         <button class="btn btn-ghost btn-sm" data-action="back-select" style="margin-bottom:.8rem">← Física</button>
         <p class="section-title">Décimo Año</p><h2 class="section-heading">⚛️ Física 10.º</h2>
       </div>
-      <p style="color:var(--text-secondary);margin-bottom:1.5rem;max-width:60ch">
+      <p style="color:var(--text-secondary);margin-bottom:.6rem;max-width:60ch">
         Física 10.° está en desarrollo progresivo. Explorá las unidades disponibles y continuá construyendo tu dominio de la Física.
       </p>
+      <button class="btn btn-ghost btn-sm" data-action="go-fisica11-desde-f10" style="margin-bottom:1.2rem">Undécimo Año → Física 11.º</button>
       <div class="units-grid">${cards}</div>
     `;
   }
@@ -291,6 +292,8 @@ Router.register('fisica10', (() => {
   function _bind() {
     const back1 = document.querySelector('[data-action="back-select"]');
     if (back1) back1.addEventListener('click', () => Router.navigate('grade-select'));
+    const goF11 = document.querySelector('[data-action="go-fisica11-desde-f10"]');
+    if (goF11) goF11.addEventListener('click', () => Router.navigate('fisica11'));
     const back2 = document.querySelector('[data-action="back-grid"]');
     if (back2) back2.addEventListener('click', () => { _infoUnitId = null; _currentUnitId = null; _rerender(); });
     document.querySelectorAll('[data-action="open-fisica10-info"]').forEach(el => {
