@@ -269,6 +269,12 @@ Router.register('fisica10', (() => {
   function _bindUnitDetailEvents() {
     document.querySelectorAll('#fisica10-unit-tabs .tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        /* HOTFIX: si ya se está en esta pestaña, no volver a
+           renderizar/re-vincular nada — reclicks sobre la misma
+           pestaña (p. ej. "Simuladores" mientras ya se está en un
+           simulador en curso) causaban un comportamiento raro donde
+           las opciones de respuesta parecían "seguir clickeadas". */
+        if (_currentTab === btn.dataset.tab) return;
         _currentTab = btn.dataset.tab;
         const unit = FISICA10_UNIDADES_DATA.find(u => u.id === _currentUnitId);
         const uData = Storage.load().fisica10[_currentUnitId] || {};

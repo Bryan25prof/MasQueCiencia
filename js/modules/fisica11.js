@@ -28,7 +28,16 @@ const FISICA11_UNIDADES_DATA = [
     game: { levels: 7 },
     exam: { perExam: 20, pass: 70 }
   },
-  { id: 'fix11-u02', num: 2, status: 'development', icon: '🧲', color: 'var(--violet)', title: 'Electrostática', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
+  { id: 'fix11-u02', num: 2, status: 'active',
+    icon: '⚡', color: 'var(--violet)',
+    title: 'Electrostática',
+    subtitle: null,
+    description: 'El modelo atómico y la carga eléctrica, clasificación de materiales según su conducción, Ley de Coulomb, campo eléctrico, y energía potencial eléctrica.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 7 },
+    exam: { perExam: 20, pass: 70 }
+  },
   { id: 'fix11-u03', num: 3, status: 'development', icon: '🔌', color: 'var(--violet)', title: 'Electricidad', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
   { id: 'fix11-u04', num: 4, status: 'development', icon: '🧭', color: 'var(--violet)', title: 'Magnetismo y electromagnetismo', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
   { id: 'fix11-u05', num: 5, status: 'development', icon: '🌐', color: 'var(--violet)', title: 'Movimiento ondulatorio', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
@@ -182,6 +191,8 @@ Router.register('fisica11', (() => {
   function _bindUnitDetailEvents() {
     document.querySelectorAll('#fisica11-unit-tabs .tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        /* HOTFIX: mismo fix que fisica10.js — ver comentario ahí. */
+        if (_currentTab === btn.dataset.tab) return;
         _currentTab = btn.dataset.tab;
         const unit = FISICA11_UNIDADES_DATA.find(u => u.id === _currentUnitId);
         const uData = Storage.load().fisica11[_currentUnitId] || {};

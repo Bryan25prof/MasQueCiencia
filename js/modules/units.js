@@ -97,7 +97,7 @@ Router.register('units', (() => {
         </div>
         <div class="unit-number">FINAL</div>
         <div class="unit-symbol">${pneUnlocked ? '🏆' : '🔒'}</div>
-        <div class="unit-name">Examen Final<br><span style="font-weight:400;color:var(--text-muted);font-size:.85em">Química 10.º</span></div>
+        <div class="unit-name">Desafío Final<br><span style="font-weight:400;color:var(--text-muted);font-size:.85em">Química 10.º</span></div>
         <div class="unit-meta">
           ${pneUnlocked
             ? `<span class="unit-meta-item">🎯 ${pneData.attempts || 0} intento${(pneData.attempts||0)!==1?'s':''} · mejor: ${pneData.bestScore || 0}/100</span>`
@@ -382,6 +382,11 @@ Router.register('units', (() => {
     /* Cambio de tabs */
     document.querySelectorAll('#unit-tabs .tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        /* HOTFIX: si ya se está en esta pestaña, no volver a
+           renderizar/re-vincular nada — evita el bug de "opciones que
+           parecen seguir clickeadas" al reclickear la misma pestaña
+           mientras un simulador está en curso. */
+        if (_currentTab === btn.dataset.tab) return;
         _currentTab = btn.dataset.tab;
         /* BUG-02: usa UNIDADES_DATA */
         const unit  = UNIDADES_DATA.find(u => u.id === _currentUnitId);

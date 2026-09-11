@@ -48,7 +48,7 @@ Router.register('grade11', (() => {
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;text-align:center;max-width:520px;margin:0 auto">
           <div style="font-size:2.4rem">🔒</div>
           <h3 style="margin:.5rem 0">Todavía no está desbloqueada</h3>
-          <p style="color:var(--text-secondary);font-size:.9rem">Aprobá 6 de los 9 exámenes de Química 10.º, o alcanzá 80 o más en el Examen Final de Química 10.º.</p>
+          <p style="color:var(--text-secondary);font-size:.9rem">Aprobá 6 de los 9 exámenes de Química 10.º, o alcanzá 80 o más en el Desafío Final de Química 10.º.</p>
           <button class="btn btn-ghost" data-action="back-select">← Volver a la selección de ruta</button>
         </div>`;
     }
@@ -164,6 +164,9 @@ Router.register('grade11', (() => {
   function _bindUnitDetailEvents() {
     document.querySelectorAll('#g11-unit-tabs .tab-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        /* HOTFIX: mismo fix que los demás módulos — ver comentario en
+           units.js. */
+        if (_currentTab === btn.dataset.tab) return;
         _currentTab = btn.dataset.tab;
         const unit = GRADE11_UNIDADES_DATA.find(u => u.id === _currentUnitId);
         const uData = Storage.load().grade11[_currentUnitId] || {};
