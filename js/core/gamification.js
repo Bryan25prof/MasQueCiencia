@@ -245,6 +245,12 @@ const Gamification = (() => {
       desc: 'Completaste FIX11-U03 — Electricidad'
     },
     {
+      id:   'maestro-magnetismo',
+      name: 'Maestro del Magnetismo',
+      icon: '🧭',
+      desc: 'Completaste FIX11-U04 — Magnetismo y electromagnetismo'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -803,6 +809,23 @@ const Gamification = (() => {
         const missionDoneG3 = !!ug3.missionDone;
         if (allTopicsG3 && allSimsG3 && gamePlayedG3 && examPassedG3 && missionDoneG3) {
           newBadges.push('maestro-electricidad');
+        }
+      }
+    }
+
+    /* RUTA DE CIERRE — FIX11-U04 — 'maestro-magnetismo': mismo
+       principio anti-farming exacto que las anteriores. */
+    if (typeof FISICA11_UNIDADES_DATA !== 'undefined' && data.fisica11 && !data.badges.includes('maestro-magnetismo')) {
+      const ug4 = data.fisica11['fix11-u04'];
+      const metag4 = FISICA11_UNIDADES_DATA.find(x => x.id === 'fix11-u04');
+      if (ug4 && metag4) {
+        const allTopicsG4 = (ug4.topicsRead || []).length >= (metag4.topics || []).length;
+        const allSimsG4 = (ug4.simsDone || []).length >= (metag4.simulators || []).length;
+        const gamePlayedG4 = (ug4.gameScore || 0) > 0;
+        const examPassedG4 = (ug4.examBest || 0) >= (metag4.exam && metag4.exam.pass || 70);
+        const missionDoneG4 = !!ug4.missionDone;
+        if (allTopicsG4 && allSimsG4 && gamePlayedG4 && examPassedG4 && missionDoneG4) {
+          newBadges.push('maestro-magnetismo');
         }
       }
     }
