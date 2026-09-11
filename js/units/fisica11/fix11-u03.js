@@ -21,7 +21,7 @@
   function _fmt2(x) { return x.toFixed(2).replace('.', ','); }
 
   function _svgCircuito(cfg) {
-    // cfg: { tipo: 'serie'|'paralelo', resistencias: [R1,R2,...] }
+    // cfg: { tipo: 'serie'|'paralelo', resistencias: [R1,R2,...], etiqueta?: string }
     const w = 280, h = 140;
     if (cfg.tipo === 'serie') {
       const n = cfg.resistencias.length;
@@ -37,7 +37,7 @@
         <line x1="20" y1="63" x2="20" y2="100" stroke="#8888B0" stroke-width="2"/>
         <line x1="${w - 20}" y1="63" x2="${w - 20}" y2="100" stroke="#8888B0" stroke-width="2"/>
         <line x1="20" y1="100" x2="${w - 20}" y2="100" stroke="#8888B0" stroke-width="2"/>
-        <text x="${w / 2}" y="118" font-size="9" fill="#F9FF4D" text-anchor="middle">Circuito en serie — misma corriente en todos</text>
+        <text x="${w / 2}" y="118" font-size="9" fill="#F9FF4D" text-anchor="middle">${cfg.etiqueta || 'Circuito en serie — misma corriente en todos'}</text>
         ${resistores}
       </svg>`;
     } else {
@@ -97,9 +97,12 @@
 
     { id: 't6', icon: '🔗', titulo: 'Circuitos: serie, paralelo y mixtos',
       ideaClave: 'En un circuito en serie, si UNA resistencia falla, TODO el circuito deja de funcionar. En uno en paralelo, cada rama funciona de forma independiente.',
-      explicacion: 'En un circuito en <strong>serie</strong>, los elementos se conectan uno tras otro, y la corriente es la MISMA en todos ellos: Req = R₁+R₂+R₃+... (suma aritmética simple). En un circuito en <strong>paralelo</strong>, cada elemento tiene su propia "línea" conectada a las mismas terminales, y el voltaje es el MISMO en todas las ramas: 1/Req = 1/R₁+1/R₂+1/R₃+... Un circuito <strong>mixto</strong> combina ambas configuraciones.',
-      ejemplo: 'Serie: R₁=3Ω, R₂=5Ω, R₃=7Ω → Req=3+5+7=15Ω. Paralelo: mismas resistencias → 1/Req=1/3+1/5+1/7 → Req≈1,49Ω (siempre menor que la resistencia más pequeña del grupo).',
-      aplicacion: 'Ejemplo real de circuito mixto: dos resistencias de 2Ω y 6Ω en paralelo (Req_parcial=1,5Ω) conectadas en serie con una de 3Ω (Req_total=4,5Ω). Con 110V aplicados, la corriente total es I=110/4,5≈24,44A.',
+      explicacion: '<strong>Circuito en serie:</strong> los elementos se conectan uno tras otro, y la corriente (I) es la MISMA en todos ellos. La resistencia equivalente se calcula como Req = R₁+R₂+R₃+... (suma aritmética simple), y el voltaje se reparte de forma distinta en cada resistencia (V=I·R en cada una).<br><br>' +
+        '<strong>Circuito en paralelo:</strong> cada elemento tiene su propia "línea" conectada a las mismas terminales, y el voltaje (V) es el MISMO en todas las ramas. La resistencia equivalente se calcula como 1/Req = 1/R₁+1/R₂+1/R₃+..., y la corriente se reparte de forma distinta en cada rama (I=V/R en cada una).<br><br>' +
+        '<strong>Circuito mixto:</strong> combina ambas configuraciones — por ejemplo, dos resistencias en paralelo, y esa combinación conectada en serie con una tercera.',
+      ejemplo: 'SERIE: R₁=3Ω, R₂=5Ω, R₃=7Ω, con V=30V. Req=3+5+7=15Ω. I=V/Req=30/15=2A (la misma en las 3). Caída de voltaje: V₁=2×3=6V, V₂=2×5=10V, V₃=2×7=14V (suman los 30V totales).<br><br>' +
+        'PARALELO: mismas resistencias (3Ω,5Ω,7Ω), con V=30V. 1/Req=1/3+1/5+1/7 → Req≈1,49Ω. I_total=30/1,49≈20,1A. Corriente por rama: I₁=30/3=10A, I₂=30/5=6A, I₃=30/7≈4,3A (suman ≈20,1A totales).',
+      aplicacion: 'MIXTO: dos resistencias de 2Ω y 6Ω en paralelo (Req_parcial=1,5Ω) conectadas en serie con una de 3Ω (Req_total=4,5Ω). Con 110V aplicados: I_total=110/4,5≈24,44A. Ese mismo I_total pasa por la resistencia de 3Ω (caída de voltaje V₃=24,44×3≈73,3V), y el voltaje restante (110−73,3≈36,7V) se reparte en las ramas paralelas: I₂Ω=36,7/2≈18,3A, I₆Ω=36,7/6≈6,1A.',
       compruebra: '¿Por qué en tu casa, si se funde un foco en una habitación, las luces de las demás habitaciones siguen funcionando?' }
   ];
 
@@ -287,28 +290,158 @@
   }
 
   /* ================================================================
-     SIMULADOR 2 — "Circuit Builder": serie vs paralelo, Req
+     SIMULADOR 2 — "Circuit Builder MQC": simulador interactivo real.
+     3 modos (Serie / Paralelo / Mixto), con V, R1, R2, R3 ajustables,
+     mostrando en vivo Req, I (amperaje) y el reparto de voltaje o
+     corriente en cada elemento. El modo Mixto además tiene un Modo
+     Desafío con rondas verificables.
      ================================================================ */
-  let _cbTipo = 'serie';
-  const CB_RESISTENCIAS = [3, 5, 7];
+  let _cbModo = 'serie'; // 'serie' | 'paralelo' | 'mixto'
+  let _cbSubmodo = 'explora'; // 'explora' | 'desafio' (solo aplica a 'mixto')
+  let _cbV = 30, _cbR1 = 3, _cbR2 = 5, _cbR3 = 7;
+
+  function _cbCalcular() {
+    if (_cbModo === 'serie') {
+      const req = _cbR1 + _cbR2 + _cbR3;
+      const i = _cbV / req;
+      return { req, i, v1: i * _cbR1, v2: i * _cbR2, v3: i * _cbR3 };
+    }
+    if (_cbModo === 'paralelo') {
+      const req = 1 / (1 / _cbR1 + 1 / _cbR2 + 1 / _cbR3);
+      const i = _cbV / req;
+      return { req, i, i1: _cbV / _cbR1, i2: _cbV / _cbR2, i3: _cbV / _cbR3 };
+    }
+    // mixto: R1 y R2 en paralelo, esa combinación en serie con R3
+    const rp = 1 / (1 / _cbR1 + 1 / _cbR2);
+    const req = rp + _cbR3;
+    const i = _cbV / req;
+    const v3 = i * _cbR3;
+    const vp = _cbV - v3;
+    return { req, i, rp, v3, vp, i1: vp / _cbR1, i2: vp / _cbR2 };
+  }
+
   function renderSim2() {
-    const svg = _svgCircuito({ tipo: _cbTipo, resistencias: CB_RESISTENCIAS });
-    const reqSerie = CB_RESISTENCIAS.reduce((a, b) => a + b, 0);
-    const reqParalelo = 1 / CB_RESISTENCIAS.reduce((a, b) => a + 1 / b, 0);
-    const req = _cbTipo === 'serie' ? reqSerie : reqParalelo;
+    if (_cbSubmodo === 'desafio') return _renderCbDesafio();
+    const svg = _svgCircuito({ tipo: _cbModo === 'paralelo' ? 'paralelo' : 'serie', resistencias: [_cbR1, _cbR2, _cbR3], etiqueta: _cbModo === 'mixto' ? 'Vista simplificada — R₁ y R₂ en paralelo, R₃ en serie (ver desglose abajo)' : undefined });
+    const r = _cbCalcular();
+    let desglose = '';
+    if (_cbModo === 'serie') {
+      desglose = `Req = R₁+R₂+R₃ = <strong style="color:${C}">${_fmt2(r.req)} Ω</strong><br>
+        I (igual en las 3) = V/Req = <strong style="color:${C}">${_fmt2(r.i)} A</strong><br>
+        Caída de voltaje: V₁=${_fmt2(r.v1)}V, V₂=${_fmt2(r.v2)}V, V₃=${_fmt2(r.v3)}V`;
+    } else if (_cbModo === 'paralelo') {
+      desglose = `1/Req = 1/R₁+1/R₂+1/R₃ → Req = <strong style="color:${C}">${_fmt2(r.req)} Ω</strong><br>
+        I total = V/Req = <strong style="color:${C}">${_fmt2(r.i)} A</strong><br>
+        Corriente por rama (mismo V en todas): I₁=${_fmt2(r.i1)}A, I₂=${_fmt2(r.i2)}A, I₃=${_fmt2(r.i3)}A`;
+    } else {
+      desglose = `R₁∥R₂ = <strong style="color:var(--cyan)">${_fmt2(r.rp)} Ω</strong> (en paralelo) + R₃ en serie<br>
+        Req total = <strong style="color:${C}">${_fmt2(r.req)} Ω</strong><br>
+        I total = V/Req = <strong style="color:${C}">${_fmt2(r.i)} A</strong><br>
+        Caída en R₃ (serie): V₃=${_fmt2(r.v3)}V &nbsp;|&nbsp; Voltaje en la parte paralela: ${_fmt2(r.vp)}V<br>
+        Corriente por rama paralela: I₁=${_fmt2(r.i1)}A, I₂=${_fmt2(r.i2)}A`;
+    }
     return `
       <div>
         <button class="btn btn-ghost btn-sm" data-sim-cerrar="sim2" style="margin-bottom:.6rem">← Volver a Simuladores</button>
         <h3 style="margin:0 0 .3rem">🔗 Circuit Builder MQC</h3>
-        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Elegí serie o paralelo, y mirá cómo cambia la resistencia equivalente con las mismas 3 resistencias (3Ω, 5Ω, 7Ω).</p>
-        <div style="display:flex;gap:.5rem;margin-bottom:1rem">
-          <button class="btn ${_cbTipo === 'serie' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-cb-tipo="serie">Serie</button>
-          <button class="btn ${_cbTipo === 'paralelo' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-cb-tipo="paralelo">Paralelo</button>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Movés la fuente y las 3 resistencias, y mirás en vivo la resistencia equivalente, el amperaje, y cómo se reparte el voltaje o la corriente. Cuando quieras, pasá a Modo Desafío para practicar ejercicios de este mismo tipo de circuito.</p>
+        <div style="display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap">
+          <button class="btn ${_cbModo === 'serie' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-cb-modo="serie">Serie</button>
+          <button class="btn ${_cbModo === 'paralelo' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-cb-modo="paralelo">Paralelo</button>
+          <button class="btn ${_cbModo === 'mixto' ? 'btn-primary' : 'btn-ghost'} btn-sm" data-cb-modo="mixto">Mixto</button>
         </div>
         ${svg}
-        <div style="margin-top:1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.8rem;font-family:var(--font-code);font-size:.85rem">
-          ${_cbTipo === 'serie' ? 'Req = R₁+R₂+R₃' : '1/Req = 1/R₁+1/R₂+1/R₃'} = <strong style="color:${C}">${_fmt2(req)} Ω</strong>
+        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:.2rem">Fuente V = <strong style="color:${C}">${_cbV} V</strong></label>
+        <input type="range" id="cb-slider-v" min="5" max="220" step="5" value="${_cbV}" style="width:100%">
+        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin:.9rem 0 .2rem">R₁ = <strong style="color:${C}">${_cbR1} Ω</strong></label>
+        <input type="range" id="cb-slider-r1" min="1" max="20" step="1" value="${_cbR1}" style="width:100%">
+        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin:.9rem 0 .2rem">R₂ = <strong style="color:${C}">${_cbR2} Ω</strong></label>
+        <input type="range" id="cb-slider-r2" min="1" max="20" step="1" value="${_cbR2}" style="width:100%">
+        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin:.9rem 0 .2rem">R₃ = <strong style="color:${C}">${_cbR3} Ω</strong></label>
+        <input type="range" id="cb-slider-r3" min="1" max="20" step="1" value="${_cbR3}" style="width:100%">
+        <div style="margin-top:1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.8rem;font-family:var(--font-code);font-size:.85rem;line-height:1.8">
+          ${desglose}
         </div>
+        <button class="btn btn-primary btn-sm" id="cb-ir-desafio" style="margin-top:1.2rem">Modo Desafío (${_cbModo === 'serie' ? 'serie' : _cbModo === 'paralelo' ? 'paralelo' : 'mixto'}) →</button>
+      </div>`;
+  }
+
+  /* Modo Desafío disponible en LOS 3 modos (serie / paralelo / mixto).
+     Cada modo tiene su propio banco de 4 rondas; _cbDesafioIdx es
+     compartido porque siempre se reinicia a 0 al entrar a Desafío
+     (ver bindSimuladores → irDesafioCb). */
+  const CB_RONDAS_SERIE = [
+    { v: 24, r1: 2, r2: 4, r3: 6, pide: 'req' },     // Req=12Ω
+    { v: 45, r1: 5, r2: 6, r3: 4, pide: 'itotal' },  // I=3A
+    { v: 100, r1: 10, r2: 15, r3: 25, pide: 'req' }, // Req=50Ω
+    { v: 36, r1: 3, r2: 5, r3: 4, pide: 'itotal' }   // I=3A
+  ];
+  const CB_RONDAS_PARALELO = [
+    { v: 12, r1: 6, r2: 6, r3: 6, pide: 'req' },     // Req=2Ω
+    { v: 15, r1: 9, r2: 9, r3: 9, pide: 'itotal' },  // I=5A
+    { v: 16, r1: 4, r2: 8, r3: 8, pide: 'req' },     // Req=2Ω
+    { v: 16, r1: 4, r2: 4, r3: 8, pide: 'itotal' }   // I=10A
+  ];
+  const CB_RONDAS_MIXTO = [
+    { v: 110, r1: 2, r2: 6, r3: 3, pide: 'req' },
+    { v: 60, r1: 4, r2: 4, r3: 2, pide: 'itotal' },
+    { v: 90, r1: 3, r2: 6, r3: 5, pide: 'req' },
+    { v: 48, r1: 8, r2: 8, r3: 4, pide: 'itotal' }
+  ];
+  let _cbDesafioIdx = 0;
+  function _cbRondasActuales() {
+    if (_cbModo === 'serie') return CB_RONDAS_SERIE;
+    if (_cbModo === 'paralelo') return CB_RONDAS_PARALELO;
+    return CB_RONDAS_MIXTO;
+  }
+  function _cbCalcularMixto(d) {
+    const rp = 1 / (1 / d.r1 + 1 / d.r2);
+    const req = rp + d.r3;
+    const itotal = d.v / req;
+    return { req, itotal };
+  }
+  function _cbCalcularDesafio(d) {
+    if (_cbModo === 'serie') {
+      const req = d.r1 + d.r2 + d.r3;
+      return { req, itotal: d.v / req };
+    }
+    if (_cbModo === 'paralelo') {
+      const req = 1 / (1 / d.r1 + 1 / d.r2 + 1 / d.r3);
+      return { req, itotal: d.v / req };
+    }
+    return _cbCalcularMixto(d);
+  }
+  function _cbEnunciadoDesafio(d) {
+    if (_cbModo === 'serie') return `V=${d.v}V, con R₁=${d.r1}Ω, R₂=${d.r2}Ω y R₃=${d.r3}Ω conectadas en serie.`;
+    if (_cbModo === 'paralelo') return `V=${d.v}V, con R₁=${d.r1}Ω, R₂=${d.r2}Ω y R₃=${d.r3}Ω conectadas en paralelo.`;
+    return `V=${d.v}V, R₁=${d.r1}Ω y R₂=${d.r2}Ω en paralelo, en serie con R₃=${d.r3}Ω.`;
+  }
+  function _cbFormulaDesafio() {
+    if (_cbModo === 'serie') return 'Req = R₁+R₂+R₃ → I = V/Req';
+    if (_cbModo === 'paralelo') return '1/Req = 1/R₁+1/R₂+1/R₃ → I = V/Req';
+    return 'R₁∥R₂ → Req = (R₁∥R₂)+R₃ → I = V/Req';
+  }
+  function _renderCbDesafio() {
+    const rondas = _cbRondasActuales();
+    const modoLabel = _cbModo === 'serie' ? 'serie' : _cbModo === 'paralelo' ? 'paralelo' : 'mixto';
+    if (_cbDesafioIdx >= rondas.length) {
+      return `<div style="text-align:center"><h3>✅ ¡Completaste las ${rondas.length} rondas de ${modoLabel}!</h3><button class="btn btn-primary btn-sm" data-sim-cerrar="sim2">← Volver a Simuladores</button></div>`;
+    }
+    const d = rondas[_cbDesafioIdx];
+    const pideTexto = d.pide === 'req' ? '¿Cuál es la resistencia equivalente total (Req)?' : '¿Cuál es la corriente total (I_total)?';
+    return `
+      <div>
+        <button class="btn btn-ghost btn-sm" data-sim-cerrar="sim2" style="margin-bottom:.6rem">← Volver a Simuladores</button>
+        <button class="btn btn-ghost btn-sm" id="cb-ir-explora" style="margin-bottom:.6rem;margin-left:.4rem">← Modo Explora</button>
+        <p style="color:var(--text-muted);font-size:.78rem">Ronda ${_cbDesafioIdx + 1} de ${rondas.length} (circuito ${modoLabel})</p>
+        <p style="margin-bottom:.6rem">${_cbEnunciadoDesafio(d)}</p>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;font-family:var(--font-code);font-size:.85rem;margin-bottom:.8rem">
+          ${_cbFormulaDesafio()}
+        </div>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${pideTexto}</p>
+        <input type="number" step="0.01" id="cb-respuesta" placeholder="${d.pide === 'req' ? 'Req (Ω)' : 'I (A)'}" style="width:200px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:.5rem">
+        <button class="btn btn-primary btn-sm" id="cb-comprobar" style="margin-top:1rem;display:block">Comprobar</button>
+        <p id="cb-feedback" style="margin-top:.8rem;font-size:.85rem"></p>
       </div>`;
   }
 
@@ -359,7 +492,7 @@
     const hechos = uData.simsDone || [];
     const metas = [
       { id: 'sim1', titulo: '🔧 Ohm Lab MQC', desc: 'El simulador estrella: controlá V e I, y mirá cómo cambia la resistencia (R=V/I).' },
-      { id: 'sim2', titulo: '🔗 Circuit Builder MQC', desc: 'Comparé la resistencia equivalente en serie vs. en paralelo con las mismas resistencias.' },
+      { id: 'sim2', titulo: '🔗 Circuit Builder MQC', desc: 'Ajustá la fuente y las resistencias en serie, paralelo o mixto — mirá Req, amperaje y el reparto en vivo, y practicá ejercicios de Modo Desafío en cada tipo.' },
       { id: 'sim3', titulo: '💡 Power Lab MQC', desc: 'Practicá las 3 fórmulas de potencia eléctrica: P=IV, P=I²R, P=V²/R.' }
     ];
     return `
@@ -382,6 +515,7 @@
       btn.addEventListener('click', () => {
         _simActivo = btn.getAttribute('data-sim-abrir');
         _ohmModo = 'explora'; _ohmDesafioIdx = 0;
+        _cbSubmodo = 'explora'; _cbDesafioIdx = 0;
         _pwIdx = 0;
         _rerenderSimTab(unit);
       });
@@ -413,9 +547,36 @@
       }
     });
 
-    /* Sim2 — Circuit Builder */
-    document.querySelectorAll('[data-cb-tipo]').forEach(btn => {
-      btn.addEventListener('click', () => { _cbTipo = btn.getAttribute('data-cb-tipo'); _rerenderSimTab(unit); markSimDone('sim2'); });
+    /* Sim2 — Circuit Builder MQC (rediseñado: interactivo real) */
+    document.querySelectorAll('[data-cb-modo]').forEach(btn => {
+      btn.addEventListener('click', () => { _cbModo = btn.getAttribute('data-cb-modo'); _cbSubmodo = 'explora'; _rerenderSimTab(unit); markSimDone('sim2'); });
+    });
+    const s2v = document.getElementById('cb-slider-v');
+    const s2r1 = document.getElementById('cb-slider-r1');
+    const s2r2 = document.getElementById('cb-slider-r2');
+    const s2r3 = document.getElementById('cb-slider-r3');
+    if (s2v) s2v.addEventListener('input', () => { _cbV = parseInt(s2v.value, 10); _rerenderSimTab(unit); });
+    if (s2r1) s2r1.addEventListener('input', () => { _cbR1 = parseInt(s2r1.value, 10); _rerenderSimTab(unit); });
+    if (s2r2) s2r2.addEventListener('input', () => { _cbR2 = parseInt(s2r2.value, 10); _rerenderSimTab(unit); });
+    if (s2r3) s2r3.addEventListener('input', () => { _cbR3 = parseInt(s2r3.value, 10); _rerenderSimTab(unit); });
+    const irDesafioCb = document.getElementById('cb-ir-desafio');
+    if (irDesafioCb) irDesafioCb.addEventListener('click', () => { _cbSubmodo = 'desafio'; _cbDesafioIdx = 0; _rerenderSimTab(unit); });
+    const irExploraCb = document.getElementById('cb-ir-explora');
+    if (irExploraCb) irExploraCb.addEventListener('click', () => { _cbSubmodo = 'explora'; _rerenderSimTab(unit); });
+    const comprobarCb = document.getElementById('cb-comprobar');
+    if (comprobarCb) comprobarCb.addEventListener('click', () => {
+      const rondas = _cbRondasActuales();
+      const d = rondas[_cbDesafioIdx];
+      const calc = _cbCalcularDesafio(d);
+      const esperado = d.pide === 'req' ? calc.req : calc.itotal;
+      const val = parseFloat(document.getElementById('cb-respuesta').value);
+      const fb = document.getElementById('cb-feedback');
+      const ok = !isNaN(val) && Math.abs(val - esperado) <= 0.2;
+      if (fb) {
+        fb.style.color = ok ? 'var(--green)' : 'var(--gold)';
+        fb.textContent = ok ? '✅ ¡Correcto!' : `💡 No coincide. Valor real: ${_fmt2(esperado)} ${d.pide === 'req' ? 'Ω' : 'A'}.`;
+        if (ok) setTimeout(() => { _cbDesafioIdx++; if (_cbDesafioIdx >= rondas.length) markSimDone('sim2'); _rerenderSimTab(unit); }, 1500);
+      }
     });
 
     /* Sim3 — Power Lab */
