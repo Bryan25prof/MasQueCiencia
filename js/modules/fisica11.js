@@ -48,7 +48,16 @@ const FISICA11_UNIDADES_DATA = [
     game: { levels: 7 },
     exam: { perExam: 20, pass: 70 }
   },
-  { id: 'fix11-u04', num: 4, status: 'development', icon: '🧭', color: 'var(--violet)', title: 'Magnetismo y electromagnetismo', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
+  { id: 'fix11-u04', num: 4, status: 'active',
+    icon: '🧭', color: 'var(--violet)',
+    title: 'Magnetismo y electromagnetismo',
+    subtitle: null,
+    description: 'Imanes y polos magnéticos, el experimento de Oersted, campo magnético en bobinas y solenoides, magnetismo terrestre, y el experimento de Faraday.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 7 },
+    exam: { perExam: 20, pass: 70 }
+  },
   { id: 'fix11-u05', num: 5, status: 'development', icon: '🌐', color: 'var(--violet)', title: 'Movimiento ondulatorio', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] },
   { id: 'fix11-u06', num: 6, status: 'development', icon: '🌀', color: 'var(--violet)', title: 'Teoría de la Relatividad', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] }
 ];
