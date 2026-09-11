@@ -523,38 +523,42 @@
       pista: 'Pensá en colisiones a gran velocidad y en los componentes más pequeños del universo.',
       correcta: 'Física de partículas', opciones: ['Física de partículas', 'Óptica geométrica', 'Mecánica clásica', 'Acústica'] }
   ];
-  let _juegoNivelActivo = null;
+  let _juegoIdx = null; // null = aún no calculado el punto de partida
   let _juegoOpcionesMezcladas = [];
   let _juegoFeedback = null; // { texto, correcto } | null
 
+  /* ================================================================
+     HOTFIX — sistema de juego unificado: antes se mostraba la lista
+     completa de escenarios de una sola vez. Ahora funciona como el
+     examen: uno a la vez, empezando en el primer pendiente, avanzando
+     automáticamente al acertar.
+     ================================================================ */
   function renderJuego(unit, uData) {
     const nivelesHechos = uData.gameLevels || [];
-    if (_juegoNivelActivo) {
-      const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+    if (_juegoIdx === null) {
+      const primerPendiente = NIVELES_JUEGO.findIndex(n => !nivelesHechos.includes(n.id));
+      _juegoIdx = primerPendiente === -1 ? NIVELES_JUEGO.length : primerPendiente;
+    }
+    if (_juegoIdx >= NIVELES_JUEGO.length) {
       return `
-        <div class="juego-panel">
-          <button class="btn btn-ghost btn-sm" data-juego-volver style="margin-bottom:.8rem">← Volver a los escenarios</button>
-          <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
-          <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">¿Qué área de la Física interviene principalmente?</p>
-          <div style="display:grid;gap:.5rem">
-            ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
-          </div>
-          ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
+        <div class="juego-panel" style="text-align:center">
+          <h3>✅ ¡Completaste los ${NIVELES_JUEGO.length} escenarios!</h3>
+          <p style="color:var(--text-secondary);font-size:.85rem">Ya resolviste todo el juego de esta unidad.</p>
         </div>`;
     }
+    const n = NIVELES_JUEGO[_juegoIdx];
+    if (!_juegoOpcionesMezcladas.length) _juegoOpcionesMezcladas = _mezclar(n.opciones);
     return `
       <div class="juego-panel">
-        <h3>🔎 Misión: Detective de la Física</h3>
-        <p style="color:var(--text-secondary);font-size:.85rem">Leé cada escenario y respondé qué área de la Física está detrás.</p>
-        <div style="display:grid;gap:.8rem;margin-top:1rem">
-          ${NIVELES_JUEGO.map((n, i) => `
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem">
-              <p style="margin:0 0 .4rem"><strong>${n.escenario}</strong></p>
-              ${nivelesHechos.includes(n.id) ? `<p style="color:var(--green);font-size:.85rem;margin-top:.4rem">✅ ${n.correcta}</p>` : `<button class="btn btn-primary btn-sm" data-nivel="${n.id}">Resolver</button>`}
-            </div>
-          `).join('')}
+        <h3 style="margin:0 0 .3rem">🔎 Detective de la Física</h3>
+        <p style="color:var(--text-muted);font-size:.78rem;margin-bottom:.8rem">Escenario ${_juegoIdx + 1} de ${NIVELES_JUEGO.length}</p>
+        <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
+        <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">¿Qué área de la Física interviene principalmente?</p>
+        <div style="display:grid;gap:.5rem">
+          ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
         </div>
+        ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
       </div>`;
   }
   function _mezclar(arr) {
@@ -563,21 +567,10 @@
     return a;
   }
   function bindJuego(unit, uData) {
-    document.querySelectorAll('[data-nivel]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        _juegoNivelActivo = btn.getAttribute('data-nivel');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
-        _juegoOpcionesMezcladas = _mezclar(n.opciones);
-        _juegoFeedback = null;
-        _rerenderJuego(unit);
-      });
-    });
-    const volver = document.querySelector('[data-juego-volver]');
-    if (volver) volver.addEventListener('click', () => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); });
     document.querySelectorAll('[data-juego-opcion]').forEach(btn => {
       btn.addEventListener('click', () => {
         const elegida = btn.getAttribute('data-juego-opcion');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+        const n = NIVELES_JUEGO[_juegoIdx];
         const acierto = elegida === n.correcta;
         if (acierto) {
           // Solo si ACIERTA: se marca completado y se otorga XP. Nunca antes.
@@ -588,7 +581,7 @@
           patchUnit({ gameLevels: done, gameScore: done.length });
           if (!yaResuelto) awardXP(done.length >= NIVELES_JUEGO.length ? 'game-won' : 'game-played');
           _juegoFeedback = { texto: `✅ ¡Correcto! Es ${n.correcta}.`, correcto: true };
-          setTimeout(() => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); }, 1500);
+          setTimeout(() => { _juegoIdx++; _juegoOpcionesMezcladas = []; _juegoFeedback = null; _rerenderJuego(unit); }, 1500);
         } else {
           // Falla: retroalimentación, NO se marca completado, NO hay XP. Puede reintentar.
           _juegoFeedback = { texto: '💡 No es esa. Volvé a leer la pista y probá otra opción.', correcto: false };

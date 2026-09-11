@@ -429,9 +429,14 @@
       markSimDone('sim2');
     });
 
-    /* Sim3 — Orbit Lab */
+    /* Sim3 — Orbit Lab
+       HOTFIX: se anula el re-render en cada 'input' (disparaba
+       continuamente mientras se arrastraba el slider, reemplazando
+       el propio elemento a mitad del arrastre y causando
+       comportamiento errático). Ahora se usa 'change', que solo
+       dispara una vez al soltar el slider. */
     const s3v = document.getElementById('ol-slider-v');
-    if (s3v) s3v.addEventListener('input', () => {
+    if (s3v) s3v.addEventListener('change', () => {
       _olVelocidad = parseInt(s3v.value, 10);
       _rerenderSimTab(unit);
       markSimDone('sim3');
@@ -470,55 +475,42 @@
       pregunta: '¿Cuál es la explicación correcta?', pista: 'Pensá en qué tienen en común ambas situaciones: una fuerza de atracción entre masas.',
       correcta: 'Ambas son manifestaciones de la misma fuerza gravitatoria universal, solo que con distintas velocidades tangenciales', opciones: ['Ambas son manifestaciones de la misma fuerza gravitatoria universal, solo que con distintas velocidades tangenciales', 'Son dos fuerzas completamente distintas y sin relación', 'La manzana cae por gravedad, pero el satélite no tiene ninguna fuerza actuando', 'Solo los objetos pequeños como la manzana sienten gravedad'] }
   ];
-  let _juegoNivelActivo = null;
+    let _juegoIdx = null; // null = aún no calculado el punto de partida
   let _juegoOpcionesMezcladas = [];
   let _juegoFeedback = null;
   function renderJuego(unit, uData) {
     const nivelesHechos = uData.gameLevels || [];
-    if (_juegoNivelActivo) {
-      const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+    if (_juegoIdx === null) {
+      const primerPendiente = NIVELES_JUEGO.findIndex(n => !nivelesHechos.includes(n.id));
+      _juegoIdx = primerPendiente === -1 ? NIVELES_JUEGO.length : primerPendiente;
+    }
+    if (_juegoIdx >= NIVELES_JUEGO.length) {
       return `
-        <div class="juego-panel">
-          <button class="btn btn-ghost btn-sm" data-juego-volver style="margin-bottom:.8rem">← Volver a los niveles</button>
-          <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
-          <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${n.pregunta}</p>
-          <div style="display:grid;gap:.5rem">
-            ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
-          </div>
-          ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
+        <div class="juego-panel" style="text-align:center">
+          <h3>✅ ¡Completaste los ${NIVELES_JUEGO.length} niveles!</h3>
+          <p style="color:var(--text-secondary);font-size:.85rem">Ya resolviste todo el juego de esta unidad.</p>
         </div>`;
     }
+    const n = NIVELES_JUEGO[_juegoIdx];
+    if (!_juegoOpcionesMezcladas.length) _juegoOpcionesMezcladas = _mezclar(n.opciones);
     return `
       <div class="juego-panel">
-        <h3>🛰️ Misión: Arquitecto de Órbitas</h3>
-        <p style="color:var(--text-secondary);font-size:.85rem">MQC necesita diseñar sistemas orbitales — resolvé cada nivel para avanzar.</p>
-        <div style="display:grid;gap:.8rem;margin-top:1rem">
-          ${NIVELES_JUEGO.map((n, i) => `
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem">
-              <p style="margin:0 0 .4rem"><strong>Nivel ${i + 1}:</strong> ${n.escenario}</p>
-              ${nivelesHechos.includes(n.id) ? `<p style="color:var(--green);font-size:.85rem;margin-top:.4rem">✅ ${n.correcta}</p>` : `<button class="btn btn-primary btn-sm" data-nivel="${n.id}">Resolver</button>`}
-            </div>
-          `).join('')}
+        <h3 style="margin:0 0 .3rem">🛰️ Arquitecto de Órbitas</h3>
+        <p style="color:var(--text-muted);font-size:.78rem;margin-bottom:.8rem">Nivel ${_juegoIdx + 1} de ${NIVELES_JUEGO.length}</p>
+        <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
+        <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${n.pregunta}</p>
+        <div style="display:grid;gap:.5rem">
+          ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
         </div>
+        ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
       </div>`;
   }
   function bindJuego(unit, uData) {
-    document.querySelectorAll('[data-nivel]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        _juegoNivelActivo = btn.getAttribute('data-nivel');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
-        _juegoOpcionesMezcladas = _mezclar(n.opciones);
-        _juegoFeedback = null;
-        _rerenderJuego(unit);
-      });
-    });
-    const volver = document.querySelector('[data-juego-volver]');
-    if (volver) volver.addEventListener('click', () => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); });
     document.querySelectorAll('[data-juego-opcion]').forEach(btn => {
       btn.addEventListener('click', () => {
         const elegida = btn.getAttribute('data-juego-opcion');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+        const n = NIVELES_JUEGO[_juegoIdx];
         const acierto = elegida === n.correcta;
         if (acierto) {
           const u = loadUnitData();
@@ -528,7 +520,7 @@
           patchUnit({ gameLevels: done, gameScore: done.length });
           if (!yaResuelto) awardXP(done.length >= NIVELES_JUEGO.length ? 'game-won' : 'game-played');
           _juegoFeedback = { texto: `✅ ¡Correcto! ${n.correcta}`, correcto: true };
-          setTimeout(() => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); }, 1700);
+          setTimeout(() => { _juegoIdx++; _juegoOpcionesMezcladas = []; _juegoFeedback = null; _rerenderJuego(unit); }, 1600);
         } else {
           _juegoFeedback = { texto: '💡 No es esa. Volvé a leer la pista y probá otra opción.', correcto: false };
         }

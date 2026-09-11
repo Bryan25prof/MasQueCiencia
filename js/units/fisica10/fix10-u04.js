@@ -188,39 +188,45 @@
 
   /* ================================================================
      SIMULADOR 1 — "Pista MRU": Modo Explora + Modo Desafío
+     ================================================================
+     HOTFIX PEDAGÓGICO: se usa la fórmula estándar de colegio v = d/t
+     (y sus despejes d = v·t, t = d/v), tal como aparece en el libro
+     fuente — se retiró la notación x₀ (posición inicial/final) del
+     CÁLCULO en sí, porque introducía una versión más "universitaria"
+     de la fórmula que puede confundir a un estudiante de décimo año.
+     x₀/Δx siguen enseñándose en el Tema 1 como concepto (ya viene de
+     U02/U03), pero la fórmula operativa de MRU es simplemente d=v·t.
      ================================================================ */
   let _mruModo = 'explora';
-  let _mruX0 = 0, _mruV = 10, _mruT = 5;
+  let _mruV = 10, _mruT = 5;
   function renderSim1() {
     if (_mruModo === 'desafio') return _renderMruDesafio();
-    const xFinal = _mruX0 + _mruV * _mruT;
+    const d = _mruV * _mruT;
     const anchoPista = 600;
-    const escalaMax = 200;
-    const posPx = Math.min(anchoPista, Math.max(0, (xFinal / escalaMax) * anchoPista));
+    const escalaMax = 300;
+    const posPx = Math.min(anchoPista, Math.max(0, (d / escalaMax) * anchoPista));
     return `
       <div>
         <button class="btn btn-ghost btn-sm" data-sim-cerrar="sim1" style="margin-bottom:.6rem">← Volver a Simuladores</button>
         <h3 style="margin:0 0 .3rem">🏁 Pista MRU — Modo Explora</h3>
-        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Movés x₀, v y t, y ves dónde termina el móvil.</p>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Movés v y t, y ves qué distancia recorre el móvil.</p>
         <div style="background:var(--bg-elevated);border-radius:10px;padding:1rem;position:relative;height:50px;margin-bottom:1rem;overflow:hidden">
           <div style="position:absolute;left:0;right:0;top:24px;height:2px;background:var(--border)"></div>
           <div style="position:absolute;left:${posPx}px;top:10px;font-size:1.6rem;transition:left .3s">🚗</div>
         </div>
-        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:.2rem">Posición inicial x₀ = <strong style="color:${C}">${_mruX0} m</strong></label>
-        <input type="range" id="mru-slider-x0" min="0" max="100" step="5" value="${_mruX0}" style="width:100%">
-        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin:.9rem 0 .2rem">Velocidad v = <strong style="color:${C}">${_mruV} m/s</strong></label>
+        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:.2rem">Velocidad v = <strong style="color:${C}">${_mruV} m/s</strong></label>
         <input type="range" id="mru-slider-v" min="0" max="20" step="1" value="${_mruV}" style="width:100%">
         <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin:.9rem 0 .2rem">Tiempo t = <strong style="color:${C}">${_mruT} s</strong></label>
         <input type="range" id="mru-slider-t" min="0" max="15" step="1" value="${_mruT}" style="width:100%">
         <div style="margin-top:1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.8rem;font-family:var(--font-code);font-size:.9rem">
-          x = x₀ + v·t = ${_mruX0} + (${_mruV})(${_mruT}) = <strong style="color:${C}">${xFinal} m</strong>
+          d = v·t = (${_mruV})(${_mruT}) = <strong style="color:${C}">${d} m</strong>
         </div>
         <button class="btn btn-primary btn-sm" id="mru-ir-desafio" style="margin-top:1.2rem">Modo Desafío →</button>
       </div>`;
   }
   const MRU_RONDAS = [
-    { x0: 20, v: 5, t: 8 }, { x0: 0, v: 12, t: 6 }, { x0: 40, v: 8, t: 10 },
-    { x0: 15, v: 20, t: 3 }, { x0: 0, v: 6, t: 15 }, { x0: 30, v: 15, t: 4 }
+    { v: 5, t: 8 }, { v: 12, t: 6 }, { v: 8, t: 10 },
+    { v: 20, t: 3 }, { v: 6, t: 15 }, { v: 15, t: 4 }
   ];
   let _mruDesafioIdx = 0;
   function _renderMruDesafio() {
@@ -233,9 +239,12 @@
         <button class="btn btn-ghost btn-sm" data-sim-cerrar="sim1" style="margin-bottom:.6rem">← Volver a Simuladores</button>
         <button class="btn btn-ghost btn-sm" id="mru-ir-explora" style="margin-bottom:.6rem;margin-left:.4rem">← Modo Explora</button>
         <p style="color:var(--text-muted);font-size:.78rem">Ronda ${_mruDesafioIdx + 1} de ${MRU_RONDAS.length}</p>
-        <p style="margin-bottom:.8rem">Un móvil parte de x₀ = ${r.x0} m, con v = ${r.v} m/s, durante t = ${r.t} s.</p>
-        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">Antes de calcular: ¿dónde estará?</p>
-        <input type="number" id="mru-respuesta" placeholder="Posición final (m)" style="width:200px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:.5rem">
+        <p style="margin-bottom:.6rem">Un móvil viaja a v = ${r.v} m/s, durante t = ${r.t} s.</p>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;font-family:var(--font-code);font-size:.85rem;margin-bottom:.8rem">
+          d = v · t
+        </div>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">¿Qué distancia recorrerá?</p>
+        <input type="number" id="mru-respuesta" placeholder="Distancia (m)" style="width:200px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:.5rem">
         <button class="btn btn-primary btn-sm" id="mru-comprobar" style="margin-top:1rem;display:block">Comprobar</button>
         <p id="mru-feedback" style="margin-top:.8rem;font-size:.85rem"></p>
       </div>`;
@@ -280,12 +289,16 @@
     }
     const r = AC_RONDAS[_acDesafioIdx];
     const pideTexto = r.pide === 'vf' ? '¿Cuál será la velocidad final (vf)?' : '¿Qué distancia recorrerá (d)?';
+    const formulaTexto = r.pide === 'vf' ? 'vf = v₀ + a · t' : 'd = v₀·t + (a·t²)/2';
     return `
       <div>
         <button class="btn btn-ghost btn-sm" data-sim-cerrar="sim2" style="margin-bottom:.6rem">← Volver a Simuladores</button>
         <button class="btn btn-ghost btn-sm" id="ac-ir-explora" style="margin-bottom:.6rem;margin-left:.4rem">← Modo Explora</button>
         <p style="color:var(--text-muted);font-size:.78rem">Ronda ${_acDesafioIdx + 1} de ${AC_RONDAS.length}</p>
-        <p style="margin-bottom:.8rem">v₀ = ${r.v0} m/s, a = ${r.a} m/s², t = ${r.t} s.</p>
+        <p style="margin-bottom:.6rem">v₀ = ${r.v0} m/s, a = ${r.a} m/s², t = ${r.t} s.</p>
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;font-family:var(--font-code);font-size:.85rem;margin-bottom:.8rem">
+          ${formulaTexto}
+        </div>
         <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${pideTexto}</p>
         <input type="number" id="ac-respuesta" placeholder="${r.pide === 'vf' ? 'vf (m/s)' : 'd (m)'}" style="width:200px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:.5rem">
         <button class="btn btn-primary btn-sm" id="ac-comprobar" style="margin-top:1rem;display:block">Comprobar</button>
@@ -316,6 +329,9 @@
             <h3 style="margin:0 0 .3rem">🗼 Torre de Galileo</h3>
             <p style="color:var(--text-muted);font-size:.78rem">Ronda ${_torreIdx + 1} de ${TORRE_RONDAS.length} — Caída libre</p>
             <p style="margin-bottom:.8rem">Se suelta un objeto desde ${r.altura} m de altura (vi = 0, g = 9,8 m/s²).</p>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;font-family:var(--font-code);font-size:.85rem;margin-bottom:.8rem">
+              h = vi·t + (g·t²)/2
+            </div>
             <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">Antes de soltarlo: ¿cuánto tiempo tardará en llegar al suelo?</p>
             <input type="number" id="torre-respuesta" step="0.1" placeholder="Tiempo (s)" style="width:200px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:.5rem">
             <button class="btn btn-primary btn-sm" id="torre-soltar" style="margin-top:1rem;display:block">Soltar y comprobar</button>
@@ -338,6 +354,9 @@
             <h3 style="margin:0 0 .3rem">🗼 Torre de Galileo</h3>
             <p style="color:var(--text-muted);font-size:.78rem">Ronda ${_torreIdx + 1} de ${TORRE_RONDAS.length} — Tiro vertical</p>
             <p style="margin-bottom:.8rem">Se lanza un objeto hacia arriba con vi = ${r.v0} m/s (g = −9,8 m/s²).</p>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;font-family:var(--font-code);font-size:.85rem;margin-bottom:.8rem">
+              t = (vf − vi) / g
+            </div>
             <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">Antes de lanzarlo: ¿cuánto tiempo tardará en llegar a su altura máxima (donde vf = 0)?</p>
             <input type="number" id="torre-respuesta" step="0.1" placeholder="Tiempo (s)" style="width:200px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:.5rem">
             <button class="btn btn-primary btn-sm" id="torre-soltar" style="margin-top:1rem;display:block">Lanzar y comprobar</button>
@@ -397,10 +416,8 @@
     });
 
     /* Sim1 — Pista MRU */
-    const s1v0 = document.getElementById('mru-slider-x0');
     const s1v = document.getElementById('mru-slider-v');
     const s1t = document.getElementById('mru-slider-t');
-    if (s1v0) s1v0.addEventListener('input', () => { _mruX0 = parseInt(s1v0.value, 10); _rerenderSimTab(unit); });
     if (s1v) s1v.addEventListener('input', () => { _mruV = parseInt(s1v.value, 10); _rerenderSimTab(unit); });
     if (s1t) s1t.addEventListener('input', () => { _mruT = parseInt(s1t.value, 10); _rerenderSimTab(unit); });
     const irDesafio1 = document.getElementById('mru-ir-desafio');
@@ -410,13 +427,13 @@
     const comprobarMru = document.getElementById('mru-comprobar');
     if (comprobarMru) comprobarMru.addEventListener('click', () => {
       const r = MRU_RONDAS[_mruDesafioIdx];
-      const esperado = r.x0 + r.v * r.t;
+      const esperado = r.v * r.t;
       const val = parseFloat(document.getElementById('mru-respuesta').value);
       const fb = document.getElementById('mru-feedback');
       const ok = Math.abs(val - esperado) <= 0.5;
       if (fb) {
         fb.style.color = ok ? 'var(--green)' : 'var(--gold)';
-        fb.textContent = ok ? '✅ ¡Correcto!' : `💡 No coincide. x = x₀ + v·t = ${r.x0} + (${r.v})(${r.t}) = ${esperado} m.`;
+        fb.textContent = ok ? '✅ ¡Correcto!' : `💡 No coincide. d = v · t = (${r.v})(${r.t}) = ${esperado} m.`;
         if (ok) setTimeout(() => { _mruDesafioIdx++; _rerenderSimTab(unit); }, 1500);
       }
     });
@@ -498,55 +515,42 @@
       pista: 'Pensá en qué fuerza actúa sobre el proyectil, y en qué dirección actúa esa fuerza.',
       correcta: 'Porque la gravedad actúa verticalmente, no afecta el movimiento horizontal', opciones: ['Porque la gravedad actúa verticalmente, no afecta el movimiento horizontal', 'Porque Vx siempre es mayor que Vy', 'Porque el aire empuja el proyectil hacia adelante', 'Porque Vx y Vy siempre son iguales'] }
   ];
-  let _juegoNivelActivo = null;
+    let _juegoIdx = null; // null = aún no calculado el punto de partida
   let _juegoOpcionesMezcladas = [];
   let _juegoFeedback = null;
   function renderJuego(unit, uData) {
     const nivelesHechos = uData.gameLevels || [];
-    if (_juegoNivelActivo) {
-      const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+    if (_juegoIdx === null) {
+      const primerPendiente = NIVELES_JUEGO.findIndex(n => !nivelesHechos.includes(n.id));
+      _juegoIdx = primerPendiente === -1 ? NIVELES_JUEGO.length : primerPendiente;
+    }
+    if (_juegoIdx >= NIVELES_JUEGO.length) {
       return `
-        <div class="juego-panel">
-          <button class="btn btn-ghost btn-sm" data-juego-volver style="margin-bottom:.8rem">← Volver a los niveles</button>
-          <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
-          <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${n.pregunta}</p>
-          <div style="display:grid;gap:.5rem">
-            ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
-          </div>
-          ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
+        <div class="juego-panel" style="text-align:center">
+          <h3>✅ ¡Completaste los ${NIVELES_JUEGO.length} niveles!</h3>
+          <p style="color:var(--text-secondary);font-size:.85rem">Ya resolviste todo el juego de esta unidad.</p>
         </div>`;
     }
+    const n = NIVELES_JUEGO[_juegoIdx];
+    if (!_juegoOpcionesMezcladas.length) _juegoOpcionesMezcladas = _mezclar(n.opciones);
     return `
       <div class="juego-panel">
-        <h3>🎮 Misión: Control de Movimiento</h3>
-        <p style="color:var(--text-secondary);font-size:.85rem">Centro de control científico MQC — identificá qué está pasando con cada móvil.</p>
-        <div style="display:grid;gap:.8rem;margin-top:1rem">
-          ${NIVELES_JUEGO.map((n, i) => `
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem">
-              <p style="margin:0 0 .4rem"><strong>Nivel ${i + 1}:</strong> ${n.escenario}</p>
-              ${nivelesHechos.includes(n.id) ? `<p style="color:var(--green);font-size:.85rem;margin-top:.4rem">✅ ${n.correcta}</p>` : `<button class="btn btn-primary btn-sm" data-nivel="${n.id}">Resolver</button>`}
-            </div>
-          `).join('')}
+        <h3 style="margin:0 0 .3rem">🎮 Control de Movimiento</h3>
+        <p style="color:var(--text-muted);font-size:.78rem;margin-bottom:.8rem">Nivel ${_juegoIdx + 1} de ${NIVELES_JUEGO.length}</p>
+        <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
+        <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${n.pregunta}</p>
+        <div style="display:grid;gap:.5rem">
+          ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
         </div>
+        ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
       </div>`;
   }
   function bindJuego(unit, uData) {
-    document.querySelectorAll('[data-nivel]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        _juegoNivelActivo = btn.getAttribute('data-nivel');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
-        _juegoOpcionesMezcladas = _mezclar(n.opciones);
-        _juegoFeedback = null;
-        _rerenderJuego(unit);
-      });
-    });
-    const volver = document.querySelector('[data-juego-volver]');
-    if (volver) volver.addEventListener('click', () => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); });
     document.querySelectorAll('[data-juego-opcion]').forEach(btn => {
       btn.addEventListener('click', () => {
         const elegida = btn.getAttribute('data-juego-opcion');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+        const n = NIVELES_JUEGO[_juegoIdx];
         const acierto = elegida === n.correcta;
         if (acierto) {
           const u = loadUnitData();
@@ -556,7 +560,7 @@
           patchUnit({ gameLevels: done, gameScore: done.length });
           if (!yaResuelto) awardXP(done.length >= NIVELES_JUEGO.length ? 'game-won' : 'game-played');
           _juegoFeedback = { texto: `✅ ¡Correcto! ${n.correcta}`, correcto: true };
-          setTimeout(() => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); }, 1600);
+          setTimeout(() => { _juegoIdx++; _juegoOpcionesMezcladas = []; _juegoFeedback = null; _rerenderJuego(unit); }, 1600);
         } else {
           _juegoFeedback = { texto: '💡 No es esa. Volvé a leer la pista y probá otra opción.', correcto: false };
         }

@@ -263,9 +263,10 @@
         ${dcl}
         <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin-bottom:.2rem">Masa m = <strong style="color:${C}">${_flM} kg</strong></label>
         <input type="range" id="fl-slider-m" min="1" max="30" step="1" value="${_flM}" style="width:100%">
-        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin:.9rem 0 .2rem">Fuerza aplicada F = <strong style="color:${C}">${_flF} N</strong></label>
+        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin:.9rem 0 .2rem">Fuerza aplicada Fx = <strong style="color:${C}">${_flF} N</strong></label>
+        <p style="font-size:.72rem;color:var(--text-muted);margin:-.3rem 0 .3rem">Fx: la fuerza aplicada sobre el eje horizontal (X), a favor del movimiento.</p>
         <input type="range" id="fl-slider-f" min="0" max="150" step="5" value="${_flF}" style="width:100%">
-        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin:.9rem 0 .2rem">Coeficiente de fricción μ = <strong style="color:${C}">${_flMu}</strong></label>
+        <label style="display:block;font-size:.8rem;color:var(--text-secondary);margin:.9rem 0 .2rem">Coeficiente de fricción μ = <strong style="color:${C}">${_fmtMu(_flMu)}</strong></label>
         <input type="range" id="fl-slider-mu" min="0" max="0.6" step="0.05" value="${_flMu}" style="width:100%">
         <div style="margin-top:1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.8rem;font-family:var(--font-code);font-size:.85rem;line-height:1.7">
           P = m·g = ${r.P.toFixed(1)} N &nbsp;|&nbsp; N = ${r.N.toFixed(1)} N<br>
@@ -275,12 +276,18 @@
         <button class="btn btn-primary btn-sm" id="fl-ir-desafio" style="margin-top:1.2rem">Modo Desafío →</button>
       </div>`;
   }
+  /* HOTFIX: se formatea μ siempre con 2 decimales y coma (convención
+     en español), para que μ=0 se vea "0,00" en vez de solo "0" —
+     antes era inconsistente con μ=0,20 que sí mostraba decimales. */
+  function _fmtMu(mu) { return mu.toFixed(2).replace('.', ','); }
+  /* HOTFIX: se redujo de 10 a 5 rondas (3 de fuerza neta, 2 de
+     aceleración), a pedido docente. */
   const FL_RONDAS = [
-    { m: 10, F: 50, mu: 0.2, pide: 'a' }, { m: 5, F: 20, mu: 0, pide: 'a' },
-    { m: 8, F: 40, mu: 0.25, pide: 'neta' }, { m: 15, F: 90, mu: 0.1, pide: 'a' },
-    { m: 4, F: 30, mu: 0.15, pide: 'neta' }, { m: 20, F: 100, mu: 0.2, pide: 'a' },
-    { m: 6, F: 45, mu: 0.3, pide: 'neta' }, { m: 12, F: 60, mu: 0.15, pide: 'a' },
-    { m: 3, F: 15, mu: 0, pide: 'a' }, { m: 25, F: 120, mu: 0.25, pide: 'neta' }
+    { m: 8, F: 40, mu: 0.25, pide: 'neta' },
+    { m: 4, F: 30, mu: 0.15, pide: 'neta' },
+    { m: 6, F: 45, mu: 0.3, pide: 'neta' },
+    { m: 10, F: 50, mu: 0.2, pide: 'a' },
+    { m: 5, F: 20, mu: 0, pide: 'a' }
   ];
   let _flDesafioIdx = 0;
   function _renderFlDesafio() {
@@ -294,7 +301,7 @@
         <button class="btn btn-ghost btn-sm" data-sim-cerrar="sim1" style="margin-bottom:.6rem">← Volver a Simuladores</button>
         <button class="btn btn-ghost btn-sm" id="fl-ir-explora" style="margin-bottom:.6rem;margin-left:.4rem">← Modo Explora</button>
         <p style="color:var(--text-muted);font-size:.78rem">Ronda ${_flDesafioIdx + 1} de ${FL_RONDAS.length}</p>
-        <p style="margin-bottom:.6rem">m = ${r.m} kg, F aplicada = ${r.F} N, μ = ${r.mu}, g = 9,8 m/s².</p>
+        <p style="margin-bottom:.6rem">m = ${r.m} kg, Fx aplicada = ${r.F} N (sobre el eje horizontal), μ = ${_fmtMu(r.mu)}, g = 9,8 m/s².</p>
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;font-family:var(--font-code);font-size:.85rem;margin-bottom:.8rem">
           N = m·g &nbsp;|&nbsp; f = μ·N &nbsp;|&nbsp; ΣF = F − f &nbsp;|&nbsp; a = ΣF/m
         </div>
@@ -501,55 +508,48 @@
       pista: 'Primero calculá la fuerza neta (F aplicada − fricción), y después dividí entre la masa.',
       correcta: '6 m/s²', opciones: ['6 m/s²', '8 m/s²', '30 m/s²', '10 m/s²'] }
   ];
-  let _juegoNivelActivo = null;
+  /* ================================================================
+     HOTFIX — sistema de juego unificado: antes se mostraba la lista
+     completa de niveles de una sola vez (visualmente abrumador). Ahora
+     funciona como el examen: una pregunta a la vez, empezando en el
+     primer nivel pendiente, avanzando automáticamente al acertar.
+     ================================================================ */
+  let _juegoIdx = null; // null = aún no calculado el punto de partida
   let _juegoOpcionesMezcladas = [];
   let _juegoFeedback = null;
   function renderJuego(unit, uData) {
     const nivelesHechos = uData.gameLevels || [];
-    if (_juegoNivelActivo) {
-      const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+    if (_juegoIdx === null) {
+      const primerPendiente = NIVELES_JUEGO.findIndex(n => !nivelesHechos.includes(n.id));
+      _juegoIdx = primerPendiente === -1 ? NIVELES_JUEGO.length : primerPendiente;
+    }
+    if (_juegoIdx >= NIVELES_JUEGO.length) {
       return `
-        <div class="juego-panel">
-          <button class="btn btn-ghost btn-sm" data-juego-volver style="margin-bottom:.8rem">← Volver a los niveles</button>
-          <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
-          <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${n.pregunta}</p>
-          <div style="display:grid;gap:.5rem">
-            ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
-          </div>
-          ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
+        <div class="juego-panel" style="text-align:center">
+          <h3>✅ ¡Completaste los ${NIVELES_JUEGO.length} niveles!</h3>
+          <p style="color:var(--text-secondary);font-size:.85rem">Ya resolviste todo el juego de esta unidad.</p>
         </div>`;
     }
+    const n = NIVELES_JUEGO[_juegoIdx];
+    if (!_juegoOpcionesMezcladas.length) _juegoOpcionesMezcladas = _mezclar(n.opciones);
     return `
       <div class="juego-panel">
-        <h3>⚙️ Misión: Ingeniero de Fuerzas</h3>
-        <p style="color:var(--text-secondary);font-size:.85rem">Varios sistemas de MQC fallaron por una mala interpretación de las fuerzas — resolvé cada uno.</p>
-        <div style="display:grid;gap:.8rem;margin-top:1rem">
-          ${NIVELES_JUEGO.map((n, i) => `
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem">
-              <p style="margin:0 0 .4rem"><strong>Nivel ${i + 1}:</strong> ${n.escenario}</p>
-              ${nivelesHechos.includes(n.id) ? `<p style="color:var(--green);font-size:.85rem;margin-top:.4rem">✅ ${n.correcta}</p>` : `<button class="btn btn-primary btn-sm" data-nivel="${n.id}">Resolver</button>`}
-            </div>
-          `).join('')}
+        <h3 style="margin:0 0 .3rem">⚙️ Ingeniero de Fuerzas</h3>
+        <p style="color:var(--text-muted);font-size:.78rem;margin-bottom:.8rem">Nivel ${_juegoIdx + 1} de ${NIVELES_JUEGO.length}</p>
+        <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
+        <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${n.pregunta}</p>
+        <div style="display:grid;gap:.5rem">
+          ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
         </div>
+        ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
       </div>`;
   }
   function bindJuego(unit, uData) {
-    document.querySelectorAll('[data-nivel]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        _juegoNivelActivo = btn.getAttribute('data-nivel');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
-        _juegoOpcionesMezcladas = _mezclar(n.opciones);
-        _juegoFeedback = null;
-        _rerenderJuego(unit);
-      });
-    });
-    const volver = document.querySelector('[data-juego-volver]');
-    if (volver) volver.addEventListener('click', () => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); });
     document.querySelectorAll('[data-juego-opcion]').forEach(btn => {
       btn.addEventListener('click', () => {
         const elegida = btn.getAttribute('data-juego-opcion');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+        const n = NIVELES_JUEGO[_juegoIdx];
         const acierto = elegida === n.correcta;
         if (acierto) {
           const u = loadUnitData();
@@ -559,7 +559,7 @@
           patchUnit({ gameLevels: done, gameScore: done.length });
           if (!yaResuelto) awardXP(done.length >= NIVELES_JUEGO.length ? 'game-won' : 'game-played');
           _juegoFeedback = { texto: `✅ ¡Correcto! ${n.correcta}`, correcto: true };
-          setTimeout(() => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); }, 1600);
+          setTimeout(() => { _juegoIdx++; _juegoOpcionesMezcladas = []; _juegoFeedback = null; _rerenderJuego(unit); }, 1600);
         } else {
           _juegoFeedback = { texto: '💡 No es esa. Volvé a leer la pista y probá otra opción.', correcto: false };
         }
@@ -717,7 +717,7 @@
     return `
       <div style="max-width:600px">
         <h3>🔧 Misión: Investigar el Sistema ${_misionFase === 2 ? '— Fase 2 (masa duplicada)' : ''}</h3>
-        <p style="color:var(--text-secondary)">Una caja de m = ${datos.m} kg es empujada con F = ${datos.F} N sobre una superficie horizontal con μ = ${datos.mu} (g = 9,8 m/s²).</p>
+        <p style="color:var(--text-secondary)">Una caja de m = ${datos.m} kg es empujada con Fx = ${datos.F} N sobre una superficie horizontal con μ = ${_fmtMu(datos.mu)} (g = 9,8 m/s²).</p>
         <label style="display:block;font-size:.82rem;color:var(--text-secondary);margin:.7rem 0">A. Peso (P):
           <input type="number" id="mision-peso" value="${_misionVals.peso}" placeholder="N" style="width:100%;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;color:var(--text-primary);padding:.5rem;margin-top:.2rem"></label>
         <label style="display:block;font-size:.82rem;color:var(--text-secondary);margin-bottom:.6rem">B. Normal (N):

@@ -257,7 +257,7 @@
         <button class="btn btn-ghost btn-sm" data-sim-cerrar="sim1" style="margin-bottom:.6rem">← Volver a Simuladores</button>
         <button class="btn btn-ghost btn-sm" id="el-ir-explora" style="margin-bottom:.6rem;margin-left:.4rem">← Modo Explora</button>
         <p style="color:var(--text-muted);font-size:.78rem">Ronda ${_elDesafioIdx + 1} de ${EL_RONDAS.length}</p>
-        <p style="margin-bottom:.6rem">Una pelota de m = ${r.m} kg cae desde h₀ = ${r.h0} m. En este instante está a ${r.hActual} m de altura.</p>
+        <p style="margin-bottom:.6rem">Una pelota de m = ${r.m} kg cae desde h₀ = ${r.h0} m. En el instante que se encuentra a ${r.hActual} m de altura...</p>
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.7rem 1rem;font-family:var(--font-code);font-size:.85rem;margin-bottom:.8rem">
           Em = m·g·h₀ &nbsp;|&nbsp; Ep = m·g·h &nbsp;|&nbsp; Ec = Em − Ep
         </div>
@@ -301,9 +301,14 @@
   /* ================================================================
      SIMULADOR 3 — "Power Lab MQC": P=W/t, proporcionalidad
      ================================================================ */
+  /* HOTFIX: se diversificaron las rondas — antes 3 de las 4 eran el
+     mismo patrón (mismo trabajo, comparar tiempo). Ahora cada ronda
+     evalúa un caso distinto. */
   const PL_RONDAS = [
-    { wA: 1000, tA: 2, wB: 1000, tB: 4 }, { wA: 500, tA: 5, wB: 1500, tB: 5 },
-    { wA: 2000, tA: 8, wB: 2000, tB: 4 }, { wA: 800, tA: 2, wB: 800, tB: 1 }
+    { wA: 1000, tA: 2, wB: 1000, tB: 4 }, // mismo trabajo, distinto tiempo
+    { wA: 500, tA: 5, wB: 1500, tB: 5 },  // mismo tiempo, distinto trabajo
+    { wA: 900, tA: 3, wB: 600, tB: 2 },   // distinto trabajo Y tiempo, potencias iguales (300W=300W)
+    { wA: 1500, tA: 5, wB: 800, tB: 2 }   // distinto trabajo Y tiempo, potencias distintas (300W vs 400W)
   ];
   let _plIdx = 0;
   function renderSim3() {
@@ -445,55 +450,42 @@
       pregunta: '¿Qué le pasa a su energía mecánica total durante todo el recorrido?', pista: 'Pensá en la Ley de Conservación de la Energía Mecánica.',
       correcta: 'Permanece constante en todo momento', opciones: ['Permanece constante en todo momento', 'Aumenta constantemente', 'Disminuye constantemente', 'Es cero en todo el recorrido'] }
   ];
-  let _juegoNivelActivo = null;
+    let _juegoIdx = null; // null = aún no calculado el punto de partida
   let _juegoOpcionesMezcladas = [];
   let _juegoFeedback = null;
   function renderJuego(unit, uData) {
     const nivelesHechos = uData.gameLevels || [];
-    if (_juegoNivelActivo) {
-      const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+    if (_juegoIdx === null) {
+      const primerPendiente = NIVELES_JUEGO.findIndex(n => !nivelesHechos.includes(n.id));
+      _juegoIdx = primerPendiente === -1 ? NIVELES_JUEGO.length : primerPendiente;
+    }
+    if (_juegoIdx >= NIVELES_JUEGO.length) {
       return `
-        <div class="juego-panel">
-          <button class="btn btn-ghost btn-sm" data-juego-volver style="margin-bottom:.8rem">← Volver a los niveles</button>
-          <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
-          <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${n.pregunta}</p>
-          <div style="display:grid;gap:.5rem">
-            ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
-          </div>
-          ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
+        <div class="juego-panel" style="text-align:center">
+          <h3>✅ ¡Completaste los ${NIVELES_JUEGO.length} niveles!</h3>
+          <p style="color:var(--text-secondary);font-size:.85rem">Ya resolviste todo el juego de esta unidad.</p>
         </div>`;
     }
+    const n = NIVELES_JUEGO[_juegoIdx];
+    if (!_juegoOpcionesMezcladas.length) _juegoOpcionesMezcladas = _mezclar(n.opciones);
     return `
       <div class="juego-panel">
-        <h3>⚡ Misión: Ingeniero de Energía</h3>
-        <p style="color:var(--text-secondary);font-size:.85rem">MQC necesita auditar sistemas de trabajo y energía — resolvé cada nivel.</p>
-        <div style="display:grid;gap:.8rem;margin-top:1rem">
-          ${NIVELES_JUEGO.map((n, i) => `
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:1rem">
-              <p style="margin:0 0 .4rem"><strong>Nivel ${i + 1}:</strong> ${n.escenario}</p>
-              ${nivelesHechos.includes(n.id) ? `<p style="color:var(--green);font-size:.85rem;margin-top:.4rem">✅ ${n.correcta}</p>` : `<button class="btn btn-primary btn-sm" data-nivel="${n.id}">Resolver</button>`}
-            </div>
-          `).join('')}
+        <h3 style="margin:0 0 .3rem">⚡ Ingeniero de Energía</h3>
+        <p style="color:var(--text-muted);font-size:.78rem;margin-bottom:.8rem">Nivel ${_juegoIdx + 1} de ${NIVELES_JUEGO.length}</p>
+        <p style="margin:0 0 .3rem"><strong>${n.escenario}</strong></p>
+        <p style="color:var(--text-muted);font-size:.82rem;margin-bottom:1rem">💡 ${n.pista}</p>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.6rem">${n.pregunta}</p>
+        <div style="display:grid;gap:.5rem">
+          ${_juegoOpcionesMezcladas.map(op => `<button class="btn btn-ghost" data-juego-opcion="${op}">${op}</button>`).join('')}
         </div>
+        ${_juegoFeedback ? `<p style="margin-top:.9rem;font-size:.85rem;color:${_juegoFeedback.correcto ? 'var(--green)' : 'var(--gold)'}">${_juegoFeedback.texto}</p>` : ''}
       </div>`;
   }
   function bindJuego(unit, uData) {
-    document.querySelectorAll('[data-nivel]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        _juegoNivelActivo = btn.getAttribute('data-nivel');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
-        _juegoOpcionesMezcladas = _mezclar(n.opciones);
-        _juegoFeedback = null;
-        _rerenderJuego(unit);
-      });
-    });
-    const volver = document.querySelector('[data-juego-volver]');
-    if (volver) volver.addEventListener('click', () => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); });
     document.querySelectorAll('[data-juego-opcion]').forEach(btn => {
       btn.addEventListener('click', () => {
         const elegida = btn.getAttribute('data-juego-opcion');
-        const n = NIVELES_JUEGO.find(x => x.id === _juegoNivelActivo);
+        const n = NIVELES_JUEGO[_juegoIdx];
         const acierto = elegida === n.correcta;
         if (acierto) {
           const u = loadUnitData();
@@ -503,7 +495,7 @@
           patchUnit({ gameLevels: done, gameScore: done.length });
           if (!yaResuelto) awardXP(done.length >= NIVELES_JUEGO.length ? 'game-won' : 'game-played');
           _juegoFeedback = { texto: `✅ ¡Correcto! ${n.correcta}`, correcto: true };
-          setTimeout(() => { _juegoNivelActivo = null; _juegoFeedback = null; _rerenderJuego(unit); }, 1600);
+          setTimeout(() => { _juegoIdx++; _juegoOpcionesMezcladas = []; _juegoFeedback = null; _rerenderJuego(unit); }, 1600);
         } else {
           _juegoFeedback = { texto: '💡 No es esa. Volvé a leer la pista y probá otra opción.', correcto: false };
         }
