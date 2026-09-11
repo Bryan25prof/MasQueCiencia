@@ -233,6 +233,18 @@ const Gamification = (() => {
       desc: 'Completaste FIX11-U01 — Hidrostática'
     },
     {
+      id:   'maestro-electrostatica',
+      name: 'Maestro de la Electrostática',
+      icon: '🔋',
+      desc: 'Completaste FIX11-U02 — Electrostática'
+    },
+    {
+      id:   'maestro-electricidad',
+      name: 'Maestro de la Electricidad',
+      icon: '🔌',
+      desc: 'Completaste FIX11-U03 — Electricidad'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -757,6 +769,40 @@ const Gamification = (() => {
         const missionDoneG1 = !!ug1.missionDone;
         if (allTopicsG1 && allSimsG1 && gamePlayedG1 && examPassedG1 && missionDoneG1) {
           newBadges.push('maestro-hidrostatica');
+        }
+      }
+    }
+
+    /* RUTA DE CIERRE — FIX11-U02 — 'maestro-electrostatica': mismo
+       principio anti-farming exacto que las anteriores. */
+    if (typeof FISICA11_UNIDADES_DATA !== 'undefined' && data.fisica11 && !data.badges.includes('maestro-electrostatica')) {
+      const ug2 = data.fisica11['fix11-u02'];
+      const metag2 = FISICA11_UNIDADES_DATA.find(x => x.id === 'fix11-u02');
+      if (ug2 && metag2) {
+        const allTopicsG2 = (ug2.topicsRead || []).length >= (metag2.topics || []).length;
+        const allSimsG2 = (ug2.simsDone || []).length >= (metag2.simulators || []).length;
+        const gamePlayedG2 = (ug2.gameScore || 0) > 0;
+        const examPassedG2 = (ug2.examBest || 0) >= (metag2.exam && metag2.exam.pass || 70);
+        const missionDoneG2 = !!ug2.missionDone;
+        if (allTopicsG2 && allSimsG2 && gamePlayedG2 && examPassedG2 && missionDoneG2) {
+          newBadges.push('maestro-electrostatica');
+        }
+      }
+    }
+
+    /* RUTA DE CIERRE — FIX11-U03 — 'maestro-electricidad': mismo
+       principio anti-farming exacto que las anteriores. */
+    if (typeof FISICA11_UNIDADES_DATA !== 'undefined' && data.fisica11 && !data.badges.includes('maestro-electricidad')) {
+      const ug3 = data.fisica11['fix11-u03'];
+      const metag3 = FISICA11_UNIDADES_DATA.find(x => x.id === 'fix11-u03');
+      if (ug3 && metag3) {
+        const allTopicsG3 = (ug3.topicsRead || []).length >= (metag3.topics || []).length;
+        const allSimsG3 = (ug3.simsDone || []).length >= (metag3.simulators || []).length;
+        const gamePlayedG3 = (ug3.gameScore || 0) > 0;
+        const examPassedG3 = (ug3.examBest || 0) >= (metag3.exam && metag3.exam.pass || 70);
+        const missionDoneG3 = !!ug3.missionDone;
+        if (allTopicsG3 && allSimsG3 && gamePlayedG3 && examPassedG3 && missionDoneG3) {
+          newBadges.push('maestro-electricidad');
         }
       }
     }
