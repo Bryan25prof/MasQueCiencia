@@ -251,6 +251,18 @@ const Gamification = (() => {
       desc: 'Completaste FIX11-U04 — Magnetismo y electromagnetismo'
     },
     {
+      id:   'maestro-ondulatorio',
+      name: 'Maestro del Movimiento Ondulatorio',
+      icon: '🌐',
+      desc: 'Completaste FIX11-U05 — Movimiento ondulatorio'
+    },
+    {
+      id:   'maestro-relatividad',
+      name: 'Maestro de la Relatividad',
+      icon: '🌀',
+      desc: 'Completaste FIX11-U06 — Teoría de la Relatividad'
+    },
+    {
       id:   'xp-1000',
       name: '¡1000 XP!',
       icon: '⭐',
@@ -826,6 +838,40 @@ const Gamification = (() => {
         const missionDoneG4 = !!ug4.missionDone;
         if (allTopicsG4 && allSimsG4 && gamePlayedG4 && examPassedG4 && missionDoneG4) {
           newBadges.push('maestro-magnetismo');
+        }
+      }
+    }
+
+    /* RUTA DE CIERRE — FIX11-U05 — 'maestro-ondulatorio': mismo
+       principio anti-farming exacto que las anteriores. */
+    if (typeof FISICA11_UNIDADES_DATA !== 'undefined' && data.fisica11 && !data.badges.includes('maestro-ondulatorio')) {
+      const ug5 = data.fisica11['fix11-u05'];
+      const metag5 = FISICA11_UNIDADES_DATA.find(x => x.id === 'fix11-u05');
+      if (ug5 && metag5) {
+        const allTopicsG5 = (ug5.topicsRead || []).length >= (metag5.topics || []).length;
+        const allSimsG5 = (ug5.simsDone || []).length >= (metag5.simulators || []).length;
+        const gamePlayedG5 = (ug5.gameScore || 0) > 0;
+        const examPassedG5 = (ug5.examBest || 0) >= (metag5.exam && metag5.exam.pass || 70);
+        const missionDoneG5 = !!ug5.missionDone;
+        if (allTopicsG5 && allSimsG5 && gamePlayedG5 && examPassedG5 && missionDoneG5) {
+          newBadges.push('maestro-ondulatorio');
+        }
+      }
+    }
+
+    /* RUTA DE CIERRE — FIX11-U06 — 'maestro-relatividad': mismo
+       principio anti-farming exacto que las anteriores. */
+    if (typeof FISICA11_UNIDADES_DATA !== 'undefined' && data.fisica11 && !data.badges.includes('maestro-relatividad')) {
+      const ug6 = data.fisica11['fix11-u06'];
+      const metag6 = FISICA11_UNIDADES_DATA.find(x => x.id === 'fix11-u06');
+      if (ug6 && metag6) {
+        const allTopicsG6 = (ug6.topicsRead || []).length >= (metag6.topics || []).length;
+        const allSimsG6 = (ug6.simsDone || []).length >= (metag6.simulators || []).length;
+        const gamePlayedG6 = (ug6.gameScore || 0) > 0;
+        const examPassedG6 = (ug6.examBest || 0) >= (metag6.exam && metag6.exam.pass || 70);
+        const missionDoneG6 = !!ug6.missionDone;
+        if (allTopicsG6 && allSimsG6 && gamePlayedG6 && examPassedG6 && missionDoneG6) {
+          newBadges.push('maestro-relatividad');
         }
       }
     }
