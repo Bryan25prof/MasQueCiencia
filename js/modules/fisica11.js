@@ -68,7 +68,16 @@ const FISICA11_UNIDADES_DATA = [
     game: { levels: 7 },
     exam: { perExam: 20, pass: 70 }
   },
-  { id: 'fix11-u06', num: 6, status: 'development', icon: '🌀', color: 'var(--violet)', title: 'Teoría de la Relatividad', description: 'En desarrollo — próxima actualización.', topics: [], simulators: [] }
+  { id: 'fix11-u06', num: 6, status: 'active',
+    icon: '🌀', color: 'var(--violet)',
+    title: 'Teoría de la Relatividad',
+    subtitle: null,
+    description: 'Los postulados de la Teoría Especial de la Relatividad de Einstein, y sus fórmulas básicas: dilatación del tiempo, contracción de la longitud, aumento de la masa y la equivalencia masa-energía (E=mc²).',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 7 },
+    exam: { perExam: 20, pass: 70 }
+  }
 ];
 
 /* ================================================================
