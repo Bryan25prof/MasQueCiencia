@@ -88,7 +88,7 @@ const FISICA11_UNIDADES_DATA = [
    normal. Para vista previa: ?fisica11preview=1 (una vez, queda
    guardado en ese navegador). Para publicar a todos: cambiar esta
    línea a "true". */
-const FISICA11_PUBLICO = false;
+const FISICA11_PUBLICO = true; /* LIBERADO A PRODUCCIÓN — 14 de setiembre de 2026 */
 const FISICA11_PREVIEW_KEY = 'mqc_fisica11_preview';
 try {
   const params = new URLSearchParams(window.location.search);
@@ -115,6 +115,7 @@ Router.register('fisica11', (() => {
   ];
 
   function _renderGrid() {
+    const data = Storage.load();
     const cards = FISICA11_UNIDADES_DATA.map(u => {
       if (u.status === 'active') {
         const pct = Storage.getFisica11UnitProgress(u.id);
@@ -153,8 +154,26 @@ Router.register('fisica11', (() => {
       <p style="color:var(--text-secondary);margin-bottom:1.5rem;max-width:60ch">
         Física 11.° está en desarrollo progresivo. Explorá las unidades disponibles y continuá construyendo tu dominio de la Física.
       </p>
-      <div class="units-grid">${cards}</div>
+      <div class="units-grid">${cards}${_renderSufCard(data)}</div>
     `;
+  }
+
+  /* AUDITORÍA FASE 2 — Finales/Suficiencia: misma tarjeta sin candado
+     que los demás cursos — no otorga XP ni desbloquea nada. */
+  function _renderSufCard(data) {
+    const sufData = (data.suficiencia && data.suficiencia.fix11) || {};
+    return `
+      <div class="unit-card" style="--unit-color:#5CF2A8" data-action="open-suficiencia-fix11">
+        <div class="unit-badge" style="color:${sufData.acreditado ? 'var(--green)' : 'var(--text-muted)'};border-color:${sufData.acreditado ? 'rgba(92,242,168,.3)' : 'var(--border)'}">
+          ${sufData.acreditado ? '🏅 Acreditado' : '✓ Disponible'}
+        </div>
+        <div class="unit-number">SUFICIENCIA</div>
+        <div class="unit-symbol">🏅</div>
+        <div class="unit-name">Examen de Suficiencia<br><span style="font-weight:400;color:var(--text-muted);font-size:.85em">Física 11.º</span></div>
+        <div class="unit-meta">
+          <span class="unit-meta-item unit-meta-item-clamp">${sufData.attempts ? `${sufData.attempts} intento${sufData.attempts !== 1 ? 's' : ''} · mejor: ${sufData.bestScore}/100` : 'Demostrá dominio del curso completo'}</span>
+        </div>
+      </div>`;
   }
 
   function _renderInfo(unitId) {
@@ -256,6 +275,11 @@ Router.register('fisica11', (() => {
     if (back2) back2.addEventListener('click', () => { _infoUnitId = null; _currentUnitId = null; _rerender(); });
     document.querySelectorAll('[data-action="open-fisica11-info"]').forEach(el => {
       el.addEventListener('click', () => { _infoUnitId = el.getAttribute('data-unit'); _rerender(); });
+    });
+    document.querySelectorAll('[data-action="open-suficiencia-fix11"]').forEach(el => {
+      el.addEventListener('click', () => {
+        if (typeof Router !== 'undefined' && Router.navigate) Router.navigate('suficiencia', { curso: 'fix11' });
+      });
     });
     document.querySelectorAll('[data-action="open-fisica11-unit"]').forEach(el => {
       el.addEventListener('click', () => {

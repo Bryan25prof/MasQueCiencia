@@ -112,6 +112,25 @@ Router.register('units', (() => {
       </div>
     `;
 
+    /* AUDITORÍA FASE 2 — Finales/Suficiencia: tarjeta adicional, sin
+       candado (a diferencia del Desafío Final PNE de arriba) — es una
+       vía alterna de acreditar dominio, no depende de haber avanzado
+       en las 9 unidades. Aprobar NO otorga XP ni desbloquea nada. */
+    const sufData = (data.suficiencia && data.suficiencia.q10) || {};
+    const sufCard = `
+      <div class="unit-card" style="--unit-color:#5CF2A8" data-action="open-suficiencia-q10">
+        <div class="unit-badge" style="color:${sufData.acreditado ? 'var(--green)' : 'var(--text-muted)'};border-color:${sufData.acreditado ? 'rgba(92,242,168,.3)' : 'var(--border)'}">
+          ${sufData.acreditado ? '🏅 Acreditado' : '✓ Disponible'}
+        </div>
+        <div class="unit-number">SUFICIENCIA</div>
+        <div class="unit-symbol">🏅</div>
+        <div class="unit-name">Examen de Suficiencia<br><span style="font-weight:400;color:var(--text-muted);font-size:.85em">Química 10.º</span></div>
+        <div class="unit-meta">
+          <span class="unit-meta-item unit-meta-item-clamp">${sufData.attempts ? `${sufData.attempts} intento${sufData.attempts !== 1 ? 's' : ''} · mejor: ${sufData.bestScore}/100` : 'Demostrá dominio del curso completo'}</span>
+        </div>
+      </div>
+    `;
+
     return `
       <div class="units-page">
         <div class="section-header">
@@ -122,7 +141,7 @@ Router.register('units', (() => {
           El programa de Química Décimo Año consta de <strong>9 unidades</strong>
           con teoría, simuladores, juegos y exámenes. Selecciona una unidad para comenzar.
         </p>
-        <div class="units-grid">${cards}${pneCard}</div>
+        <div class="units-grid">${cards}${pneCard}${sufCard}</div>
       </div>
     `;
   }
@@ -356,6 +375,11 @@ Router.register('units', (() => {
     document.querySelectorAll('[data-action="locked-pne"]').forEach(el => {
       el.addEventListener('click', () => {
         _localToast('🔒', 'Desafío bloqueado', 'Aprueba los exámenes de al menos 5 de las 9 unidades para desbloquearlo.');
+      });
+    });
+    document.querySelectorAll('[data-action="open-suficiencia-q10"]').forEach(el => {
+      el.addEventListener('click', () => {
+        if (typeof Router !== 'undefined' && Router.navigate) Router.navigate('suficiencia', { curso: 'q10' });
       });
     });
     document.querySelectorAll('[data-action="open-unit"]').forEach(el => {

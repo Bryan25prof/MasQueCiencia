@@ -83,12 +83,30 @@ Router.register('grade11', (() => {
       </div>`;
     }).join('');
 
+    /* AUDITORÍA FASE 2 — Finales/Suficiencia: mismo patrón exacto que
+       units.js (Química 10.º) — tarjeta adicional sin candado, no
+       otorga XP ni desbloquea nada. */
+    const sufData = (data.suficiencia && data.suficiencia.q11) || {};
+    const sufCard = `
+      <div class="unit-card" style="--unit-color:#5CF2A8" data-action="open-suficiencia-q11">
+        <div class="unit-badge" style="color:${sufData.acreditado ? 'var(--green)' : 'var(--text-muted)'};border-color:${sufData.acreditado ? 'rgba(92,242,168,.3)' : 'var(--border)'}">
+          ${sufData.acreditado ? '🏅 Acreditado' : '✓ Disponible'}
+        </div>
+        <div class="unit-number">SUFICIENCIA</div>
+        <div class="unit-symbol">🏅</div>
+        <div class="unit-name">Examen de Suficiencia<br><span style="font-weight:400;color:var(--text-muted);font-size:.85em">Química 11.º</span></div>
+        <div class="unit-meta">
+          <span class="unit-meta-item unit-meta-item-clamp">${sufData.attempts ? `${sufData.attempts} intento${sufData.attempts !== 1 ? 's' : ''} · mejor: ${sufData.bestScore}/100` : 'Demostrá dominio del curso completo'}</span>
+        </div>
+      </div>
+    `;
+
     return `
       <div class="section-header"><p class="section-title">Undécimo Año</p><h2 class="section-heading">🎓 Química 11.º</h2></div>
       <p style="color:var(--text-secondary);margin-bottom:1.5rem;max-width:60ch">
         Tu acceso ya está preparado. Las experiencias de este nivel se irán incorporando gradualmente.
       </p>
-      <div class="units-grid">${cards}</div>
+      <div class="units-grid">${cards}${sufCard}</div>
     `;
   }
 
@@ -194,6 +212,11 @@ Router.register('grade11', (() => {
     if (back2) back2.addEventListener('click', () => { _infoUnitId = null; _currentUnitId = null; _rerender(); });
     document.querySelectorAll('[data-action="open-g11-info"]').forEach(el => {
       el.addEventListener('click', () => { _infoUnitId = el.getAttribute('data-unit'); _rerender(); });
+    });
+    document.querySelectorAll('[data-action="open-suficiencia-q11"]').forEach(el => {
+      el.addEventListener('click', () => {
+        if (typeof Router !== 'undefined' && Router.navigate) Router.navigate('suficiencia', { curso: 'q11' });
+      });
     });
     document.querySelectorAll('[data-action="open-g11-unit"]').forEach(el => {
       el.addEventListener('click', () => {
