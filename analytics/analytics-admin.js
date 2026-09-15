@@ -24,6 +24,7 @@
   let _ordenSeguimiento = { campo: 'alias', asc: true };
   let _ordenSeccion = { campo: 'grupo', asc: true };
   let _ordenItems = { campo: 'pct_error', asc: false };
+  let _fusionCache = null; // { candidatos, fusionados } | null — "Candidatos de Fusión" (fragmentación de profileId)
 
   const root = () => document.getElementById('mqc-an-root');
 
@@ -110,17 +111,7 @@
      aparte (no en el Promise.all principal) porque solo hace falta
      al abrir esa pestaña específica. */
   async function _cargarColegiosLegacy() {
-    // CORRECCIÓN: antes consultaba la tabla `students` cruda (que
-    // guarda una fila por cada evento, no una por perfil, y cuyo
-    // school_id nunca se actualiza después de "Unificar" — por diseño,
-    // esa tabla es de solo inserción). Eso hacía que un mismo perfil
-    // apareciera contado varias veces, y que un colegio ya unificado
-    // siguiera apareciendo en la lista para siempre. La vista
-    // v_students_latest sí tiene una fila por perfil (la más
-    // reciente) y sí refleja school_id_efectivo (colegio propio O
-    // resuelto por school_alias_map) — por eso hay que consultar esa
-    // vista, no la tabla cruda.
-    return _restGet('v_students_latest?select=colegio&school_id_efectivo=is.null&colegio=not.is.null');
+    return _restGet('students?select=colegio&school_id=is.null&colegio=not.is.null');
   }
 
   /* ================================================================
@@ -196,6 +187,7 @@
           <button class="an-tab" data-tab="resumen">Resumen</button>
           <button class="an-tab" data-tab="panorama">🏫 Panorama Global</button>
           <button class="an-tab" data-tab="colegios">🗂️ Gestión de Colegios</button>
+          <button class="an-tab" data-tab="fusion">🧬 Candidatos de Fusión</button>
           <button class="an-tab" data-tab="seguimiento">Seguimiento académico</button>
           <button class="an-tab" data-tab="pne">PNE 11.º — Analítica</button>
           <button class="an-tab" data-tab="items">Análisis de ítems</button>
@@ -218,6 +210,14 @@
         _cargarColegiosLegacy().then(r => { _colegiosLegacy = r; if (_vista === 'colegios') { cont.innerHTML = _htmlColegios(); _bindColegios(); } });
       } else {
         _bindColegios();
+      }
+    }
+    else if (_vista === 'fusion') {
+      cont.innerHTML = _htmlFusion();
+      if (_fusionCache === null) {
+        _cargarCandidatosFusion().then(r => { _fusionCache = r; if (_vista === 'fusion') { cont.innerHTML = _htmlFusion(); _bindFusion(); } });
+      } else {
+        _bindFusion();
       }
     }
     else if (_vista === 'seguimiento') { cont.innerHTML = _htmlSeguimiento(); _bindSeguimiento(); }
@@ -311,6 +311,158 @@
           _unificarColegio(nombre, schoolId);
         }
       });
+    });
+  }
+
+  /* ================================================================
+     SECCIÓN: CANDIDATOS DE FUSIÓN (AUDITORÍA FASE 2 — fragmentación
+     de profileId)
+     ================================================================
+     La plataforma es de identidad anónima (sin cuentas): un mismo
+     estudiante real puede terminar con varios profile_id si cambia de
+     dispositivo, borra el navegador o reinstala. Esta pantalla agrupa
+     perfiles ACTIVOS con el mismo alias+grupo+colegio y deja que el
+     admin, a mano, elija cuál es el "principal" y confirme la fusión.
+     NUNCA se fusiona nada automáticamente. La confirmación escribe en
+     student_merge_map (protegida, solo admin) — no borra ni reescribe
+     ningún dato histórico; solo cambia cómo se agrupan los conteos en
+     Panorama Global y Resultados por sección (ver
+     SUPABASE_MIGRATION_fusion_perfiles.sql, profile_id_efectivo()).
+     ================================================================ */
+  async function _cargarCandidatosFusion() {
+    const [candidatos, fusionados] = await Promise.all([
+      _restGet('v_candidatos_fusion?select=*'),
+      _restGet('student_merge_map?select=*&order=created_at.desc')
+    ]);
+    return { candidatos, fusionados };
+  }
+
+  // Agrupa client-side por alias normalizado + grupo + colegio efectivo
+  // (mismo criterio, mismo estilo, que "Gestión de Colegios" — nunca
+  // similitud difusa de texto, solo coincidencia exacta ya normalizada).
+  function _gruposCandidatosFusion() {
+    const mapa = {};
+    (_fusionCache.candidatos || []).forEach(c => {
+      const key = c.alias_normalizado + '||' + (c.grupo || '') + '||' + (c.school_id_efectivo || '');
+      (mapa[key] = mapa[key] || []).push(c);
+    });
+    return Object.keys(mapa).map(k => mapa[k]).filter(g => g.length > 1)
+      .sort((a, b) => b.length - a.length);
+  }
+
+  function _htmlFusion() {
+    if (_fusionCache === null) {
+      return `<div class="an-empty">Buscando posibles perfiles duplicados…</div>`;
+    }
+    const grupos = _gruposCandidatosFusion();
+    const fusionados = _fusionCache.fusionados || [];
+    return `
+      <h2 class="an-section-title">🧬 Candidatos de Fusión</h2>
+      <p class="an-note" style="margin-bottom:1rem">Perfiles ACTIVOS con el mismo nombre, grupo y colegio — probablemente el mismo estudiante con varios dispositivos/reinstalaciones. Elegí cuál es el perfil "principal" en cada grupo antes de fusionar. <strong>Esto nunca borra ni combina el historial de nadie</strong>: solo hace que Panorama Global y los promedios cuenten a ese grupo como una sola persona.</p>
+      ${!grupos.length
+        ? `<div class="an-empty">✅ No se detectaron perfiles duplicados activos por ahora.</div>`
+        : grupos.map((g, i) => _htmlGrupoFusion(g, i)).join('')}
+      ${fusionados.length ? `
+        <h3 class="an-section-title" style="margin-top:2rem">Fusiones ya confirmadas</h3>
+        <div class="an-table-wrap"><table class="an-table">
+          <thead><tr><th>Perfil duplicado</th><th>Fusionado con (principal)</th><th>Fecha</th><th></th></tr></thead>
+          <tbody>${fusionados.map(f => `
+            <tr>
+              <td>${_esc(f.alias_duplicado || f.profile_id_duplicado)}</td>
+              <td>${_esc(f.alias_canonico || f.profile_id_canonico)}</td>
+              <td>${new Date(f.created_at).toLocaleDateString('es-CR')}</td>
+              <td><button class="btn btn-ghost btn-sm" data-deshacer-fusion="${_esc(f.profile_id_duplicado)}">↺ Deshacer</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>` : ''}`;
+  }
+
+  function _htmlGrupoFusion(grupo, idx) {
+    return `
+      <div class="an-table-wrap" style="margin-bottom:1.2rem">
+      <table class="an-table">
+        <thead><tr>
+          <th>Principal</th><th>Nombre</th><th>Grupo</th><th>Colegio</th><th>Últ. actividad</th><th>Creado</th>
+        </tr></thead>
+        <tbody>${grupo.map((c, j) => `
+          <tr>
+            <td><input type="radio" name="fusion-principal-${idx}" value="${_esc(c.profile_id)}" ${j === 0 ? 'checked' : ''}></td>
+            <td>${_esc(c.alias)}</td>
+            <td>${c.grupo ? _esc(c.grupo) : '—'}</td>
+            <td>${c.school_name_efectivo ? _esc(c.school_name_efectivo) : (c.colegio ? _esc(c.colegio) : '—')}</td>
+            <td>${c.last_seen_at ? new Date(c.last_seen_at).toLocaleDateString('es-CR') : '—'}</td>
+            <td>${c.last_update ? new Date(c.last_update).toLocaleDateString('es-CR') : '—'}</td>
+          </tr>`).join('')}
+        </tbody>
+        <tfoot><tr><td colspan="6" style="text-align:right;padding-top:.6rem">
+          <button class="btn btn-primary btn-sm" data-fusionar-grupo="${idx}">🧬 Fusionar este grupo</button>
+        </td></tr></tfoot>
+      </table>
+      </div>`;
+  }
+
+  async function _confirmarFusion(profileIdCanonico, aliasCanonico, duplicados) {
+    const cfg = _cfg();
+    const url = cfg.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/student_merge_map';
+    await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': cfg.supabaseAnonKey,
+        'Authorization': 'Bearer ' + (_session && _session.access_token || cfg.supabaseAnonKey),
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(duplicados.map(d => ({
+        profile_id_duplicado: d.profile_id,
+        profile_id_canonico: profileIdCanonico,
+        alias_duplicado: d.alias,
+        alias_canonico: aliasCanonico,
+        merged_by: (_session && _session.user && _session.user.id) || null
+      })))
+    });
+    await _refrescarFusion();
+  }
+
+  async function _deshacerFusion(profileIdDuplicado) {
+    const cfg = _cfg();
+    const url = cfg.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/student_merge_map?profile_id_duplicado=eq.' + encodeURIComponent(profileIdDuplicado);
+    await fetch(url, {
+      method: 'DELETE',
+      headers: {
+        'apikey': cfg.supabaseAnonKey,
+        'Authorization': 'Bearer ' + (_session && _session.access_token || cfg.supabaseAnonKey)
+      }
+    });
+    await _refrescarFusion();
+  }
+
+  async function _refrescarFusion() {
+    _fusionCache = await _cargarCandidatosFusion();
+    await _cargarTodosLosDatos(); // refresca Panorama Global/Resultados con los nuevos conteos efectivos
+    if (_vista === 'fusion') {
+      document.getElementById('an-contenido').innerHTML = _htmlFusion();
+      _bindFusion();
+    }
+  }
+
+  function _bindFusion() {
+    document.querySelectorAll('[data-fusionar-grupo]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = btn.getAttribute('data-fusionar-grupo');
+        const grupo = _gruposCandidatosFusion()[idx];
+        if (!grupo) return;
+        const radio = document.querySelector(`input[name="fusion-principal-${idx}"]:checked`);
+        const principalId = radio ? radio.value : grupo[0].profile_id;
+        const principal = grupo.find(c => c.profile_id === principalId) || grupo[0];
+        const duplicados = grupo.filter(c => c.profile_id !== principal.profile_id);
+        if (!duplicados.length) return;
+        if (confirm(`¿Fusionar ${duplicados.length} perfil(es) con "${principal.alias}" como principal? Esto NO borra ni combina el historial de nadie — solo hace que Panorama Global y los promedios cuenten a este grupo como una sola persona. Podés deshacerlo después.`)) {
+          _confirmarFusion(principal.profile_id, principal.alias, duplicados);
+        }
+      });
+    });
+    document.querySelectorAll('[data-deshacer-fusion]').forEach(btn => {
+      btn.addEventListener('click', () => _deshacerFusion(btn.getAttribute('data-deshacer-fusion')));
     });
   }
 
@@ -471,6 +623,22 @@
     return '<span class="an-pill an-pill-green">Activo</span>';
   }
 
+  /* AUDITORÍA FASE 2 — Finales/Suficiencia: badges compactos, uno por
+     curso acreditado (v_seguimiento_academico ya trae los 4 booleanos
+     — ver SUPABASE_MIGRATION_suficiencia.sql). Sin acreditaciones se
+     muestra un guión, igual que las demás columnas vacías del panel. */
+  function _pillsSuficiencia(x) {
+    const cursos = [
+      { key: 'suficiencia_q10', label: 'Q10' },
+      { key: 'suficiencia_q11', label: 'Q11' },
+      { key: 'suficiencia_fix10', label: 'F10' },
+      { key: 'suficiencia_fix11', label: 'F11' }
+    ];
+    const acreditados = cursos.filter(c => x[c.key]);
+    if (!acreditados.length) return '<span class="an-pill an-pill-muted">—</span>';
+    return acreditados.map(c => `<span class="an-pill an-pill-green" title="Suficiencia acreditada">🏅 ${c.label}</span>`).join(' ');
+  }
+
   function _filasHtmlSeguimiento() {
     const filas = _filasSeguimientoFiltradas();
     if (!filas.length) return `<div class="an-empty">Ningún estudiante coincide con estos filtros.</div>`;
@@ -482,6 +650,7 @@
           <th>Estado</th>
           <th data-sort="examenes_10_aprobados">Exámenes 10.º</th><th data-sort="examenes_11_aprobados">Exámenes 11.º</th>
           <th data-sort="pne_aprobada">PNE 11.º</th><th data-sort="pne_mejor_nota">Mejor PNE</th><th data-sort="pne_intentos">Intentos</th>
+          <th>Suficiencia</th>
           <th>Acciones</th>
           ${verEliminados ? '<th>Eliminado</th><th>Profile ID</th>' : ''}
         </tr></thead>
@@ -500,6 +669,7 @@
             <td>${esDocente ? '—' : (x.pne_intentos === 0 ? '<span class="an-pill an-pill-muted">No realizada</span>' : x.pne_aprobada ? '<span class="an-pill an-pill-green">Aprobada</span>' : '<span class="an-pill an-pill-red">No aprobada</span>')}</td>
             <td>${esDocente ? '—' : (x.pne_mejor_nota == null ? '—' : Number(x.pne_mejor_nota).toFixed(1) + '%')}</td>
             <td>${esDocente ? '—' : x.pne_intentos}</td>
+            <td>${esDocente ? '—' : _pillsSuficiencia(x)}</td>
             <td style="display:flex;gap:.35rem;flex-wrap:wrap">
               ${x.archived
                 ? `<button class="btn btn-ghost btn-sm" data-restaurar="${_esc(x.profile_id)}">↺ Restaurar</button>`
