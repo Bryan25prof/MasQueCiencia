@@ -179,7 +179,14 @@ const Storage = (() => {
     settings: {
       reducedMotion: false,
       fontSize:      'normal',
-      _visitedPT:    false    // tabla periódica visitada (XP de primera visita)
+      _visitedPT:    false,   // tabla periódica visitada (XP de primera visita)
+      /* AUDITORÍA FASE 2 — Hallazgo CRÍTICO #2: _exploredEls vivía como un
+         Set en memoria dentro de periodic-table.js, reiniciado en cada
+         destroy() de la sección — permitía recobrar XP del mismo elemento
+         cada vez que se salía y volvía a entrar. Se persiste ahora la
+         lista de números atómicos ya explorados (una sola vez por
+         elemento, para siempre, no "por sesión"). */
+      _exploredElements: []   // números atómicos ya explorados en Tabla Periódica (XP de una sola vez por elemento)
       /*
         ╔═══════════════════════════════════════════════════════╗
         ║  AGREGAR FLAGS DE PRIMERA VISITA AQUÍ:                ║
@@ -279,8 +286,43 @@ const Storage = (() => {
       xpAwardedAt: null,
       submissionCount: 0,     /* cuántas veces se guardó un informe (primera entrega + actualizaciones) */
       lastUpdatedAt: null
+    },
+    /* AUDITORÍA FASE 2 — Finales/Suficiencia. Carril completamente
+       aislado, uno por curso: NUNCA escribe en data.units/data.grade11/
+       data.fisica10/data.fisica11 (progreso de unidades), ni en
+       data.pne (Desafío Final de Química 10.º), ni otorga XP. El
+       ÚNICO efecto de aprobar es `acreditado:true` en el curso
+       correspondiente — una credencial visible en el perfil del
+       estudiante y en el panel docente (Seguimiento académico), sin
+       desbloquear ni afectar nada más del sistema (decisión explícita
+       de Bryan, 2026-09-15). "Suficiente para acreditar" = 14/20
+       (70%) en un examen de 20 preguntas estratificado por unidad —
+       ver js/shared/suficiencia-adapter.js. Reintentable sin límite;
+       `acreditado` es "pegajoso" (una vez true, nunca vuelve a false),
+       igual que unit.completed. */
+    suficiencia: {
+      q10:   _emptySuficiencia(),
+      q11:   _emptySuficiencia(),
+      fix10: _emptySuficiencia(),
+      fix11: _emptySuficiencia()
     }
   };
+
+  /* Crea el estado vacío de Suficiencia para un curso (ver
+     data.suficiencia arriba). */
+  function _emptySuficiencia() {
+    return {
+      acreditado: false,
+      acreditadoAt: null,
+      attempts: 0,
+      passCount: 0,
+      failCount: 0,
+      bestScore: 0,
+      lastScore: 0,
+      lastAttemptQuestionIds: [],
+      historial: []   /* { fecha, score, aciertos, total, aprobado } */
+    };
+  }
 
   /* Crea un objeto de unidad vacío */
   function _emptyUnit() {
