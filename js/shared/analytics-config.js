@@ -15,12 +15,12 @@
    Para activarlo: ver README_ANALYTICS_SETUP.md.
 ================================================================ */
 window.MQC_ANALYTICS_CONFIG = {
-  enabled: true,
+  enabled: false,
 
   // Pegar aquí los valores reales desde tu Dashboard de Supabase:
   // Project Settings → API → Project URL / anon public key.
-  supabaseUrl: 'https://ebdyfcgchfdnihutvzuc.supabase.co',
-  supabaseAnonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImViZHlmY2djaGZkbmlodXR2enVjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODc0MTIwMzgsImV4cCI6MjEwMjk4ODAzOH0.UVCHIkkNQ73WjYGxHD3xxW6mSO1QIHKjDF4DgD2I0Fs',
+  supabaseUrl: '',
+  supabaseAnonKey: '',
 
   // Nombre de las tablas remotas (coincide con SUPABASE_SCHEMA.sql).
   tablas: {
@@ -28,7 +28,8 @@ window.MQC_ANALYTICS_CONFIG = {
     unitExamResults: 'unit_exam_results',
     pneAttempts: 'pne_attempts',
     pneAnswers: 'pne_answers',
-    profileDeletions: 'profile_deletions',
-    profileSessions: 'profile_sessions'
+    profileDeletions: 'profile_deletions', /* ver SUPABASE_MIGRATION_profile_deletions.sql */
+    profileSessions: 'profile_sessions', /* ver SUPABASE_MIGRATION_analytics_sprint.sql */
+    suficienciaResultados: 'suficiencia_resultados' /* ver SUPABASE_MIGRATION_suficiencia.sql */
   }
 };

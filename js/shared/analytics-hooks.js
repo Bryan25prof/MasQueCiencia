@@ -209,6 +209,94 @@
   }
 
   /* ================================================================
+     2.b SUFICIENCIA — Fase 2 (Finales/Suficiencia). Mismo enfoque
+     robusto ya usado para el Simulacro PNE arriba: en vez de inferir
+     una "transición", se revisa el CONTENIDO de
+     value.<curso>.historial cada vez que se guarda 'suficiencia' y se
+     envía cualquier intento (identificado por su `fecha`, único por
+     diseño) que todavía no se haya enviado. Un registro local propio
+     de "fechas ya enviadas" evita duplicados ante reintentos, igual
+     que con PNE.
+
+     Se envía SIEMPRE el resumen del intento (score/aciertos/aprobado),
+     y además `acreditado`/`acreditado_at` tal como quedaron en ese
+     mismo guardado — así v_seguimiento_academico puede derivar el
+     estado de acreditación por curso con un simple bool_or(aprobado),
+     sin necesitar una segunda tabla ni un segundo evento separado.
+     ================================================================ */
+  const SUF_ENVIADOS_KEY = 'mqc_analytics_suficiencia_enviados_v1';
+  const SUF_CURSOS = ['q10', 'q11', 'fix10', 'fix11'];
+
+  function _intentosSufYaEnviados() {
+    try { return JSON.parse(localStorage.getItem(SUF_ENVIADOS_KEY) || '[]'); } catch (e) { return []; }
+  }
+  function _marcarIntentoSufEnviado(clave) {
+    try {
+      const lista = _intentosSufYaEnviados();
+      if (lista.indexOf(clave) === -1) {
+        lista.push(clave);
+        localStorage.setItem(SUF_ENVIADOS_KEY, JSON.stringify(lista));
+      }
+    } catch (e) { /* en el peor caso se reintenta la próxima vez — el servidor
+                     descarta duplicados por attempt_id, sin efectos secundarios */ }
+  }
+
+  function _registrarIntentoSuficiencia(curso, registro, profileId) {
+    const attemptId = 'suf_' + profileId + '_' + curso + '_' + registro.fecha;
+    window.AnalyticsQueue.push('suficienciaResultados', {
+      attempt_id: attemptId,
+      profile_id: profileId,
+      curso: curso,
+      score: registro.score,
+      aciertos: registro.aciertos,
+      total: registro.total,
+      aprobado: !!registro.aprobado,
+      fecha: new Date(registro.fecha).toISOString()
+    });
+  }
+
+  (function () {
+    const originalSet = Storage.set;
+    if (typeof originalSet !== 'function') return; // Storage.set ya pudo haber sido envuelto arriba (PNE) — esto envuelve la versión ya envuelta, encadenando ambos comportamientos sin conflicto
+
+    Storage.set = function (key, value) {
+      let entradasNuevas = []; // [{ curso, registro }]
+
+      if (key === 'suficiencia' && value && typeof value === 'object') {
+        try {
+          const yaEnviados = _intentosSufYaEnviados();
+          SUF_CURSOS.forEach(function (curso) {
+            const suf = value[curso];
+            if (!suf || !Array.isArray(suf.historial)) return;
+            suf.historial.forEach(function (registro) {
+              if (!registro || registro.fecha == null) return;
+              const clave = curso + ':' + registro.fecha;
+              if (yaEnviados.indexOf(clave) === -1) entradasNuevas.push({ curso: curso, registro: registro, clave: clave });
+            });
+          });
+        } catch (e) { /* si algo falla al inspeccionar, simplemente no se registra este guardado */ }
+      }
+
+      const resultado = originalSet.call(Storage, key, value); // comportamiento original (encadenado), sin cambios
+
+      if (entradasNuevas.length) {
+        const data = Storage.load();
+        const profileId = data.profileMeta && data.profileMeta.profileId;
+        if (profileId) {
+          entradasNuevas.forEach(function (e) {
+            try {
+              _marcarIntentoSufEnviado(e.clave); // marcar ANTES de enviar: nunca se duplica, aunque falle el envío
+              _registrarIntentoSuficiencia(e.curso, e.registro, profileId);
+            } catch (err) { /* Analytics nunca debe interrumpir la Suficiencia */ }
+          });
+        }
+      }
+
+      return resultado;
+    };
+  })();
+
+  /* ================================================================
      3. SINCRONIZACIÓN INICIAL — perfiles creados ANTES de que existiera
         Analytics (o antes de que se activara)
      ================================================================
@@ -281,8 +369,10 @@
         alias: (meta && meta.alias) || (data.user && data.user.name) || 'Estudiante',
         grupo: (meta && meta.group) || null,
         grado: null, /* MQC es multigrado por perfil; el grado se infiere del lado del panel a partir de las unidades con progreso */
-        colegio: (meta && meta.colegio) || null, /* Colegio/Institución + Docente (nuevo) */
-        rol: (meta && meta.rol) || 'estudiante'
+        colegio: (meta && meta.colegio) || null, /* texto visible — se mantiene por compatibilidad (ver HOTFIX catálogo de colegios) */
+        rol: (meta && meta.rol) || 'estudiante',
+        school_id: (meta && meta.schoolId) || null, /* HOTFIX CATÁLOGO DE COLEGIOS: identificador estable, nunca el texto libre */
+        school_region: (meta && meta.schoolRegion) || null
       });
     } catch (e) { /* no interrumpir la gestión de perfiles */ }
   }
@@ -332,6 +422,23 @@
         });
       }
 
+      // 3.b Intentos de Suficiencia ya presentes en el historial de cada
+      //     curso (perfil con progreso previo a que existiera esta Fase 2).
+      const suficiencia = data.suficiencia;
+      if (suficiencia) {
+        SUF_CURSOS.forEach(function (curso) {
+          const suf = suficiencia[curso];
+          if (!suf || !Array.isArray(suf.historial)) return;
+          suf.historial.forEach(function (registro) {
+            if (!registro || registro.fecha == null) return;
+            const clave = curso + ':' + registro.fecha;
+            if (_intentosSufYaEnviados().indexOf(clave) !== -1) return; // ya enviado
+            _marcarIntentoSufEnviado(clave);
+            _registrarIntentoSuficiencia(curso, registro, profileId);
+          });
+        });
+      }
+
       _marcarComoSincronizado(profileId);
     } catch (e) { /* la sincronización inicial nunca debe interrumpir la carga de la app */ }
   }
@@ -342,8 +449,8 @@
   if (typeof window.MQCProfiles !== 'undefined') {
     const _originalCreate = MQCProfiles.create;
     if (typeof _originalCreate === 'function') {
-      MQCProfiles.create = function (alias, group, avatar, colegio, rol) {
-        const r = _originalCreate.call(MQCProfiles, alias, group, avatar, colegio, rol);
+      MQCProfiles.create = function (alias, group, avatar, colegio, rol, schoolId, schoolRegion) {
+        const r = _originalCreate.call(MQCProfiles, alias, group, avatar, colegio, rol, schoolId, schoolRegion);
         if (r && r.ok) {
           try {
             _registrarPerfilActivo();
@@ -374,6 +481,19 @@
     if (typeof _originalSetColegio === 'function') {
       MQCProfiles.setColegio = function (id, colegio) {
         const r = _originalSetColegio.call(MQCProfiles, id, colegio);
+        if (r && r.ok && MQCProfiles.activeId && MQCProfiles.activeId() === id) {
+          try { _registrarPerfilActivo(); } catch (e) {}
+        }
+        return r;
+      };
+    }
+
+    /* HOTFIX CATÁLOGO DE COLEGIOS: mismo envoltorio, para setEscuela
+       (colegio + school_id + school_region a la vez). */
+    const _originalSetEscuela = MQCProfiles.setEscuela;
+    if (typeof _originalSetEscuela === 'function') {
+      MQCProfiles.setEscuela = function (id, schoolId, schoolName, schoolRegion) {
+        const r = _originalSetEscuela.call(MQCProfiles, id, schoolId, schoolName, schoolRegion);
         if (r && r.ok && MQCProfiles.activeId && MQCProfiles.activeId() === id) {
           try { _registrarPerfilActivo(); } catch (e) {}
         }
@@ -519,7 +639,24 @@
     function _aplicarAlChip(chip) {
       chip.style.borderColor = '#F9FF4D';
       const spans = chip.querySelectorAll('span');
-      if (spans[1]) spans[1].classList.add('mqc-colaborador-holo');
+      if (spans[1] && !chip.querySelector('.mqc-apoyo-chip-label')) {
+        const nameSpan = spans[1];
+        nameSpan.classList.add('mqc-colaborador-holo');
+        // "APOYA" chiquito arriba del nombre, DENTRO del propio chip
+        // (antes era una etiqueta flotante aparte, con su propia
+        // posición fija — eso complicaba el espacio en la esquina
+        // inferior derecha en pantallas de celular, justo donde caen
+        // los botones de navegación del Simulacro PNE).
+        const columna = document.createElement('span');
+        columna.style.cssText = 'display:flex;flex-direction:column;line-height:1.15';
+        const etiqueta = document.createElement('span');
+        etiqueta.className = 'mqc-apoyo-chip-label';
+        etiqueta.textContent = 'APOYA';
+        etiqueta.style.cssText = 'font-size:.55rem;font-weight:800;letter-spacing:.05em;color:#F9FF4D';
+        nameSpan.parentNode.insertBefore(columna, nameSpan);
+        columna.appendChild(etiqueta);
+        columna.appendChild(nameSpan);
+      }
     }
     const chipYaPresente = document.getElementById('mqc-chip');
     if (chipYaPresente) {
