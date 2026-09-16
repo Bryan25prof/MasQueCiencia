@@ -1,61 +1,43 @@
-MQC — FASE 2, LOTE 5: "Motor de examen unificado"
-====================================================
+MQC — FASE 2, LOTE 6: "Bandeja de excepciones de colegios"
+=============================================================
 
 Qué es este paquete
 --------------------
-Todo el código nuevo/modificado del Lote 5 (unificación del motor de
-examen de los 3 "finales": Desafío Final PNE, Simulacro Nacional y
-Suficiencia). Los 27 exámenes de unidad (Química/Física 10.º/11.º) NO
-están en este paquete porque NO se tocaron — decisión de alcance
-explícita, ver MQC_AUDITORIA_FASE2_LOTE5_MOTOR_EXAMEN.md.
+Todo el código modificado del Lote 6 (la pestaña "Gestión de Colegios"
+del panel de Analytics ahora separa los nombres legacy en "resueltos
+automáticamente" / "requieren tu criterio" / "ya confirmados, ocultos",
+en vez de listarlos todos por igual).
 
 Este paquete NO requiere ninguna acción en Supabase. Es un refactor
-100% de JavaScript de cliente.
+100% de JavaScript de cliente — reutiliza la tabla school_alias_map
+que ya existía desde el hotfix de catálogo de colegios.
 
-Archivos incluidos (6), con su ruta EXACTA dentro del repo:
+Archivos incluidos (2), con su ruta EXACTA dentro del repo:
 
-  NUEVO:
-    js/shared/exam-engine.js
-
-  MODIFICADOS:
-    index.html
-    js/shared/simulacro-nacional-adapter.js
-    js/modules/pne-final.js
-    js/shared/suficiencia-adapter.js
-    js/modules/suficiencia.js
+    js/data/catalogo-colegios.js
+    analytics/analytics-admin.js
 
 Cómo subirlo a GitHub
 ----------------------
 1. Descomprimí este .zip en cualquier carpeta temporal. Vas a ver una
    carpeta "MasQueCiencia_Beta_v1.0/" con la misma estructura de
-   subcarpetas que tu repo (js/shared/, js/modules/, etc.).
+   subcarpetas que tu repo.
 
-2. Copiá esos 6 archivos a las mismas rutas dentro de tu copia local
-   del repo, REEMPLAZANDO los que ya existen con ese nombre (index.html,
-   simulacro-nacional-adapter.js, pne-final.js, suficiencia-adapter.js,
-   suficiencia.js) y agregando el único archivo nuevo (exam-engine.js).
+2. Copiá esos 2 archivos a las mismas rutas dentro de tu copia local
+   del repo, REEMPLAZANDO los que ya existen con ese nombre.
 
 3. Confirmá los cambios con git y subilos a GitHub, por ejemplo:
 
-     git add js/shared/exam-engine.js
-     git add js/shared/simulacro-nacional-adapter.js
-     git add js/shared/suficiencia-adapter.js
-     git add js/modules/pne-final.js
-     git add js/modules/suficiencia.js
-     git add index.html
-     git commit -m "Fase 2 Lote 5: unificar motor de examen (PNE Final, Simulacro Nacional, Suficiencia)"
+     git add js/data/catalogo-colegios.js
+     git add analytics/analytics-admin.js
+     git commit -m "Fase 2 Lote 6: bandeja de excepciones de colegios"
      git push
 
 Qué NO hay que hacer
 ----------------------
 - NO hay ningún archivo .sql en este lote — no hay que tocar Supabase
   para nada.
-- NO hay que tocar ningún archivo de js/units/, js/units/grade11/,
-  js/units/fisica10/ ni js/units/fisica11/ — esos 27 exámenes de
-  unidad quedan exactamente como están.
 
-Cualquier duda, todo el detalle técnico y de verificación (pruebas en
-Node.js con los bancos reales + pruebas en Chromium real contra un
-perfil de prueba, verificadas contra un oráculo independiente) está en
-MQC_AUDITORIA_FASE2_LOTE5_MOTOR_EXAMEN.md, que te llega junto con este
-paquete.
+Cualquier duda, todo el detalle técnico y de verificación está en
+MQC_AUDITORIA_FASE2_LOTE6_BANDEJA_COLEGIOS.md, que te llega junto con
+este paquete.
