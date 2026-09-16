@@ -139,15 +139,13 @@ window.SimulacroNacional = (function () {
   }
 
   /** Baraja el ARREGLO de 4 opciones (Fisher–Yates) — 'correcta' sigue
-   *  apuntando al mismo id sin importar la nueva posición visual. */
-  function _shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+   *  apuntando al mismo id sin importar la nueva posición visual.
+   *  AUDITORÍA FASE 2 — "Motor de examen unificado": delegado al motor
+   *  compartido (js/shared/exam-engine.js) en vez de duplicar el mismo
+   *  Fisher–Yates que ya vivía acá, en pne-final.js y en
+   *  suficiencia-adapter.js. Se mantiene el nombre local `_shuffle`
+   *  para no tocar ningún otro punto de este archivo. */
+  function _shuffle(arr) { return ExamEngine.shuffle(arr); }
 
   function _barajarOpciones(itemAdaptado) {
     const clon = Object.assign({}, itemAdaptado);
@@ -174,59 +172,19 @@ window.SimulacroNacional = (function () {
      de 10.º y 11.º (p. ej. "Estructura atómica", "Estequiometría",
      "Disoluciones", "Nomenclatura inorgánica"), agrupar por tema logra
      automáticamente la "representación transversal" pedida — no hace
-     falta una regla aparte ni limitar a las unidades de 11.º. */
-  function _agruparPorTema(items) {
-    const grupos = {};
-    items.forEach(it => {
-      if (!grupos[it.tema]) grupos[it.tema] = [];
-      grupos[it.tema].push(it);
-    });
-    return grupos;
-  }
+     falta una regla aparte ni limitar a las unidades de 11.º.
 
+     AUDITORÍA FASE 2 — "Motor de examen unificado": el round-robin
+     estratificado (agrupar por clave, barajar grupos, tomar 1 de cada
+     uno por vuelta evitando repetir el intento anterior) es idéntico
+     al que también necesitaba Suficiencia (Lote 4) agrupando por
+     unidad en vez de por tema — ahora vive una sola vez en
+     js/shared/exam-engine.js y este archivo solo aporta CUÁL es la
+     clave de agrupación ('tema') y CUÁL es el banco de origen. Mismo
+     resultado exacto que antes, verificado con las mismas pruebas. */
   function _seleccionarCienciaEstratificada(ciencia, cantidad, idsEvitar) {
     const banco = _soloCalificables(_bancoCrudo(ciencia));
-    if (banco.length === 0) return [];
-
-    const evitar = new Set(idsEvitar || []);
-    const frescos = banco.filter(it => !evitar.has(it.id));
-    // Si evitar deja menos de los necesarios, se completa con el banco completo
-    const poolBase = frescos.length >= cantidad ? frescos : banco;
-
-    const grupos = _agruparPorTema(poolBase);
-    let clavesTema = _shuffle(Object.keys(grupos));
-    // Barajar también el contenido de cada grupo para no tomar siempre el mismo primero
-    clavesTema.forEach(k => { grupos[k] = _shuffle(grupos[k]); });
-
-    const seleccion = [];
-    const usados = new Set();
-    let vuelta = 0;
-    // Round-robin entre temas hasta juntar 'cantidad' o agotar el banco
-    while (seleccion.length < cantidad) {
-      let avanceEnVuelta = false;
-      for (let i = 0; i < clavesTema.length && seleccion.length < cantidad; i++) {
-        const grupo = grupos[clavesTema[i]];
-        const candidato = grupo[vuelta];
-        if (candidato && !usados.has(candidato.id)) {
-          seleccion.push(candidato);
-          usados.add(candidato.id);
-          avanceEnVuelta = true;
-        }
-      }
-      vuelta++;
-      if (!avanceEnVuelta) break; // ya no hay más ítems sin repetir en ningún grupo
-    }
-
-    // Si aun así faltan (banco muy pequeño), rellenar con lo que quede del banco completo
-    if (seleccion.length < cantidad) {
-      const resto = _shuffle(banco.filter(it => !usados.has(it.id)));
-      for (let i = 0; i < resto.length && seleccion.length < cantidad; i++) {
-        seleccion.push(resto[i]);
-        usados.add(resto[i].id);
-      }
-    }
-
-    return seleccion;
+    return ExamEngine.seleccionarEstratificado(banco, cantidad, idsEvitar, it => it.tema);
   }
 
   /** Construye un intento completo: 20 Biología + 20 Física + 20 Química,

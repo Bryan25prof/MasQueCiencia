@@ -52,85 +52,26 @@ window.SuficienciaEngine = (function () {
   const ACIERTOS_APROBACION  = 14; // 14/20 = 70%
 
   /* ================================================================
-     1. UTILIDADES GENÉRICAS — mismo algoritmo (barajado Fisher–Yates,
-        agrupación por clave, selección round-robin estratificada) ya
-        usado y probado en js/shared/simulacro-nacional-adapter.js.
-        Se duplica a propósito en vez de importarlo/generalizarlo: es
-        la misma regla del proyecto ya aplicada en Storage
-        (_computePctG11/_computePctFisica10/_computePctFisica11
-        duplican _computePct) — nunca se arriesga el comportamiento ya
-        probado de un curso al tocar el motor de otro.
-     ================================================================ */
-  function _shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
-
-  function _agruparPorUnidad(items) {
-    const grupos = {};
-    items.forEach(it => {
-      const k = it._unidadId;
-      if (!grupos[k]) grupos[k] = [];
-      grupos[k].push(it);
-    });
-    return grupos;
-  }
-
-  /** Round-robin entre unidades hasta juntar `cantidad`, priorizando
-   *  no repetir los ids usados en el intento anterior del mismo perfil. */
+     1. UTILIDADES GENÉRICAS
+     ================================================================
+     AUDITORÍA FASE 2 — "Motor de examen unificado": el barajado
+     Fisher–Yates y la selección round-robin estratificada (agrupar
+     por unidad, evitar repetir el intento anterior) ya no se duplican
+     acá — viven una sola vez en js/shared/exam-engine.js, compartidos
+     con el Simulacro Nacional. El barajado de OPCIONES además pasó a
+     usar el patrón de ID ESTABLE por opción (el mismo que ya usaba el
+     Simulacro PNE): cada opción se etiqueta con un id fijo ANTES de
+     barajar, así que `correcta` nunca necesita "recalcularse" después
+     — apunta siempre al mismo id, sin importar el orden visual. */
   function _seleccionarEstratificado(pool, cantidad, idsEvitar) {
-    if (pool.length === 0) return [];
-    const evitar = new Set(idsEvitar || []);
-    const frescos = pool.filter(it => !evitar.has(it.id));
-    const poolBase = frescos.length >= cantidad ? frescos : pool;
-
-    const grupos = _agruparPorUnidad(poolBase);
-    const claves = _shuffle(Object.keys(grupos));
-    claves.forEach(k => { grupos[k] = _shuffle(grupos[k]); });
-
-    const seleccion = [];
-    const usados = new Set();
-    let vuelta = 0;
-    while (seleccion.length < cantidad) {
-      let avance = false;
-      for (let i = 0; i < claves.length && seleccion.length < cantidad; i++) {
-        const grupo = grupos[claves[i]];
-        const candidato = grupo[vuelta];
-        if (candidato && !usados.has(candidato.id)) {
-          seleccion.push(candidato);
-          usados.add(candidato.id);
-          avance = true;
-        }
-      }
-      vuelta++;
-      if (!avance) break; // ya no hay más ítems sin repetir en ninguna unidad
-    }
-    if (seleccion.length < cantidad) {
-      const resto = _shuffle(pool.filter(it => !usados.has(it.id)));
-      for (let i = 0; i < resto.length && seleccion.length < cantidad; i++) {
-        seleccion.push(resto[i]);
-        usados.add(resto[i].id);
-      }
-    }
-    return seleccion;
+    return ExamEngine.seleccionarEstratificado(pool, cantidad, idsEvitar, it => it._unidadId);
   }
 
   /** Adapta un ítem crudo (cualquiera de los 4 formatos) a la forma
-   *  única que consume la UI: opciones barajadas, `correcta` como
-   *  índice remapeado, explicación normalizada. */
+   *  única que consume la UI: opciones con ID estable, `correcta`
+   *  como ese id (nunca un índice posicional), explicación normalizada. */
   function _adaptarItem(raw) {
-    const n = raw.opciones.length;
-    const orden = _shuffle(Array.from({ length: n }, (_, i) => i));
-    const opciones = orden.map(i => raw.opciones[i]);
-    const correcta = orden.indexOf(raw.correcta);
-    let explicacionesIncorrectas = null;
-    if (Array.isArray(raw.explicacion_incorrectas)) {
-      explicacionesIncorrectas = orden.map(i => raw.explicacion_incorrectas[i] || '');
-    }
+    const { opciones, correcta } = ExamEngine.adaptarOpcionesEstables(raw.opciones, raw.correcta);
     return {
       id: raw.id,
       unidadId: raw._unidadId,
@@ -142,7 +83,11 @@ window.SuficienciaEngine = (function () {
       opciones,
       correcta,
       explicacionCorrecta: raw.explicacion_correcta || raw.explicacion || '',
-      explicacionesIncorrectas
+      /* Alineada al orden ORIGINAL (índice i ↔ id 'optI'), no al orden
+         barajado — hoy la UI de Suficiencia no muestra retroalimentación
+         por opción incorrecta (solo al final, agregada por unidad), así
+         que este campo queda como metadata disponible a futuro. */
+      explicacionesIncorrectas: Array.isArray(raw.explicacion_incorrectas) ? raw.explicacion_incorrectas : null
     };
   }
 
@@ -281,7 +226,7 @@ window.SuficienciaEngine = (function () {
     if (pool.length < CANTIDAD_PREGUNTAS) {
       throw new Error('SuficienciaEngine: banco insuficiente para "' + curso + '" (' + pool.length + '/' + CANTIDAD_PREGUNTAS + ')');
     }
-    const seleccion = _shuffle(_seleccionarEstratificado(pool, CANTIDAD_PREGUNTAS, idsEvitar));
+    const seleccion = ExamEngine.shuffle(_seleccionarEstratificado(pool, CANTIDAD_PREGUNTAS, idsEvitar));
     return seleccion.map((raw, i) => Object.assign(_adaptarItem(raw), { numero: i + 1 }));
   }
 
