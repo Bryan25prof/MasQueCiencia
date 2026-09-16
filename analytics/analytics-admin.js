@@ -114,6 +114,18 @@
     return _restGet('students?select=colegio&school_id=is.null&colegio=not.is.null');
   }
 
+  /* AUDITORÍA FASE 2 — "Bandeja de excepciones de colegios": nombres
+     legacy que un docente YA confirmó unificar en una sesión anterior
+     (escrito en school_alias_map por _unificarColegio más abajo). Se
+     cargan aparte para poder EXCLUIRLOS de la lista — sin esto, un
+     nombre ya resuelto seguiría apareciendo como "pendiente" para
+     siempre, porque la columna students.school_id del perfil original
+     nunca se toca (la unificación vive en la vista, no en la fila). */
+  async function _cargarAliasMapConfirmados() {
+    const filas = await _restGet('school_alias_map?select=alias_normalizado');
+    return new Set(filas.map(f => f.alias_normalizado));
+  }
+
   /* ================================================================
      RENDER — GATE (acceso restringido / login)
      ================================================================ */
@@ -206,8 +218,12 @@
     else if (_vista === 'panorama') cont.innerHTML = _htmlPanorama();
     else if (_vista === 'colegios') {
       cont.innerHTML = _htmlColegios();
-      if (_colegiosLegacy === null) {
-        _cargarColegiosLegacy().then(r => { _colegiosLegacy = r; if (_vista === 'colegios') { cont.innerHTML = _htmlColegios(); _bindColegios(); } });
+      if (_colegiosLegacy === null || _aliasMapConfirmados === null) {
+        Promise.all([_cargarColegiosLegacy(), _cargarAliasMapConfirmados()]).then(([legacy, aliasMap]) => {
+          _colegiosLegacy = legacy;
+          _aliasMapConfirmados = aliasMap;
+          if (_vista === 'colegios') { cont.innerHTML = _htmlColegios(); _bindColegios(); }
+        });
       } else {
         _bindColegios();
       }
@@ -234,44 +250,99 @@
      admin), sin tocar ningún dato académico de los perfiles.
      ================================================================ */
   let _colegiosLegacy = null;
+  let _aliasMapConfirmados = null; // Set de alias_normalizado ya escritos en school_alias_map
 
-  function _htmlColegios() {
-    if (_colegiosLegacy === null) {
-      return `<div class="an-empty">Cargando nombres de colegio pendientes de unificar…</div>`;
-    }
-    if (!_colegiosLegacy.length) {
-      return `<div class="an-empty">✅ No hay colegios legacy pendientes de unificar — todos los perfiles ya tienen un centro educativo del catálogo.</div>`;
-    }
-    // Agrupar client-side por texto de colegio (case/espacios ya
-    // vienen tal cual del estudiante — la unificación real ocurre acá).
+  /* AUDITORÍA FASE 2 — "Bandeja de excepciones de colegios" (hallazgo
+     de MQC_AUDITORIA_INTEGRAL_DIAGNOSTICO.md, sección 10): la pantalla
+     original listaba CADA nombre legacy por igual, sin distinguir los
+     casos ya resolubles automáticamente (alias conocido o coincidencia
+     exacta contra el catálogo) de los genuinamente ambiguos. Ahora se
+     separan en 3 grupos, en este orden de prioridad:
+       1. Ya confirmados en una sesión anterior (school_alias_map) →
+          NO se muestran — ya no están "pendientes".
+       2. Pre-resueltos automáticamente (preResolverSchoolId, sin
+          similitud difusa) → una fila con el colegio ya sugerido y un
+          solo botón "Confirmar" (nunca se escribe sin este clic).
+       3. Genuinamente ambiguos (sin resolución automática) → la tabla
+          de selección manual completa, igual que antes, pero ahora
+          reservada solo para lo que de verdad la necesita. */
+  function _clasificarColegiosLegacy() {
     const conteos = {};
     _colegiosLegacy.forEach(r => {
       const nombre = (r.colegio || '').trim();
       if (!nombre) return;
       conteos[nombre] = (conteos[nombre] || 0) + 1;
     });
-    const filas = Object.keys(conteos).sort((a, b) => conteos[b] - conteos[a]);
+    const yaConfirmados = [];
+    const resueltos = [];
+    const ambiguos = [];
+    Object.keys(conteos).forEach(nombre => {
+      const norm = (typeof normalizarNombreColegio === 'function') ? normalizarNombreColegio(nombre) : nombre.toLowerCase().trim();
+      if (_aliasMapConfirmados && _aliasMapConfirmados.has(norm)) {
+        yaConfirmados.push(nombre);
+        return;
+      }
+      const schoolId = (typeof preResolverSchoolId === 'function') ? preResolverSchoolId(nombre) : null;
+      const colegio = schoolId ? buscarColegioPorId(schoolId) : null;
+      if (colegio) resueltos.push({ nombre, perfiles: conteos[nombre], colegio });
+      else ambiguos.push({ nombre, perfiles: conteos[nombre] });
+    });
+    resueltos.sort((a, b) => b.perfiles - a.perfiles);
+    ambiguos.sort((a, b) => b.perfiles - a.perfiles);
+    return { yaConfirmados, resueltos, ambiguos };
+  }
+
+  function _htmlColegios() {
+    if (_colegiosLegacy === null || _aliasMapConfirmados === null) {
+      return `<div class="an-empty">Cargando nombres de colegio pendientes de unificar…</div>`;
+    }
+    if (!_colegiosLegacy.length) {
+      return `<div class="an-empty">✅ No hay colegios legacy pendientes de unificar — todos los perfiles ya tienen un centro educativo del catálogo.</div>`;
+    }
+    const { yaConfirmados, resueltos, ambiguos } = _clasificarColegiosLegacy();
+    if (!resueltos.length && !ambiguos.length) {
+      return `<div class="an-empty">✅ No hay nombres de colegio pendientes — los ${yaConfirmados.length} nombre(s) legacy que había ya están unificados.</div>`;
+    }
     const catalogo = (typeof CATALOGO_COLEGIOS !== 'undefined' ? CATALOGO_COLEGIOS.slice() : [])
       .sort((a, b) => a.school_name.localeCompare(b.school_name, 'es'));
     return `
       <h2 class="an-section-title">🗂️ Gestión de Colegios</h2>
-      <p class="an-note" style="margin-bottom:1rem">Nombres de colegio escritos antes de que existiera el catálogo. Unificalos con el centro educativo real para que dejen de aparecer separados en Panorama Global.</p>
+      <p class="an-note" style="margin-bottom:1rem">Nombres de colegio escritos antes de que existiera el catálogo. Unificalos con el centro educativo real para que dejen de aparecer separados en Panorama Global.${yaConfirmados.length ? ` (${yaConfirmados.length} nombre(s) ya unificados no se muestran acá.)` : ''}</p>
+
+      ${resueltos.length ? `
+      <h3 class="an-section-title" style="font-size:1rem;margin-top:0">✅ Resueltos automáticamente — confirmá con un clic</h3>
+      <p class="an-note" style="margin-bottom:.6rem">Coinciden, sin ninguna duda (alias ya conocido o el mismo nombre del catálogo con distintas mayúsculas/espacios), con un colegio real. No se escribe nada hasta que confirmés.</p>
+      <div class="an-table-wrap"><table class="an-table">
+        <thead><tr><th>Nombre legacy</th><th>Perfiles</th><th>Colegio sugerido</th><th></th></tr></thead>
+        <tbody>${resueltos.map(r => `
+          <tr>
+            <td>${_esc(r.nombre)}</td>
+            <td>${r.perfiles}</td>
+            <td>${_esc(r.colegio.school_name)}</td>
+            <td><button class="btn btn-primary btn-sm" data-confirmar-btn="${_esc(r.nombre)}" data-confirmar-schoolid="${_esc(r.colegio.school_id)}">Confirmar</button></td>
+          </tr>`).join('')}
+        </tbody>
+      </table></div>` : ''}
+
+      ${ambiguos.length ? `
+      <h3 class="an-section-title" style="font-size:1rem;margin-top:1.2rem">⚠️ Requieren tu criterio</h3>
+      <p class="an-note" style="margin-bottom:.6rem">Sin ninguna coincidencia exacta contra el catálogo — elegí a mano el colegio real.</p>
       <div class="an-table-wrap"><table class="an-table">
         <thead><tr><th>Nombre legacy</th><th>Perfiles</th><th>Unificar con →</th></tr></thead>
-        <tbody>${filas.map(nombre => `
+        <tbody>${ambiguos.map(a => `
           <tr>
-            <td>${_esc(nombre)}</td>
-            <td>${conteos[nombre]}</td>
+            <td>${_esc(a.nombre)}</td>
+            <td>${a.perfiles}</td>
             <td>
-              <select data-unificar-select="${_esc(nombre)}" style="margin-right:.4rem">
+              <select data-unificar-select="${_esc(a.nombre)}" style="margin-right:.4rem">
                 <option value="">— Elegir colegio —</option>
                 ${catalogo.map(c => `<option value="${c.school_id}">${_esc(c.school_name)}</option>`).join('')}
               </select>
-              <button class="btn btn-primary btn-sm" data-unificar-btn="${_esc(nombre)}">Unificar</button>
+              <button class="btn btn-primary btn-sm" data-unificar-btn="${_esc(a.nombre)}">Unificar</button>
             </td>
           </tr>`).join('')}
         </tbody>
-      </table></div>`;
+      </table></div>` : ''}`;
   }
 
   async function _unificarColegio(nombreLegacy, schoolId) {
@@ -279,6 +350,7 @@
     if (!colegio) return;
     const cfg = _cfg();
     const url = cfg.supabaseUrl.replace(/\/+$/, '') + '/rest/v1/school_alias_map';
+    const aliasNormalizado = nombreLegacy.toLowerCase().trim().replace(/\s+/g, ' ');
     await fetch(url, {
       method: 'POST',
       headers: {
@@ -288,19 +360,32 @@
         'Prefer': 'resolution=merge-duplicates'
       },
       body: JSON.stringify({
-        alias_normalizado: nombreLegacy.toLowerCase().trim().replace(/\s+/g, ' '),
+        alias_normalizado: aliasNormalizado,
         school_id: colegio.school_id,
         school_name: colegio.school_name,
         school_region: colegio.school_region
       })
     });
-    _colegiosLegacy = await _cargarColegiosLegacy();
+    // Actualización optimista: ya sabemos exactamente qué se escribió,
+    // así que lo agregamos al set local sin esperar otro round-trip —
+    // el nombre desaparece de inmediato de la bandeja pendiente.
+    if (_aliasMapConfirmados) _aliasMapConfirmados.add(aliasNormalizado);
     await _cargarTodosLosDatos(); // refresca Panorama Global con la nueva unificación
     document.getElementById('an-contenido').innerHTML = _htmlColegios();
     _bindColegios();
   }
 
   function _bindColegios() {
+    document.querySelectorAll('[data-confirmar-btn]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nombre = btn.getAttribute('data-confirmar-btn');
+        const schoolId = btn.getAttribute('data-confirmar-schoolid');
+        const colegio = buscarColegioPorId(schoolId);
+        if (confirm(`¿Confirmar que "${nombre}" es "${colegio ? colegio.school_name : schoolId}"? Esto no borra ningún dato, solo corrige la agrupación en Panorama Global.`)) {
+          _unificarColegio(nombre, schoolId);
+        }
+      });
+    });
     document.querySelectorAll('[data-unificar-btn]').forEach(btn => {
       btn.addEventListener('click', () => {
         const nombre = btn.getAttribute('data-unificar-btn');
