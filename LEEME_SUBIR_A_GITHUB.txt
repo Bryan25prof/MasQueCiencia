@@ -1,0 +1,40 @@
+MQC — LOTE 4 (Finales/Suficiencia) — PAQUETE DE CÓDIGO PARA GITHUB
+====================================================================
+
+Este zip contiene SOLO los archivos de código nuevos/modificados de
+este lote, con la MISMA estructura de carpetas que tu repositorio.
+Subilos a GitHub reemplazando los archivos existentes en las mismas
+rutas (y agregando los 2 archivos nuevos donde corresponde).
+
+ARCHIVOS NUEVOS (no existían antes):
+  - js/shared/suficiencia-adapter.js
+  - js/modules/suficiencia.js
+
+ARCHIVOS MODIFICADOS (reemplazan a los que ya tenés en esas rutas):
+  - index.html
+  - js/core/storage.js
+  - js/modules/units.js
+  - js/modules/grade11.js
+  - js/modules/fisica10.js
+  - js/modules/fisica11.js
+  - js/shared/analytics-hooks.js
+  - js/shared/analytics-config.js
+  - analytics/analytics-admin.js
+
+CÓMO SUBIRLO (GitHub web, sin usar git en terminal):
+  1. Entrá a tu repositorio en github.com.
+  2. Para cada archivo de la lista de arriba: navegá a esa misma ruta
+     dentro del repo, abrí el archivo, tocá el lápiz (Edit), borrá
+     todo el contenido y pegá el contenido del archivo correspondiente
+     de este zip. Confirmá el cambio (Commit changes).
+  3. Para los 2 archivos NUEVOS: en la carpeta correspondiente
+     (js/shared/ y js/modules/) usá "Add file → Create new file",
+     escribí el nombre exacto (suficiencia-adapter.js / suficiencia.js)
+     y pegá el contenido.
+  4. Si usás GitHub Pages, el sitio se actualiza solo unos minutos
+     después de cada commit — no hace falta ningún paso extra.
+
+NOTA: la migración de Supabase (SUPABASE_MIGRATION_suficiencia.sql)
+ya la corriste — este zip es solo la parte de GitHub. El reporte
+completo con todas las pruebas está en
+MQC_AUDITORIA_FASE2_LOTE4_SUFICIENCIA.md (ya lo tenés, no va en GitHub).
