@@ -154,9 +154,9 @@ Router.register('suficiencia', (() => {
           ${q.imagen ? `<div style="text-align:center;margin-bottom:.9rem"><img src="${_escAttr(q.imagen)}" alt="" style="max-width:100%;max-height:260px;border-radius:var(--radius-md)"></div>` : ''}
           <div id="suf-opciones" style="display:flex;flex-direction:column;gap:.55rem">
             ${q.opciones.map((op, k) => `
-              <button class="btn ${_intento.respuestas[q.id] === k ? 'btn-primary' : 'btn-ghost'}" data-opcion="${k}"
+              <button class="btn ${_intento.respuestas[q.id] === op.id ? 'btn-primary' : 'btn-ghost'}" data-opcion="${_escAttr(op.id)}"
                       style="text-align:left;justify-content:flex-start;white-space:normal;height:auto;padding:.7rem .9rem;font-size:.9rem">
-                <strong style="margin-right:.5rem">${String.fromCharCode(65 + k)}</strong> ${_esc(op)}
+                <strong style="margin-right:.5rem">${String.fromCharCode(65 + k)}</strong> ${_esc(op.texto)}
               </button>`).join('')}
           </div>
         </div>
@@ -220,7 +220,7 @@ Router.register('suficiencia', (() => {
     document.querySelectorAll('#suf-opciones [data-opcion]').forEach(b => {
       b.addEventListener('click', () => {
         const q = _intento.preguntas[_intento.indice];
-        _intento.respuestas[q.id] = parseInt(b.getAttribute('data-opcion'), 10);
+        _intento.respuestas[q.id] = b.getAttribute('data-opcion'); // id estable de la opción, no un índice (AUDITORÍA FASE 2 — Motor de examen unificado)
         _drawExamen();
       });
     });

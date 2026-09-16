@@ -30,14 +30,12 @@ Router.register('pne-final', (() => {
   let exam = null;
   let _startTs = null;
 
-  function _shuffle(arr) {
-    const a = arr.slice();
-    for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [a[i], a[j]] = [a[j], a[i]];
-    }
-    return a;
-  }
+  /* AUDITORÍA FASE 2 — "Motor de examen unificado": delegado al motor
+     compartido (js/shared/exam-engine.js) en vez de duplicar el mismo
+     Fisher–Yates que ya vivía acá, en simulacro-nacional-adapter.js y
+     en suficiencia-adapter.js. Se mantiene el nombre local `_shuffle`
+     para no tocar ningún otro punto de este archivo. */
+  function _shuffle(arr) { return ExamEngine.shuffle(arr); }
 
   function _bankFor(unitId) {
     const n = unitId.split('-')[1];
@@ -86,14 +84,19 @@ Router.register('pne-final', (() => {
     selected = selected.map(q => {
       const unitId = 'unit-0' + q.unidad;
       const presented = (typeof PNEBank !== 'undefined') ? PNEBank.present(unitId, q) : q;
-      const order = presented.opciones.map((_, i) => i);
-      const shuffledOrder = _shuffle(order);
+      /* AUDITORÍA FASE 2 — "Motor de examen unificado": antes se barajaban
+         ÍNDICES y se recalculaba `correcta = shuffledOrder.indexOf(...)`.
+         Ahora se usa el mismo patrón de ID ESTABLE por opción que ya
+         usaba el Simulacro PNE (js/shared/exam-engine.js): cada opción
+         se etiqueta con un id fijo ('opt0'..'optN') ANTES de barajar, así
+         que `correcta` apunta siempre a ese id, nunca a una posición. */
+      const { opciones, correcta } = ExamEngine.adaptarOpcionesEstables(presented.opciones, presented.correcta);
       const clone = Object.assign({}, presented);
-      clone.opciones = shuffledOrder.map(i => presented.opciones[i]);
-      clone.correcta = shuffledOrder.indexOf(presented.correcta);
-      if (Array.isArray(presented.explicacion_incorrectas)) {
-        clone.explicacion_incorrectas = shuffledOrder.map(i => presented.explicacion_incorrectas[i]);
-      }
+      clone.opciones = opciones;   // [{id,texto}], antes era string[]
+      clone.correcta = correcta;   // id estable ('optN'), antes era índice
+      // explicacion_incorrectas queda en su orden ORIGINAL (índice i ↔ id
+      // 'optI') — ya no se reordena; _answerQuestion() la lee traduciendo
+      // el id elegido de vuelta a su índice original.
       clone._unitId = unitId;
       return clone;
     });
@@ -103,11 +106,11 @@ Router.register('pne-final', (() => {
 
   function _renderLocked(status) {
     return `
-      <div class="section-header"><p class="section-title">Examen Final</p><h2 class="section-heading">Examen Final · Química 10.º</h2></div>
+      <div class="section-header"><p class="section-title">Desafío Final</p><h2 class="section-heading">Desafío Final · Química 10.º</h2></div>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;text-align:center;max-width:520px;margin:0 auto">
         <div style="font-size:2.4rem">🔒</div>
         <h3 style="margin:.5rem 0">Todavía no está desbloqueado</h3>
-        <p style="color:var(--text-secondary);font-size:.9rem">Aprueba los exámenes de al menos ${MIN_UNITS_REQUIRED} de las 9 unidades para desbloquear el Examen Final.</p>
+        <p style="color:var(--text-secondary);font-size:.9rem">Aprueba los exámenes de al menos ${MIN_UNITS_REQUIRED} de las 9 unidades para desbloquear el Desafío Final.</p>
         <div class="progress-bar" style="margin:1rem 0"><div class="progress-fill progress-fill-cyan" style="width:${Math.round((status.passed/status.total)*100)}%"></div></div>
         <p style="font-family:var(--font-code);color:var(--text-muted)">${status.passed}/${status.total} unidades aprobadas</p>
         <button class="btn btn-ghost" id="pne-back">← Volver a Unidades</button>
@@ -119,7 +122,7 @@ Router.register('pne-final', (() => {
     const pne = data.pne || {};
     const isGuest = (typeof MQCProfiles !== 'undefined' && MQCProfiles.isGuest && MQCProfiles.isGuest());
     return `
-      <div class="section-header"><p class="section-title">Examen Final</p><h2 class="section-heading">🏆 Examen Final · Química 10.º</h2></div>
+      <div class="section-header"><p class="section-title">Desafío Final</p><h2 class="section-heading">🏆 Desafío Final · Química 10.º</h2></div>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.75rem;max-width:600px;margin:0 auto;text-align:center">
         <p style="color:var(--text-secondary);font-size:.92rem;line-height:1.6">
           Este es el desafío final: <strong>${TOTAL_QUESTIONS} preguntas</strong> tomadas de las <strong>9 unidades</strong>
@@ -157,7 +160,7 @@ Router.register('pne-final', (() => {
     }, 350);
     const root = document.getElementById('content');
     if (root) {
-      root.innerHTML = `<div style="text-align:center;padding:3rem"><div style="font-size:2rem">🧪</div><p style="color:var(--text-secondary)">Preparando tu Examen Final…</p></div>`;
+      root.innerHTML = `<div style="text-align:center;padding:3rem"><div style="font-size:2rem">🧪</div><p style="color:var(--text-secondary)">Preparando tu Desafío Final…</p></div>`;
     }
   }
 
@@ -207,9 +210,9 @@ Router.register('pne-final', (() => {
           ${voiceOn ? `<button class="btn btn-ghost btn-sm" id="pne-stop-speak-btn" style="margin-bottom:.6rem">⏹ Detener lectura</button>` : ''}
           <div id="pne-exam-opts" style="display:flex;flex-direction:column;gap:.5rem">
             ${q.opciones.map((op, k) => `
-              <button class="btn btn-ghost" data-opt="${k}"
+              <button class="btn btn-ghost" data-opt="${op.id}"
                       style="text-align:left;justify-content:flex-start;white-space:normal;height:auto;padding:.7rem .9rem;font-size:.9rem">
-                <strong style="margin-right:.5rem">${String.fromCharCode(65 + k)}</strong> ${op}
+                <strong style="margin-right:.5rem">${String.fromCharCode(65 + k)}</strong> ${op.texto}
               </button>`).join('')}
           </div>
           <div id="pne-exam-fb" style="margin-top:1rem"></div>
@@ -217,12 +220,12 @@ Router.register('pne-final', (() => {
       </div>`;
 
     root.querySelectorAll('[data-opt]').forEach(b =>
-      b.addEventListener('click', () => _answerQuestion(parseInt(b.getAttribute('data-opt'), 10))));
+      b.addEventListener('click', () => _answerQuestion(b.getAttribute('data-opt'))));
 
     const speakBtn = document.getElementById('pne-speak-btn');
     if (speakBtn) {
       speakBtn.addEventListener('click', () => {
-        const optsText = q.opciones.map((op, k) => `Opción ${String.fromCharCode(65 + k)}: ${op}.`).join(' ');
+        const optsText = q.opciones.map((op, k) => `Opción ${String.fromCharCode(65 + k)}: ${op.texto}.`).join(' ');
         if (typeof PNE !== 'undefined' && PNE.speak) PNE.speak(q.pregunta + '. ' + optsText);
       });
     }
@@ -230,6 +233,11 @@ Router.register('pne-final', (() => {
     if (stopBtn) stopBtn.addEventListener('click', _stopSpeech);
   }
 
+  /* AUDITORÍA FASE 2 — "Motor de examen unificado": `choice` ahora es el
+     id ESTABLE de la opción elegida ('optN'), no un índice posicional —
+     mismo cambio que en simulacro-nacional.js/suficiencia.js. Solo se
+     usa para esta retroalimentación visual inmediata; nunca se persiste
+     en Storage (exam.answers solo se lee por .id/.unitId/.ok más abajo). */
   function _answerQuestion(choice) {
     const q = exam.qs[exam.i];
     const ok = choice === q.correcta;
@@ -238,13 +246,17 @@ Router.register('pne-final', (() => {
 
     const opts = document.getElementById('pne-exam-opts');
     opts.querySelectorAll('[data-opt]').forEach(b => {
-      const k = parseInt(b.getAttribute('data-opt'), 10);
+      const optId = b.getAttribute('data-opt');
       b.disabled = true;
-      if (k === q.correcta) b.style.borderColor = 'var(--green)';
-      if (k === choice && !ok) b.style.borderColor = 'var(--red)';
+      if (optId === q.correcta) b.style.borderColor = 'var(--green)';
+      if (optId === choice && !ok) b.style.borderColor = 'var(--red)';
     });
 
-    const expWrong = (q.explicacion_incorrectas && q.explicacion_incorrectas[choice]) || '';
+    // explicacion_incorrectas quedó en su orden ORIGINAL (índice i ↔ id
+    // 'optI' — ver _buildAttempt()), así que se traduce el id elegido de
+    // vuelta a su índice original para buscar la explicación correcta.
+    const idxElegido = typeof choice === 'string' ? parseInt(choice.replace('opt', ''), 10) : NaN;
+    const expWrong = (q.explicacion_incorrectas && !isNaN(idxElegido) && q.explicacion_incorrectas[idxElegido]) || '';
     document.getElementById('pne-exam-fb').innerHTML = `
       <div style="border-left:4px solid ${ok ? 'var(--green)' : 'var(--red)'};background:var(--bg-elevated);
                   border-radius:0 var(--radius-md) var(--radius-md) 0;padding:.7rem 1rem;font-size:.88rem;line-height:1.55">
@@ -399,7 +411,7 @@ Router.register('pne-final', (() => {
       ? Math.round(pne.scoreHistory.reduce((a, h) => a + h.score, 0) / pne.scoreHistory.length) : 0;
 
     root.innerHTML = `
-      <div class="section-header"><p class="section-title">Examen Final</p><h2 class="section-heading">📊 Estadísticas del Examen Final 10.º</h2></div>
+      <div class="section-header"><p class="section-title">Desafío Final</p><h2 class="section-heading">📊 Estadísticas del Desafío Final 10.º</h2></div>
       <div style="max-width:640px;margin:0 auto">
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.7rem;margin-bottom:1.2rem">
           <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:.8rem;text-align:center">
