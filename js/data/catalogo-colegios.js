@@ -75,3 +75,34 @@ function buscarSchoolIdPorAlias(textoLibre) {
 function buscarColegioPorId(schoolId) {
   return CATALOGO_COLEGIOS.find(c => c.school_id === schoolId) || null;
 }
+
+/* ================================================================
+   AUDITORÍA FASE 2 — "Bandeja de excepciones de colegios" (hallazgo
+   de MQC_AUDITORIA_INTEGRAL_DIAGNOSTICO.md, sección 10: "todavía no
+   es una bandeja de excepciones" — la pantalla de administración
+   listaba CADA nombre legacy por igual, sin distinguir los casos ya
+   resolubles automáticamente de los genuinamente ambiguos).
+
+   Coincidencia EXACTA tras normalizar contra el nombre OFICIAL del
+   catálogo — distinta de un alias ya confirmado a mano en
+   ALIAS_COLEGIOS_CONOCIDOS: cubre el caso simple de un estudiante que
+   escribió el nombre real del colegio pero con mayúsculas/espacios
+   distintos (ej. "liceo de heredia" → "Liceo de Heredia", HER_LDH).
+   Regla explícita de la Fase 2: NUNCA similitud difusa, solo
+   coincidencia exacta tras normalizar — igual que ALIAS_COLEGIOS_CONOCIDOS. */
+function buscarSchoolIdPorNombreExacto(textoLibre) {
+  const norm = normalizarNombreColegio(textoLibre);
+  if (!norm) return null;
+  const match = CATALOGO_COLEGIOS.find(c => normalizarNombreColegio(c.school_name) === norm);
+  return match ? match.school_id : null;
+}
+
+/* Punto único de pre-resolución automática (sin similitud difusa):
+   primero un alias ya confirmado a mano, luego coincidencia exacta
+   normalizada contra el catálogo oficial. Usado por la bandeja de
+   excepciones de colegios para decidir qué nombres legacy puede
+   resolver solo con un clic de confirmación, y cuáles requieren que
+   el docente elija a mano por ser genuinamente ambiguos. */
+function preResolverSchoolId(textoLibre) {
+  return buscarSchoolIdPorAlias(textoLibre) || buscarSchoolIdPorNombreExacto(textoLibre);
+}
