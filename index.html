@@ -647,6 +647,11 @@
 <script src="js/data/banco-fix11-u06.js"></script>
 <script src="js/units/fisica11/fix11-u06.js"></script>
 
+<!-- AUDITORÍA FASE 2 — "Motor de examen unificado": lógica pura compartida
+     por los 3 "exámenes finales" (PNE Final, Simulacro Nacional, Suficiencia).
+     Debe cargar ANTES que los tres — ver js/shared/exam-engine.js. -->
+<script src="js/shared/exam-engine.js"></script>
+
 <!-- HOTFIX-02: Desafío Final (Química 10.º) — depende de las 9 unidades y sus bancos ya cargados -->
 <script src="js/modules/pne-final.js"></script>
 

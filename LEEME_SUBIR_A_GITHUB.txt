@@ -1,40 +1,61 @@
-MQC — LOTE 4 (Finales/Suficiencia) — PAQUETE DE CÓDIGO PARA GITHUB
-====================================================================
+MQC — FASE 2, LOTE 5: "Motor de examen unificado"
+====================================================
 
-Este zip contiene SOLO los archivos de código nuevos/modificados de
-este lote, con la MISMA estructura de carpetas que tu repositorio.
-Subilos a GitHub reemplazando los archivos existentes en las mismas
-rutas (y agregando los 2 archivos nuevos donde corresponde).
+Qué es este paquete
+--------------------
+Todo el código nuevo/modificado del Lote 5 (unificación del motor de
+examen de los 3 "finales": Desafío Final PNE, Simulacro Nacional y
+Suficiencia). Los 27 exámenes de unidad (Química/Física 10.º/11.º) NO
+están en este paquete porque NO se tocaron — decisión de alcance
+explícita, ver MQC_AUDITORIA_FASE2_LOTE5_MOTOR_EXAMEN.md.
 
-ARCHIVOS NUEVOS (no existían antes):
-  - js/shared/suficiencia-adapter.js
-  - js/modules/suficiencia.js
+Este paquete NO requiere ninguna acción en Supabase. Es un refactor
+100% de JavaScript de cliente.
 
-ARCHIVOS MODIFICADOS (reemplazan a los que ya tenés en esas rutas):
-  - index.html
-  - js/core/storage.js
-  - js/modules/units.js
-  - js/modules/grade11.js
-  - js/modules/fisica10.js
-  - js/modules/fisica11.js
-  - js/shared/analytics-hooks.js
-  - js/shared/analytics-config.js
-  - analytics/analytics-admin.js
+Archivos incluidos (6), con su ruta EXACTA dentro del repo:
 
-CÓMO SUBIRLO (GitHub web, sin usar git en terminal):
-  1. Entrá a tu repositorio en github.com.
-  2. Para cada archivo de la lista de arriba: navegá a esa misma ruta
-     dentro del repo, abrí el archivo, tocá el lápiz (Edit), borrá
-     todo el contenido y pegá el contenido del archivo correspondiente
-     de este zip. Confirmá el cambio (Commit changes).
-  3. Para los 2 archivos NUEVOS: en la carpeta correspondiente
-     (js/shared/ y js/modules/) usá "Add file → Create new file",
-     escribí el nombre exacto (suficiencia-adapter.js / suficiencia.js)
-     y pegá el contenido.
-  4. Si usás GitHub Pages, el sitio se actualiza solo unos minutos
-     después de cada commit — no hace falta ningún paso extra.
+  NUEVO:
+    js/shared/exam-engine.js
 
-NOTA: la migración de Supabase (SUPABASE_MIGRATION_suficiencia.sql)
-ya la corriste — este zip es solo la parte de GitHub. El reporte
-completo con todas las pruebas está en
-MQC_AUDITORIA_FASE2_LOTE4_SUFICIENCIA.md (ya lo tenés, no va en GitHub).
+  MODIFICADOS:
+    index.html
+    js/shared/simulacro-nacional-adapter.js
+    js/modules/pne-final.js
+    js/shared/suficiencia-adapter.js
+    js/modules/suficiencia.js
+
+Cómo subirlo a GitHub
+----------------------
+1. Descomprimí este .zip en cualquier carpeta temporal. Vas a ver una
+   carpeta "MasQueCiencia_Beta_v1.0/" con la misma estructura de
+   subcarpetas que tu repo (js/shared/, js/modules/, etc.).
+
+2. Copiá esos 6 archivos a las mismas rutas dentro de tu copia local
+   del repo, REEMPLAZANDO los que ya existen con ese nombre (index.html,
+   simulacro-nacional-adapter.js, pne-final.js, suficiencia-adapter.js,
+   suficiencia.js) y agregando el único archivo nuevo (exam-engine.js).
+
+3. Confirmá los cambios con git y subilos a GitHub, por ejemplo:
+
+     git add js/shared/exam-engine.js
+     git add js/shared/simulacro-nacional-adapter.js
+     git add js/shared/suficiencia-adapter.js
+     git add js/modules/pne-final.js
+     git add js/modules/suficiencia.js
+     git add index.html
+     git commit -m "Fase 2 Lote 5: unificar motor de examen (PNE Final, Simulacro Nacional, Suficiencia)"
+     git push
+
+Qué NO hay que hacer
+----------------------
+- NO hay ningún archivo .sql en este lote — no hay que tocar Supabase
+  para nada.
+- NO hay que tocar ningún archivo de js/units/, js/units/grade11/,
+  js/units/fisica10/ ni js/units/fisica11/ — esos 27 exámenes de
+  unidad quedan exactamente como están.
+
+Cualquier duda, todo el detalle técnico y de verificación (pruebas en
+Node.js con los bancos reales + pruebas en Chromium real contra un
+perfil de prueba, verificadas contra un oráculo independiente) está en
+MQC_AUDITORIA_FASE2_LOTE5_MOTOR_EXAMEN.md, que te llega junto con este
+paquete.
