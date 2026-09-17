@@ -51,9 +51,12 @@ window.MQCProfilesUI = (function () {
   function _renderSelectorColegio(idPrefix, schoolIdActual, colegioTextoActual) {
     const catalogo = (typeof CATALOGO_COLEGIOS !== 'undefined' ? CATALOGO_COLEGIOS.slice() : [])
       .sort((a, b) => a.school_name.localeCompare(b.school_name, 'es'));
-    const esOtro = schoolIdActual === 'OTHER' || (colegioTextoActual && !schoolIdActual);
+    const provincias = (typeof PROVINCIAS_SIN_CATALOGO !== 'undefined' ? PROVINCIAS_SIN_CATALOGO.slice() : []);
+    const esProvinciaId = (id) => /^OTHER_/.test(id || '');
+    const esOtro = schoolIdActual === 'OTHER' || esProvinciaId(schoolIdActual) || (colegioTextoActual && !schoolIdActual);
+    const provinciaActual = esProvinciaId(schoolIdActual) ? schoolIdActual : '';
     _selectorColegioState[idPrefix] = {
-      schoolId: esOtro ? 'OTHER' : (schoolIdActual || ''),
+      schoolId: esOtro ? (schoolIdActual === 'OTHER' || esProvinciaId(schoolIdActual) ? schoolIdActual : 'OTHER') : (schoolIdActual || ''),
       schoolName: colegioTextoActual || '',
       schoolRegion: schoolIdActual && typeof buscarColegioPorId === 'function' ? (buscarColegioPorId(schoolIdActual) || {}).school_region || '' : ''
     };
@@ -75,11 +78,18 @@ window.MQCProfilesUI = (function () {
           </button>
         </div>
         <p id="${idPrefix}-elegido" style="font-size:.78rem;color:var(--cyan);margin:.4rem 0 0;min-height:1.1em">
-          ${_selectorColegioState[idPrefix].schoolId && _selectorColegioState[idPrefix].schoolId !== 'OTHER' ? '✓ ' + esc(colegioTextoActual || '') : ''}
+          ${_selectorColegioState[idPrefix].schoolId && _selectorColegioState[idPrefix].schoolId !== 'OTHER' && !esOtro ? '✓ ' + esc(colegioTextoActual || '') : ''}
         </p>
-        <input type="text" id="${idPrefix}-otro-texto" placeholder="Nombre del centro educativo" maxlength="80"
-               value="${esOtro ? esc(colegioTextoActual || '') : ''}"
-               style="display:${esOtro ? 'block' : 'none'};width:100%;margin-top:.4rem" class="qi-overlay-input">
+        <div id="${idPrefix}-otro-wrap" style="display:${esOtro ? 'block' : 'none'};margin-top:.4rem">
+          <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 .3rem">Colegio fuera del catálogo: decinos tu provincia y el nombre de tu centro educativo.</p>
+          <select id="${idPrefix}-otro-provincia" class="qi-overlay-input" style="width:100%;margin-bottom:.4rem">
+            <option value="">— Elegí tu provincia —</option>
+            ${provincias.map(p => `<option value="${p.school_id}"${p.school_id === provinciaActual ? ' selected' : ''}>${esc(p.school_region)}</option>`).join('')}
+          </select>
+          <input type="text" id="${idPrefix}-otro-texto" placeholder="Nombre del centro educativo" maxlength="80"
+                 value="${esOtro ? esc(colegioTextoActual || '') : ''}"
+                 style="width:100%" class="qi-overlay-input">
+        </div>
       </div>`;
   }
 
@@ -89,6 +99,8 @@ window.MQCProfilesUI = (function () {
     const buscar = cont.querySelector(`#${idPrefix}-buscar`);
     const lista = cont.querySelector(`#${idPrefix}-lista`);
     const elegido = cont.querySelector(`#${idPrefix}-elegido`);
+    const otroWrap = cont.querySelector(`#${idPrefix}-otro-wrap`);
+    const otroProvincia = cont.querySelector(`#${idPrefix}-otro-provincia`);
     const otroTexto = cont.querySelector(`#${idPrefix}-otro-texto`);
 
     if (buscar) buscar.addEventListener('input', () => {
@@ -106,16 +118,36 @@ window.MQCProfilesUI = (function () {
         const nombre = btn.getAttribute('data-colegio-nombre');
         const region = btn.getAttribute('data-colegio-region');
         if (id === 'OTHER') {
-          _selectorColegioState[idPrefix] = { schoolId: 'OTHER', schoolName: '', schoolRegion: '' };
-          if (otroTexto) { otroTexto.style.display = 'block'; otroTexto.value = ''; otroTexto.focus(); }
+          // Conserva el nombre ya escrito (si el estudiante vuelve a
+          // tocar "Otro" tras haber elegido un colegio del catálogo,
+          // no se pierde nada) — solo se resetea la provincia, porque
+          // el school_id concreto ('OTHER_XXX') dependía del colegio
+          // anterior y ya no aplica.
+          _selectorColegioState[idPrefix] = { schoolId: 'OTHER', schoolName: _selectorColegioState[idPrefix].schoolName || '', schoolRegion: '' };
+          if (otroWrap) otroWrap.style.display = 'block';
+          if (otroProvincia) { otroProvincia.value = ''; otroProvincia.focus(); }
           if (elegido) elegido.textContent = '';
         } else {
           _selectorColegioState[idPrefix] = { schoolId: id, schoolName: nombre, schoolRegion: region };
-          if (otroTexto) otroTexto.style.display = 'none';
+          if (otroWrap) otroWrap.style.display = 'none';
           if (elegido) elegido.textContent = '✓ ' + nombre;
         }
         if (typeof onChange === 'function') onChange(_selectorColegioState[idPrefix]);
       });
+    });
+
+    /* AUDITORÍA FASE 2 — "Catálogo de colegios mono-provincial": al
+       elegir "Otro", la provincia (obligatoria) es lo que fija el
+       school_id ('OTHER_SANJOSE', etc.) — el texto libre del nombre
+       nunca decide el school_id, para que Analytics siga agrupando
+       por provincia sin importar cómo cada estudiante escriba el
+       nombre de su colegio. */
+    if (otroProvincia) otroProvincia.addEventListener('change', () => {
+      const st = _selectorColegioState[idPrefix];
+      st.schoolId = otroProvincia.value || 'OTHER';
+      const prov = otroProvincia.value && typeof buscarColegioPorId === 'function' ? buscarColegioPorId(otroProvincia.value) : null;
+      st.schoolRegion = prov ? prov.school_region : '';
+      if (typeof onChange === 'function') onChange(st);
     });
 
     if (otroTexto) otroTexto.addEventListener('input', () => {
@@ -125,11 +157,18 @@ window.MQCProfilesUI = (function () {
   }
 
   /* Devuelve {schoolId, schoolName, schoolRegion, valido}. "Otro"
-     requiere que el nombre escrito no esté vacío (Parte 5: campo
-     obligatorio cuando se elige Otro). */
+     requiere PROVINCIA elegida (school_id pasa de 'OTHER' genérico a
+     'OTHER_<PROVINCIA>') Y el nombre del colegio escrito — ambos
+     obligatorios (Parte 5 del sprint original + Fase 2, catálogo
+     mono-provincial). Un colegio real del catálogo (Heredia) sigue
+     siendo válido con solo tener schoolId. */
   function _valorSelectorColegio(idPrefix) {
     const st = _selectorColegioState[idPrefix] || { schoolId: '', schoolName: '', schoolRegion: '' };
-    const valido = st.schoolId === 'OTHER' ? !!(st.schoolName && st.schoolName.trim()) : !!st.schoolId;
+    const esOtroSinProvincia = st.schoolId === 'OTHER';
+    const esOtroConProvincia = /^OTHER_/.test(st.schoolId || '');
+    const valido = esOtroSinProvincia ? false
+      : esOtroConProvincia ? !!(st.schoolName && st.schoolName.trim())
+      : !!st.schoolId;
     return { schoolId: st.schoolId, schoolName: (st.schoolName || '').trim(), schoolRegion: st.schoolRegion || '', valido };
   }
 
@@ -309,7 +348,7 @@ window.MQCProfilesUI = (function () {
       // SPRINT ANALYTICS — PARTE 6: grupo/sección obligatorio para estudiantes nuevos (no aplica a docentes).
       if (rol === 'estudiante' && !group) { host.querySelector('#mqc-nf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
       // HOTFIX CATÁLOGO DE COLEGIOS — Parte 6: obligatorio seleccionar del catálogo (u "Otro" con nombre).
-      if (!colegioSel.valido) { host.querySelector('#mqc-nf-err').textContent = 'Seleccioná tu colegio (o "Otro centro educativo" y escribí el nombre) para continuar.'; return; }
+      if (!colegioSel.valido) { host.querySelector('#mqc-nf-err').textContent = 'Seleccioná tu colegio (o "Otro centro educativo", tu provincia y el nombre) para continuar.'; return; }
       const r=P().create(alias, rol === 'docente' ? '' : group, av, colegioSel.schoolName, rol, colegioSel.schoolId, colegioSel.schoolRegion);
       if(!r.ok){ host.querySelector('#mqc-nf-err').textContent=r.message||'No se pudo crear.'; return; }
       location.reload();
@@ -378,7 +417,7 @@ window.MQCProfilesUI = (function () {
     ov.querySelector('#mqc-cp-go').addEventListener('click', () => {
       const activeId = p.activeId ? p.activeId() : null;
       const colegioSel = _valorSelectorColegio('mqc-cp-colegio');
-      if (!colegioSel.valido) { ov.querySelector('#mqc-cp-err').textContent = 'Seleccioná tu colegio (o "Otro" con el nombre) para continuar.'; return; }
+      if (!colegioSel.valido) { ov.querySelector('#mqc-cp-err').textContent = 'Seleccioná tu colegio (o "Otro", tu provincia y el nombre) para continuar.'; return; }
       if (!esSoloActualizacionColegio && rolElegido === 'estudiante') {
         const group = ov.querySelector('#mqc-cp-group').value;
         if (!group) { ov.querySelector('#mqc-cp-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
@@ -551,7 +590,7 @@ window.MQCProfilesUI = (function () {
       const colegioSel = _valorSelectorColegio('mqc-cf-colegio');
       // SPRINT ANALYTICS — PARTE 6: grupo/sección obligatorio para estudiantes nuevos.
       if (rol === 'estudiante' && !group) { host.querySelector('#mqc-cf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
-      if (!colegioSel.valido) { host.querySelector('#mqc-cf-err').textContent = 'Seleccioná tu colegio (o "Otro" con el nombre) para continuar.'; return; }
+      if (!colegioSel.valido) { host.querySelector('#mqc-cf-err').textContent = 'Seleccioná tu colegio (o "Otro", tu provincia y el nombre) para continuar.'; return; }
       const r=P().create(host.querySelector('#mqc-cf-alias').value, rol === 'docente' ? '' : group, av, colegioSel.schoolName, rol, colegioSel.schoolId, colegioSel.schoolRegion);
       if(!r.ok){host.querySelector('#mqc-cf-err').textContent=r.message||'No se pudo crear.';return;}
       location.reload();
