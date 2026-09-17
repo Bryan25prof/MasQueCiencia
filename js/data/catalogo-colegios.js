@@ -48,6 +48,40 @@ const CATALOGO_COLEGIOS = [
 const SCHOOL_ID_OTRO = 'OTHER';
 
 /* ================================================================
+   AUDITORÍA FASE 2 — "Catálogo de colegios mono-provincial", decisión
+   explícita de Bryan (2026-09-17): NO se construye un catálogo
+   detallado (colegio por colegio) para las 6 provincias restantes —
+   Heredia sigue siendo la única con catálogo específico, sin tocar.
+   En su lugar, cuando un estudiante de otra provincia elige "OTRO
+   CENTRO EDUCATIVO", además de escribir el nombre de su colegio
+   (texto libre, se sigue guardando igual que siempre en `colegio`,
+   NUNCA se agrega a ningún catálogo) ahora también marca su
+   PROVINCIA — y Analytics unifica/agrupa esos casos por provincia,
+   en vez de dejarlos todos sueltos en un único bucket genérico
+   "OTRO" como antes. Ejemplo del propio Bryan: un estudiante del
+   "Liceo de Pavas" (San José, no catalogado) marca "San José" — su
+   perfil individual sigue mostrando "Liceo de Pavas" como nombre en
+   Seguimiento académico, pero en Panorama Global se agrupa junto con
+   el resto de San José.
+
+   Estos 7 `school_id` son ESTABLES y representan la provincia como
+   bucket completo, no un colegio individual — por eso `school_name`
+   es directamente el nombre de la provincia, nunca el texto libre
+   que escriba cada estudiante (eso evita el mismo problema que
+   motivó todo este catálogo: si el nombre mostrado dependiera del
+   texto libre, cada variante de escritura volvería a fragmentar el
+   conteo, esta vez a nivel de provincia). */
+const PROVINCIAS_SIN_CATALOGO = [
+  { school_id: 'OTHER_SANJOSE',    school_name: 'San José',   school_region: 'San José' },
+  { school_id: 'OTHER_ALAJUELA',   school_name: 'Alajuela',   school_region: 'Alajuela' },
+  { school_id: 'OTHER_CARTAGO',    school_name: 'Cartago',    school_region: 'Cartago' },
+  { school_id: 'OTHER_HEREDIA',    school_name: 'Heredia',    school_region: 'Heredia' },
+  { school_id: 'OTHER_GUANACASTE', school_name: 'Guanacaste', school_region: 'Guanacaste' },
+  { school_id: 'OTHER_PUNTARENAS', school_name: 'Puntarenas', school_region: 'Puntarenas' },
+  { school_id: 'OTHER_LIMON',      school_name: 'Limón',      school_region: 'Limón' }
+];
+
+/* ================================================================
    Parte 8 del sprint — alias legacy CONOCIDOS y confiables (revisados
    a mano). Regla explícita: NO matching agresivo por similitud, solo
    normalizar variantes ya confirmadas manualmente. La clave va en
@@ -72,8 +106,14 @@ function normalizarNombreColegio(texto) {
 function buscarSchoolIdPorAlias(textoLibre) {
   return ALIAS_COLEGIOS_CONOCIDOS[normalizarNombreColegio(textoLibre)] || null;
 }
+/* Busca en el catálogo detallado de Heredia PRIMERO, y si no aparece
+   ahí, en las 7 provincias-bucket — así todo el resto del código
+   (selector de colegio, panel de Analytics) sigue usando un único
+   punto de búsqueda sin necesidad de saber cuál de las dos listas
+   corresponde. */
 function buscarColegioPorId(schoolId) {
-  return CATALOGO_COLEGIOS.find(c => c.school_id === schoolId) || null;
+  return CATALOGO_COLEGIOS.find(c => c.school_id === schoolId) ||
+         PROVINCIAS_SIN_CATALOGO.find(p => p.school_id === schoolId) || null;
 }
 
 /* ================================================================
