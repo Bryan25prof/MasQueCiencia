@@ -11,6 +11,12 @@
   <meta name="description" content="Plataforma educativa e interactiva de Ciencias — Química, Física y Biología — 10° y 11° — Lic. Bryan Chavarría C.">
   <title>MásQueCiencia — Ciencias Interactivas 10° y 11° | Lic. Bryan Chavarría C.</title>
 
+  <!-- AUDITORÍA FASE 2 — cargado bien temprano a propósito: la insignia
+       del sidebar (más abajo en este mismo archivo) necesita leer estas
+       banderas ANTES de que el navegador la dibuje. Ver el archivo para
+       el detalle completo del bug que esto corrige. -->
+  <script src="js/shared/mqc-fisica-flags.js"></script>
+
   <!-- Open Graph / vistas previas al compartir el enlace (WhatsApp, Facebook, Discord, etc.)
        SPRINT MULTICIENCIA — FASE 1: ya no debe leerse como "solo Química".
        Se agrega og:image con el nuevo logo multiciencia (Química/Física/Biología). -->
@@ -352,10 +358,21 @@
              Pronto" para todos; con la vista previa activada en este
              navegador, dice "Física 10.º" sin insignia — pero SIEMPRE
              apunta a la misma ruta 'fisica10', que internamente decide
-             si mostrar la unidad real o "en desarrollo". */
+             si mostrar la unidad real o "en desarrollo".
+
+             AUDITORÍA FASE 2 — corregido: además del flag manual de
+             vista previa (localStorage, para probar antes del
+             lanzamiento), ahora también revisa
+             window.MQC_FISICA_FLAGS.fisica10Publico (ver
+             js/shared/mqc-fisica-flags.js, cargado arriba en el
+             <head>) — que es lo que hace que la insignia "Pronto" por
+             fin desaparezca para todos los estudiantes reales, ahora
+             que Física 10.º ya es pública en producción. */
           (function () {
             try {
-              if (localStorage.getItem('mqc_fisica10_preview') === '1') {
+              var publico = (window.MQC_FISICA_FLAGS && window.MQC_FISICA_FLAGS.fisica10Publico) ||
+                            localStorage.getItem('mqc_fisica10_preview') === '1';
+              if (publico) {
                 document.getElementById('nav-fisica10-label').textContent = 'Física 10.º';
                 var badge = document.getElementById('nav-fisica10-badge');
                 if (badge) badge.remove();
