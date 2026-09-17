@@ -151,13 +151,29 @@ Router.register('grade-select', (() => {
 
   /* FIX10-U01: "elegí tu año" de Física — mismo patrón que Química,
      pero más simple: Física no tiene desbloqueo por examen (10.º y
-     11.º son independientes entre sí), y Física 11.º sigue sin
-     construirse (regla explícita del sprint). */
+     11.º son independientes entre sí).
+
+     AUDITORÍA FASE 2 — bug encontrado y corregido (17 de setiembre de
+     2026): esta función solo revisaba el flag MANUAL de vista previa
+     (localStorage, pensado para probar antes del lanzamiento) — nunca
+     el flag real de publicación (window.MQC_FISICA_FLAGS, ver
+     js/shared/mqc-fisica-flags.js). Como ningún estudiante real
+     escribe nunca ese localStorage, esta pantalla —que es la
+     PANTALLA DE ATERRIZAJE de todo estudiante, ver Router.navigate(
+     'grade-select') en js/app.js— le mostraba "Física / En
+     desarrollo" con un botón deshabilitado sin ninguna acción a
+     CUALQUIER estudiante real, aunque Física 10.º/11.º ya estaban
+     públicas en producción desde el 14 de setiembre (fisica10.js/
+     fisica11.js, FISICA10_PUBLICO/FISICA11_PUBLICO). Ahora revisa
+     ambas fuentes: la de producción real, y la manual de vista previa
+     (para no romper el mecanismo de prueba de nadie que ya lo use). */
   function _fisica10VistaPreviaActiva() {
+    if (typeof window !== 'undefined' && window.MQC_FISICA_FLAGS && window.MQC_FISICA_FLAGS.fisica10Publico) return true;
     try { return localStorage.getItem('mqc_fisica10_preview') === '1'; } catch (e) { return false; }
   }
   /* RUTA DE CIERRE — misma lógica para Física 11.º, independiente. */
   function _fisica11VistaPreviaActiva() {
+    if (typeof window !== 'undefined' && window.MQC_FISICA_FLAGS && window.MQC_FISICA_FLAGS.fisica11Publico) return true;
     try { return localStorage.getItem('mqc_fisica11_preview') === '1'; } catch (e) { return false; }
   }
 

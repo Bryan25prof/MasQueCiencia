@@ -260,6 +260,7 @@ Router.register('home', (() => {
           ${unitsGridHTML}
         </div>
         ${_buildTipsBanner(completedUnits, startedUnits, levelInfo)}
+        ${_buildApoyoDocenteBanner(completedUnits, startedUnits, streak)}
       </div>
     `;
   }
@@ -321,6 +322,113 @@ Router.register('home', (() => {
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  /* ================================================================
+     Banner de apoyo/adopción docente (Auditoría Fase 2 — sección 13)
+     ================================================================
+     100% ADITIVO. Discreto, SOLO para perfiles con rol 'docente', y
+     SOLO después de una señal de uso real de la plataforma (nunca en
+     el primer ingreso):
+       · al menos 1 unidad iniciada o completada, O
+       · racha.best >= 2 (usó la app en al menos 2 días distintos —
+         streak.best ya lo calcula Storage.registerSession() en cada
+         carga, así que no hace falta tocar storage.js).
+
+     Reutiliza MQCSupport.openModal() (js/shared/support.js) — el
+     MISMO modal de PayPal/SINPE que ya usan las tarjetas de "Acerca
+     de" y del resultado del Simulacro PNE 11.º — sin reimplementar
+     ninguna lógica de pago aquí.
+
+     Nunca se registra en Router ni se muestra fuera de home.js (no
+     hay ninguna llamada a esto desde exámenes, simuladores ni
+     misiones). Dismissible: "✕" oculta solo por esta sesión de
+     navegador (sessionStorage); "No volver a mostrar" oculta para
+     siempre en este dispositivo (localStorage). Ambas claves están
+     namespaced por perfil (MQCProfiles.activeId()) para no mezclar
+     preferencias entre perfiles distintos del mismo dispositivo.
+  ================================================================ */
+  const APOYO_DOCENTE_PREFIJO = 'mqc_apoyo_docente_';
+
+  function _apoyoDocentePerfilId() {
+    try {
+      if (typeof MQCProfiles !== 'undefined' && MQCProfiles.activeId) {
+        return MQCProfiles.activeId() || 'sinperfil';
+      }
+    } catch (e) { /* ignorar */ }
+    return 'sinperfil';
+  }
+
+  function _apoyoDocenteOcultoSesion(pid) {
+    try { return sessionStorage.getItem(APOYO_DOCENTE_PREFIJO + 'sesion_' + pid) === '1'; }
+    catch (e) { return false; }
+  }
+
+  function _apoyoDocenteOcultoPermanente(pid) {
+    try { return localStorage.getItem(APOYO_DOCENTE_PREFIJO + 'nomostrar_' + pid) === '1'; }
+    catch (e) { return false; }
+  }
+
+  /* ¿El perfil activo es un docente con al menos una señal real de uso? */
+  function _esDocenteConUsoReal(completed, started, streak) {
+    try {
+      if (typeof MQCProfiles === 'undefined') return false;
+      if (!MQCProfiles.hasActive || !MQCProfiles.hasActive()) return false;
+      if (MQCProfiles.isGuest && MQCProfiles.isGuest()) return false; /* invitado: nunca */
+      const meta = MQCProfiles.activeMeta ? MQCProfiles.activeMeta() : null;
+      if (!meta || meta.rol !== 'docente') return false;
+    } catch (e) { return false; }
+
+    const usoContenido  = (completed > 0 || started > 0);
+    const usoVariosDias = !!(streak && streak.best >= 2);
+    return usoContenido || usoVariosDias;
+  }
+
+  function _buildApoyoDocenteBanner(completed, started, streak) {
+    if (!_esDocenteConUsoReal(completed, started, streak)) return '';
+    if (typeof window.MQCSupport === 'undefined') return ''; /* sin soporte cargado, no hay a dónde abrir */
+
+    const pid = _apoyoDocentePerfilId();
+    if (_apoyoDocenteOcultoSesion(pid) || _apoyoDocenteOcultoPermanente(pid)) return '';
+
+    return `
+      <div class="card mqc-apoyo-docente" id="mqc-apoyo-docente-banner" style="margin-top:1.25rem;border-color:rgba(0,212,255,.18);position:relative">
+        <button type="button" id="mqc-apoyo-docente-cerrar" title="Cerrar" aria-label="Cerrar"
+                style="position:absolute;top:.5rem;right:.6rem;background:none;border:none;color:var(--text-muted);font-size:1rem;cursor:pointer;line-height:1;padding:.2rem">✕</button>
+        <p style="color:var(--text-secondary);font-size:.9rem;margin:0 1.8rem 0 0">
+          💙 <strong>¿Te está siendo útil MásQueCiencia con tu grupo?</strong> Si querés, podés apoyar el mantenimiento y crecimiento del proyecto — es completamente voluntario y no afecta tu acceso.
+        </p>
+        <div style="margin-top:.65rem;display:flex;align-items:center;gap:1.1rem;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" id="mqc-apoyo-docente-abrir">♡ Ver cómo apoyar</button>
+          <button type="button" id="mqc-apoyo-docente-nomostrar"
+                  style="background:none;border:none;color:var(--text-muted);font-size:.78rem;text-decoration:underline;cursor:pointer;padding:0">
+            No volver a mostrar
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  function _bindApoyoDocenteBanner() {
+    const banner = document.getElementById('mqc-apoyo-docente-banner');
+    if (!banner) return;
+    const pid = _apoyoDocentePerfilId();
+
+    const cerrarBtn    = document.getElementById('mqc-apoyo-docente-cerrar');
+    const abrirBtn     = document.getElementById('mqc-apoyo-docente-abrir');
+    const noMostrarBtn = document.getElementById('mqc-apoyo-docente-nomostrar');
+
+    if (cerrarBtn) cerrarBtn.addEventListener('click', () => {
+      try { sessionStorage.setItem(APOYO_DOCENTE_PREFIJO + 'sesion_' + pid, '1'); } catch (e) {}
+      banner.remove();
+    });
+    if (abrirBtn) abrirBtn.addEventListener('click', () => {
+      if (typeof MQCSupport !== 'undefined' && MQCSupport.openModal) MQCSupport.openModal();
+    });
+    if (noMostrarBtn) noMostrarBtn.addEventListener('click', () => {
+      try { localStorage.setItem(APOYO_DOCENTE_PREFIJO + 'nomostrar_' + pid, '1'); } catch (e) {}
+      banner.remove();
+    });
+  }
+
   /* ── Eventos ────────────────────────────────────────────── */
 
   function _bindEvents() {
@@ -330,6 +438,9 @@ Router.register('home', (() => {
         Router.navigate('units', { unitId: card.dataset.unit });
       });
     });
+
+    /* Banner de apoyo/adopción docente (si se renderizó) */
+    _bindApoyoDocenteBanner();
 
     /* Canvas responsive */
     window.addEventListener('resize', _onResize);
