@@ -94,16 +94,22 @@
      CARGA DE DATOS (vistas de solo lectura)
      ================================================================ */
   async function _cargarTodosLosDatos() {
-    const [seguimiento, porSeccion, porCiencia, items, distribucion, pneAttemptsCrudo, panoramaColegios] = await Promise.all([
+    const [seguimiento, porSeccion, porCiencia, items, distribucion, pneAttemptsCrudo, panoramaColegios,
+           panoramaProvincias, porCienciaProvincia, panoramaNacional] = await Promise.all([
       _restGet('v_seguimiento_academico?select=*'),
       _restGet('v_resultados_por_seccion?select=*'),
       _restGet('v_rendimiento_por_ciencia?select=*'),
       _restGet('v_analisis_items?select=*'),
       _restGet('v_distribucion_opciones?select=*'),
       _restGet('pne_attempts?select=nota_pne,aprobado,grupo,fecha'),
-      _restGet('v_panorama_colegios?select=*')
+      _restGet('v_panorama_colegios?select=*'),
+      // AUDITORÍA FASE 2, Lote 8 — Analytics por provincia/nacional.
+      _restGet('v_panorama_provincias?select=*'),
+      _restGet('v_rendimiento_por_ciencia_provincia?select=*'),
+      _restGet('v_panorama_nacional?select=*')
     ]);
-    _datos = { seguimiento, porSeccion, porCiencia, items, distribucion, pneAttemptsCrudo, panoramaColegios };
+    _datos = { seguimiento, porSeccion, porCiencia, items, distribucion, pneAttemptsCrudo, panoramaColegios,
+               panoramaProvincias, porCienciaProvincia, panoramaNacional };
   }
 
   /* HOTFIX CATÁLOGO DE COLEGIOS — Parte 9: perfiles legacy sin
@@ -198,6 +204,7 @@
         <div class="an-tabs">
           <button class="an-tab" data-tab="resumen">Resumen</button>
           <button class="an-tab" data-tab="panorama">🏫 Panorama Global</button>
+          <button class="an-tab" data-tab="provincias">🌎 Panorama por Provincia</button>
           <button class="an-tab" data-tab="colegios">🗂️ Gestión de Colegios</button>
           <button class="an-tab" data-tab="fusion">🧬 Candidatos de Fusión</button>
           <button class="an-tab" data-tab="seguimiento">Seguimiento académico</button>
@@ -216,6 +223,7 @@
     const cont = document.getElementById('an-contenido');
     if (_vista === 'resumen') cont.innerHTML = _htmlResumen();
     else if (_vista === 'panorama') cont.innerHTML = _htmlPanorama();
+    else if (_vista === 'provincias') cont.innerHTML = _htmlPanoramaProvincias();
     else if (_vista === 'colegios') {
       cont.innerHTML = _htmlColegios();
       if (_colegiosLegacy === null || _aliasMapConfirmados === null) {
@@ -570,6 +578,60 @@
           </div>`).join('')}
       </div>
       <p class="an-note" style="margin-top:1rem">Los perfiles archivados y eliminados no se incluyen en estos números. "Sin colegio (legacy)" son perfiles creados antes de que este campo existiera.</p>`;
+  }
+
+  /* ================================================================
+     AUDITORÍA FASE 2, LOTE 8 — Analytics por provincia/nacional.
+     Reutiliza _card()/_filaBarra() (ya definidos más abajo en este
+     mismo archivo, para Resumen y PNE) — misma vitrina visual que el
+     resto del panel, sin introducir ningún componente nuevo.
+     ================================================================ */
+  function _htmlPanoramaProvincias() {
+    const nac = (_datos.panoramaNacional || [])[0];
+    const provs = (_datos.panoramaProvincias || []).slice();
+    if (!nac || !provs.length) return `<div class="an-empty">Todavía no hay datos de provincia registrados.</div>`;
+    const cienciaPorProvincia = new Map((_datos.porCienciaProvincia || []).map(c => [c.provincia, c]));
+
+    return `
+      <h2 class="an-section-title">🌎 Panorama Nacional</h2>
+      <div class="an-cards">
+        ${_card('Estudiantes', nac.estudiantes)}
+        ${_card('Docentes', nac.docentes)}
+        ${_card('Colegios identificados', nac.colegios)}
+        ${_card('Provincias con datos', nac.provincias_con_datos)}
+        ${_card('PNE realizadas', nac.pne_realizadas)}
+        ${_card('Tasa aprobación PNE', nac.tasa_aprobacion_pne == null ? '—' : nac.tasa_aprobacion_pne + '%')}
+      </div>
+
+      <h3 class="an-section-title" style="margin-top:1.2rem">Rendimiento nacional por ciencia</h3>
+      <div class="an-barchart">
+        ${_filaBarra('Biología', nac.biologia_pct == null ? 0 : nac.biologia_pct)}
+        ${_filaBarra('Física', nac.fisica_pct == null ? 0 : nac.fisica_pct)}
+        ${_filaBarra('Química', nac.quimica_pct == null ? 0 : nac.quimica_pct)}
+      </div>
+
+      <h2 class="an-section-title" style="margin-top:1.6rem">Panorama por provincia</h2>
+      <div class="an-cards-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-top:1rem">
+        ${provs.map(p => {
+          const c = cienciaPorProvincia.get(p.provincia);
+          return `
+          <div class="an-card" style="background:var(--bg-elevated);border:1px solid var(--border);border-radius:12px;padding:1.1rem">
+            <h3 style="margin:0 0 .6rem;font-size:.95rem">${p.provincia === 'Sin provincia identificada' ? '❔' : '📍'} ${_esc(p.provincia)}</h3>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.4rem;color:var(--text-secondary)"><span>Colegios identificados</span><strong>${p.colegios}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.4rem;color:var(--text-secondary)"><span>Estudiantes</span><strong style="color:var(--cyan)">${p.estudiantes}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.4rem;color:var(--text-secondary)"><span>Docentes</span><strong style="color:var(--violet)">${p.docentes}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:.4rem;color:var(--text-secondary)"><span>PNE realizadas</span><strong>${p.pne_realizadas}</strong></div>
+            <div style="display:flex;justify-content:space-between;font-size:.82rem;color:var(--text-secondary)"><span>Tasa aprobación PNE</span><strong>${p.tasa_aprobacion_pne == null ? '—' : p.tasa_aprobacion_pne + '%'}</strong></div>
+            ${c ? `
+            <div style="border-top:1px solid var(--border);padding-top:.5rem;margin-top:.6rem">
+              ${_filaBarra('Biología', c.biologia_pct == null ? 0 : c.biologia_pct)}
+              ${_filaBarra('Física', c.fisica_pct == null ? 0 : c.fisica_pct)}
+              ${_filaBarra('Química', c.quimica_pct == null ? 0 : c.quimica_pct)}
+            </div>` : ''}
+          </div>`;
+        }).join('')}
+      </div>
+      <p class="an-note" style="margin-top:1rem">Los perfiles archivados y eliminados no se incluyen en estos números. "Sin provincia identificada" son perfiles legacy sin colegio/provincia registrada. Heredia agrupa acá tanto los colegios reales del catálogo como la provincia-bucket "Otro" — para ver el detalle colegio por colegio de Heredia, usá "🏫 Panorama Global".</p>`;
   }
 
   /* ================================================================
