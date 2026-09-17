@@ -1,25 +1,30 @@
-MQC — FASE 2, LOTE 7: "Catálogo de colegios mono-provincial"
-=============================================================
+MQC — FASE 2, LOTE 9: "Física ya se puede avanzar" + "Apoyo docente"
+=======================================================================
 
 Qué es este paquete
 --------------------
-Heredia sigue con su catálogo de colegios, sin tocar. Para el resto de
-provincias NO se construyó ningún catálogo nuevo (tal como pediste) —
-en vez de eso, el selector "Otro centro educativo" ahora también pide
-elegir la PROVINCIA, y el panel de Analytics agrupa por provincia en
-vez de mezclar todo en un solo bucket genérico.
+Dos entregas juntas, porque vinieron del mismo pedido:
 
-De paso se corrigió un bug que ya existía: las tarjetas de Panorama
-Global para un colegio real de Heredia mostraban el código interno
-(ej. "HER_LDH") en vez del nombre ("Liceo de Heredia").
+1) Se encontró y corrigió un bug real: la pantalla principal "Selecciona
+   tu ruta científica" (por donde entra la mayoría de estudiantes)
+   todavía mostraba Física como "En desarrollo" con un botón sin
+   función, aunque el contenido real ya estaba público desde el 14 de
+   setiembre. Con este fix, los estudiantes SÍ pueden avanzar en
+   Física 10.º y 11.º desde esa pantalla (y desde el sidebar).
 
-ESTE PAQUETE SÍ REQUIERE UN PASO EN SUPABASE — ver más abajo.
+2) El banner discreto de "Apoyo/adopción docente" que pediste
+   ("opción 2"): aparece solo a perfiles docentes, y solo después de
+   que ya usaron la plataforma de verdad (nunca en su primer ingreso).
 
-Archivos incluidos (3), con su ruta EXACTA dentro del repo:
+ESTE PAQUETE NO REQUIERE NINGÚN PASO EN SUPABASE — los 4 archivos son
+100% del lado del navegador (HTML/JavaScript).
 
-    js/data/catalogo-colegios.js
-    js/shared/profiles-ui.js
-    SUPABASE_MIGRATION_provincias_sin_catalogo.sql   ← ver paso 2
+Archivos incluidos (4), con su ruta EXACTA dentro del repo:
+
+    index.html
+    js/modules/grade-select.js
+    js/modules/home.js
+    js/shared/mqc-fisica-flags.js          ← archivo NUEVO
 
 Cómo subirlo a GitHub
 ----------------------
@@ -27,42 +32,32 @@ Cómo subirlo a GitHub
    carpeta "MasQueCiencia_Beta_v1.0/" con la misma estructura de
    subcarpetas que tu repo.
 
-2. Copiá los 2 archivos .js a las mismas rutas dentro de tu copia local
-   del repo, REEMPLAZANDO los que ya existen con ese nombre.
+2. Copiá estos 4 archivos a las mismas rutas dentro de tu copia local
+   del repo:
+   - index.html                    → REEMPLAZA el que ya existe
+   - js/modules/grade-select.js    → REEMPLAZA el que ya existe
+   - js/modules/home.js            → REEMPLAZA el que ya existe
+   - js/shared/mqc-fisica-flags.js → es un archivo NUEVO, se agrega
 
 3. Confirmá los cambios con git y subilos a GitHub, por ejemplo:
 
-     git add js/data/catalogo-colegios.js
-     git add js/shared/profiles-ui.js
-     git commit -m "Fase 2 Lote 7: catalogo mono-provincial"
+     git add index.html js/modules/grade-select.js js/modules/home.js js/shared/mqc-fisica-flags.js
+     git commit -m "Fase 2 Lote 9: Fisica ya se puede avanzar + banner de apoyo docente"
      git push
-
-Paso OBLIGATORIO en Supabase (a diferencia de los últimos 2 lotes)
----------------------------------------------------------------------
-1. Entrá al Dashboard de tu proyecto de Supabase → SQL Editor → New query.
-2. Abrí el archivo SUPABASE_MIGRATION_provincias_sin_catalogo.sql (está
-   en la raíz de este paquete, junto a este LEEME), copiá TODO su
-   contenido, pegalo en el SQL Editor → Run.
-3. Es seguro ejecutarlo: no borra ni modifica ningún dato real, solo
-   corrige cómo se CALCULAN Y MUESTRAN 2 columnas derivadas
-   (school_name_efectivo / el agrupamiento de Panorama Global).
-
-Sin este paso 2, el selector de provincia en la app va a funcionar
-bien igual, pero Panorama Global va a seguir mostrando el bug de los
-códigos internos para Heredia, y las provincias todavía no se van a
-agrupar correctamente en las tarjetas.
 
 Qué vas a notar distinto
 --------------------------
-- En "Otro centro educativo" (bienvenida, completar perfil, editar
-  perfil, crear perfil desde el panel) ahora aparece también un
-  selector de provincia, obligatorio.
-- En Panorama Global vas a ver tarjetas por provincia (San José,
-  Alajuela, Cartago, etc.) agrupando a todos los que la eligieron, sin
-  importar cómo cada uno escribió el nombre de su colegio.
-- Las tarjetas de colegios reales de Heredia van a mostrar el nombre
-  correcto en vez de un código interno.
+- En "Selecciona tu ruta científica", la tarjeta de Física ya dice
+  "Disponible" y al entrar aparecen botones reales "Continuar en
+  Física 10.º" / "Continuar en Física 11.º". La insignia del sidebar
+  ya no dice "Pronto".
+- En el dashboard de inicio, los perfiles docentes que ya usaron la
+  plataforma (al menos 1 unidad iniciada, o al menos 2 días distintos
+  de uso) van a ver, debajo del contenido normal, una tarjeta discreta
+  invitando a apoyar el proyecto. Un estudiante nunca la va a ver.
+  Se puede cerrar con "✕" (vuelve la próxima vez que abran el
+  navegador) o con "No volver a mostrar" (para siempre).
 
 Cualquier duda, todo el detalle técnico y de verificación está en
-MQC_AUDITORIA_FASE2_LOTE7_CATALOGO_PROVINCIAS.md, que te llega junto
+MQC_AUDITORIA_FASE2_LOTE9_FISICA_APOYO_DOCENTE.md, que te llega junto
 con este paquete.
