@@ -1,21 +1,25 @@
-MQC — FASE 2, LOTE 6: "Bandeja de excepciones de colegios"
+MQC — FASE 2, LOTE 7: "Catálogo de colegios mono-provincial"
 =============================================================
 
 Qué es este paquete
 --------------------
-Todo el código modificado del Lote 6 (la pestaña "Gestión de Colegios"
-del panel de Analytics ahora separa los nombres legacy en "resueltos
-automáticamente" / "requieren tu criterio" / "ya confirmados, ocultos",
-en vez de listarlos todos por igual).
+Heredia sigue con su catálogo de colegios, sin tocar. Para el resto de
+provincias NO se construyó ningún catálogo nuevo (tal como pediste) —
+en vez de eso, el selector "Otro centro educativo" ahora también pide
+elegir la PROVINCIA, y el panel de Analytics agrupa por provincia en
+vez de mezclar todo en un solo bucket genérico.
 
-Este paquete NO requiere ninguna acción en Supabase. Es un refactor
-100% de JavaScript de cliente — reutiliza la tabla school_alias_map
-que ya existía desde el hotfix de catálogo de colegios.
+De paso se corrigió un bug que ya existía: las tarjetas de Panorama
+Global para un colegio real de Heredia mostraban el código interno
+(ej. "HER_LDH") en vez del nombre ("Liceo de Heredia").
 
-Archivos incluidos (2), con su ruta EXACTA dentro del repo:
+ESTE PAQUETE SÍ REQUIERE UN PASO EN SUPABASE — ver más abajo.
+
+Archivos incluidos (3), con su ruta EXACTA dentro del repo:
 
     js/data/catalogo-colegios.js
-    analytics/analytics-admin.js
+    js/shared/profiles-ui.js
+    SUPABASE_MIGRATION_provincias_sin_catalogo.sql   ← ver paso 2
 
 Cómo subirlo a GitHub
 ----------------------
@@ -23,21 +27,42 @@ Cómo subirlo a GitHub
    carpeta "MasQueCiencia_Beta_v1.0/" con la misma estructura de
    subcarpetas que tu repo.
 
-2. Copiá esos 2 archivos a las mismas rutas dentro de tu copia local
+2. Copiá los 2 archivos .js a las mismas rutas dentro de tu copia local
    del repo, REEMPLAZANDO los que ya existen con ese nombre.
 
 3. Confirmá los cambios con git y subilos a GitHub, por ejemplo:
 
      git add js/data/catalogo-colegios.js
-     git add analytics/analytics-admin.js
-     git commit -m "Fase 2 Lote 6: bandeja de excepciones de colegios"
+     git add js/shared/profiles-ui.js
+     git commit -m "Fase 2 Lote 7: catalogo mono-provincial"
      git push
 
-Qué NO hay que hacer
-----------------------
-- NO hay ningún archivo .sql en este lote — no hay que tocar Supabase
-  para nada.
+Paso OBLIGATORIO en Supabase (a diferencia de los últimos 2 lotes)
+---------------------------------------------------------------------
+1. Entrá al Dashboard de tu proyecto de Supabase → SQL Editor → New query.
+2. Abrí el archivo SUPABASE_MIGRATION_provincias_sin_catalogo.sql (está
+   en la raíz de este paquete, junto a este LEEME), copiá TODO su
+   contenido, pegalo en el SQL Editor → Run.
+3. Es seguro ejecutarlo: no borra ni modifica ningún dato real, solo
+   corrige cómo se CALCULAN Y MUESTRAN 2 columnas derivadas
+   (school_name_efectivo / el agrupamiento de Panorama Global).
+
+Sin este paso 2, el selector de provincia en la app va a funcionar
+bien igual, pero Panorama Global va a seguir mostrando el bug de los
+códigos internos para Heredia, y las provincias todavía no se van a
+agrupar correctamente en las tarjetas.
+
+Qué vas a notar distinto
+--------------------------
+- En "Otro centro educativo" (bienvenida, completar perfil, editar
+  perfil, crear perfil desde el panel) ahora aparece también un
+  selector de provincia, obligatorio.
+- En Panorama Global vas a ver tarjetas por provincia (San José,
+  Alajuela, Cartago, etc.) agrupando a todos los que la eligieron, sin
+  importar cómo cada uno escribió el nombre de su colegio.
+- Las tarjetas de colegios reales de Heredia van a mostrar el nombre
+  correcto en vez de un código interno.
 
 Cualquier duda, todo el detalle técnico y de verificación está en
-MQC_AUDITORIA_FASE2_LOTE6_BANDEJA_COLEGIOS.md, que te llega junto con
-este paquete.
+MQC_AUDITORIA_FASE2_LOTE7_CATALOGO_PROVINCIAS.md, que te llega junto
+con este paquete.
