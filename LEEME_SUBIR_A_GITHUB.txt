@@ -1,30 +1,52 @@
-MQC — FASE 2, LOTE 9: "Física ya se puede avanzar" + "Apoyo docente"
-=======================================================================
+MQC — LOTE PREVIO DE INTEGRIDAD (previo a la migración XP 2.0)
+================================================================
 
 Qué es este paquete
 --------------------
-Dos entregas juntas, porque vinieron del mismo pedido:
+Es la Parte A del "lote previo de integridad" que pediste antes de
+autorizar la migración XP 2.0: la corrección de un bug real de
+farmeo de XP en el Proyecto Integrador Final ("Alerta en el Río
+Pacuare").
 
-1) Se encontró y corrigió un bug real: la pantalla principal "Selecciona
-   tu ruta científica" (por donde entra la mayoría de estudiantes)
-   todavía mostraba Física como "En desarrollo" con un botón sin
-   función, aunque el contenido real ya estaba público desde el 14 de
-   setiembre. Con este fix, los estudiantes SÍ pueden avanzar en
-   Física 10.º y 11.º desde esa pantalla (y desde el sidebar).
+El bug: cada una de las 7 estaciones del proyecto otorgaba sus 30 XP
+sin ninguna guarda persistida. El único camino de regreso del flujo
+("← Revisar el caso", en la pantalla final) llevaba de nuevo a la
+estación 7, y su botón "Continuar" volvía a otorgar los 30 XP cada
+vez — de forma indefinida, con un botón real de la interfaz, sin
+necesidad de herramientas de desarrollador ni trucos. Confirmado con
+una prueba funcional real (no solo lectura de código): se repitió el
+ciclo dos veces y ambas veces se otorgaron 30 XP de más.
 
-2) El banner discreto de "Apoyo/adopción docente" que pediste
-   ("opción 2"): aparece solo a perfiles docentes, y solo después de
-   que ya usaron la plataforma de verdad (nunca en su primer ingreso).
+La corrección es puramente ADITIVA:
+- Se agrega una guarda nueva ("estacionesPremiadas") dentro del mismo
+  objeto que ya se guardaba para este módulo (junto a "completado",
+  "informe", "xpAwarded" — mismo patrón, ninguna estructura nueva en
+  Storage).
+- No se borra ninguna respuesta del estudiante.
+- No se cambia el significado de "completado" (los 300 XP del informe
+  final siguen otorgándose exactamente igual que antes, con su propia
+  guarda intacta).
+- No se resta XP a nadie ni se modifica ningún perfil existente: un
+  perfil que ya había completado el proyecto antes de este fix
+  simplemente ya no tiene ocasión de volver a recibir XP de estación
+  después de completado (eso se infiere de "completado:true", sin
+  escribir nada retroactivo en su perfil).
 
-ESTE PAQUETE NO REQUIERE NINGÚN PASO EN SUPABASE — los 4 archivos son
-100% del lado del navegador (HTML/JavaScript).
+Verificado con 3 pruebas funcionales automatizadas (detalle completo
+en MQC_LOTE_PREINTEGRIDAD_XP2_REPORTE.md):
+  A) La secuencia exacta que pediste: primera finalización de la
+     estación 7 → +30 XP · "Revisar el caso" → "Continuar" → +0 ·
+     repetir de nuevo → +0.
+  B) Un perfil nuevo puede obtener exactamente una vez los 30 XP de
+     CADA una de las 7 estaciones, y el informe final sigue otorgando
+     sus 300 XP con su guarda original intacta.
+  C) Un perfil YA EXISTENTE (que ya tenía el proyecto completado antes
+     de este fix, sin la guarda nueva) queda protegido igual, sin
+     necesitar ninguna migración escrita sobre su perfil.
 
-Archivos incluidos (4), con su ruta EXACTA dentro del repo:
+Archivo incluido (1), con su ruta EXACTA dentro del repo:
 
-    index.html
-    js/modules/grade-select.js
-    js/modules/home.js
-    js/shared/mqc-fisica-flags.js          ← archivo NUEVO
+    js/modules/integrador.js
 
 Cómo subirlo a GitHub
 ----------------------
@@ -32,32 +54,30 @@ Cómo subirlo a GitHub
    carpeta "MasQueCiencia_Beta_v1.0/" con la misma estructura de
    subcarpetas que tu repo.
 
-2. Copiá estos 4 archivos a las mismas rutas dentro de tu copia local
-   del repo:
-   - index.html                    → REEMPLAZA el que ya existe
-   - js/modules/grade-select.js    → REEMPLAZA el que ya existe
-   - js/modules/home.js            → REEMPLAZA el que ya existe
-   - js/shared/mqc-fisica-flags.js → es un archivo NUEVO, se agrega
+2. Copiá el archivo a la misma ruta dentro de tu copia local del
+   repo:
+   - js/modules/integrador.js   → REEMPLAZA el que ya existe
 
-3. Confirmá los cambios con git y subilos a GitHub, por ejemplo:
+3. Confirmá el cambio con git y subilo a GitHub, por ejemplo:
 
-     git add index.html js/modules/grade-select.js js/modules/home.js js/shared/mqc-fisica-flags.js
-     git commit -m "Fase 2 Lote 9: Fisica ya se puede avanzar + banner de apoyo docente"
+     git add js/modules/integrador.js
+     git commit -m "Lote previo de integridad XP 2.0: guarda persistida por estacion en Proyecto Integrador"
      git push
 
 Qué vas a notar distinto
 --------------------------
-- En "Selecciona tu ruta científica", la tarjeta de Física ya dice
-  "Disponible" y al entrar aparecen botones reales "Continuar en
-  Física 10.º" / "Continuar en Física 11.º". La insignia del sidebar
-  ya no dice "Pronto".
-- En el dashboard de inicio, los perfiles docentes que ya usaron la
-  plataforma (al menos 1 unidad iniciada, o al menos 2 días distintos
-  de uso) van a ver, debajo del contenido normal, una tarjeta discreta
-  invitando a apoyar el proyecto. Un estudiante nunca la va a ver.
-  Se puede cerrar con "✕" (vuelve la próxima vez que abran el
-  navegador) o con "No volver a mostrar" (para siempre).
+Nada distinto en la experiencia normal de completar el proyecto una
+sola vez. La única diferencia observable es que "Revisar el caso" ya
+no vuelve a otorgar los 30 XP de la estación 7 (ni de ninguna otra) si
+se repite el flujo.
 
-Cualquier duda, todo el detalle técnico y de verificación está en
-MQC_AUDITORIA_FASE2_LOTE9_FISICA_APOYO_DOCENTE.md, que te llega junto
-con este paquete.
+Sobre la Parte B (tabla de XP de juego) y la migración XP 2.0
+---------------------------------------------------------------
+Este paquete NO incluye la Parte B (la tabla conceptual de XP de
+juego) porque esa parte es una propuesta técnica, no un cambio de
+código — está en el reporte .md, para tu aprobación.
+
+Tampoco incluye ningún cambio relacionado con la migración XP 2.0
+en sí (xpQuimica, xpFisica, rangos, etc.) — eso sigue sin
+implementarse, a la espera de tu aprobación explícita, tal como
+pediste.
