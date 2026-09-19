@@ -32,6 +32,42 @@
   function saveState(v){ if(typeof Storage!=='undefined'&&Storage&&Storage.set){try{Storage.set(KEY,v);}catch(e){}} }
   function sub(f){ return String(f).replace(/(\d+)/g,'<sub>$1</sub>'); }
 
+  /* AUDITORÍA FASE 2 — LOTE PREINTEGRIDAD XP 2.0: guarda persistida por
+     estación para 'integrador-estacion' (antes solo protegida por la
+     interfaz, igual que los 2 hallazgos CRÍTICOS ya corregidos en el
+     Lote 1 para section-visited/element-explored — este era el que
+     faltaba, encontrado con una prueba funcional real: el botón real
+     "← Revisar el caso" del informe final vuelve a la estación 7 sin
+     pedir responder de nuevo, y su botón "Continuar" volvía a otorgar
+     30 XP cada vez, indefinidamente, sin devtools ni trucos).
+
+     100% ADITIVO:
+     - Nueva clave `estacionesPremiadas` dentro de Storage.get('integrador')
+       (el mismo objeto que ya existía, mismo patrón que `completado`/
+       `informe`/`xpAwarded` — no se agrega ninguna clave nueva a
+       Storage.defaults() ni se toca ningún otro módulo).
+     - NO borra `respuestas` (sigue viviendo solo en memoria, como
+       siempre — esta guarda no la toca).
+     - NO cambia el significado de `completado` (`_submitInformeOnce`
+       sigue exactamente igual, con su propia guarda de 300 XP intacta).
+     - NO resta XP histórico de nadie ni migra ningún perfil existente:
+       un perfil que ya tenía `completado:true` ANTES de este fix
+       simplemente nunca tuvo la ocasión de volver a otorgarse XP de
+       estación después de completar el proyecto (ver la condición
+       `st.completado===true` abajo) — se lee el estado tal cual está,
+       nunca se le escribe nada retroactivo. */
+  function _estacionYaPremiada(id, st) {
+    if (st.completado === true) return true; /* si el proyecto ya está entregado, las 7 estaciones ya se premiaron en su momento (no hay forma de llegar a 'completado' sin pasar por las 7) */
+    return !!(st.estacionesPremiadas && st.estacionesPremiadas[id]);
+  }
+  function _awardEstacionOnce(id) {
+    const st = loadState();
+    if (_estacionYaPremiada(id, st)) return; /* ya otorgada antes: "Revisar el caso → Continuar" (o cualquier reingreso futuro) ya no vuelve a otorgar XP */
+    const premiadas = Object.assign({}, st.estacionesPremiadas || {}, { [id]: true });
+    saveState(Object.assign({}, st, { estacionesPremiadas: premiadas }));
+    awardXP('integrador-estacion');
+  }
+
   function box(t,c,col){col=col||C;return `<div style="border-left:4px solid ${col};background:var(--bg-elevated);border-radius:0 var(--radius-md) var(--radius-md) 0;padding:.75rem 1rem;margin:.75rem 0"><strong style="color:${col};font-size:.85rem;display:block;margin-bottom:.25rem">${t}</strong><span style="font-size:.9rem;color:var(--text-secondary);line-height:1.6">${c}</span></div>`;}
 
   /* ============================================================
@@ -144,7 +180,7 @@
       stage().innerHTML = stationChrome(e, body);
       const o1=stage().querySelector('#int-e1-ops'); if(o1) stage().querySelectorAll('[data-o]').forEach(b=>b.addEventListener('click',()=>{g1=b.getAttribute('data-o');respuestas.e1_g1=g1;paso=2;respuestas.e1_paso=2;draw();}));
       stage().querySelectorAll('[data-o2]').forEach(b=>b.addEventListener('click',()=>{g2=+b.getAttribute('data-o2');respuestas.e1_g2=g2;paso=3;respuestas.e1_paso=3;draw();}));
-      const nx=stage().querySelector('#int-e1-next'); if(nx) nx.addEventListener('click',()=>{awardXP('integrador-estacion');next();});
+      const nx=stage().querySelector('#int-e1-next'); if(nx) nx.addEventListener('click',()=>{_awardEstacionOnce('e1');next();});
     }
     draw();
   }
@@ -169,7 +205,7 @@
       }
       stage().innerHTML = stationChrome(e, body);
       stage().querySelectorAll('[data-o]').forEach(b=>b.addEventListener('click',()=>{guess=b.getAttribute('data-o');respuestas.e2_guess=guess;paso=2;respuestas.e2_paso=2;draw();}));
-      const nx=stage().querySelector('#int-e2-next'); if(nx) nx.addEventListener('click',()=>{awardXP('integrador-estacion');next();});
+      const nx=stage().querySelector('#int-e2-next'); if(nx) nx.addEventListener('click',()=>{_awardEstacionOnce('e2');next();});
     }
     draw();
   }
@@ -189,7 +225,7 @@
       }
       stage().innerHTML = stationChrome(e, body);
       stage().querySelectorAll('[data-o]').forEach(b=>b.addEventListener('click',()=>{respuestas.e3_guess=b.getAttribute('data-o');respuestas.e3_done=true;answered=true;draw();}));
-      const nx=stage().querySelector('#int-e3-next'); if(nx) nx.addEventListener('click',()=>{awardXP('integrador-estacion');next();});
+      const nx=stage().querySelector('#int-e3-next'); if(nx) nx.addEventListener('click',()=>{_awardEstacionOnce('e3');next();});
     }
     draw();
   }
@@ -220,7 +256,7 @@
       stage().innerHTML = stationChrome(e, body);
       stage().querySelector('#int-e4-slider').addEventListener('input',ev=>{masa=+ev.target.value;respuestas.e4_masa=masa;draw();});
       const ok=stage().querySelector('#int-e4-ok'); if(ok) ok.addEventListener('click',()=>{revealed=true;respuestas.e4_done=true;respuestas.e4_mol=mol;draw();});
-      const nx=stage().querySelector('#int-e4-next'); if(nx) nx.addEventListener('click',()=>{awardXP('integrador-estacion');next();});
+      const nx=stage().querySelector('#int-e4-next'); if(nx) nx.addEventListener('click',()=>{_awardEstacionOnce('e4');next();});
     }
     draw();
   }
@@ -254,7 +290,7 @@
       stage().innerHTML = stationChrome(e, body);
       stage().querySelector('#int-e5-slider').addEventListener('input',ev=>{V2=+ev.target.value;respuestas.e5_v2=V2;draw();});
       const ok=stage().querySelector('#int-e5-ok'); if(ok) ok.addEventListener('click',()=>{done=true;respuestas.e5_done=true;draw();});
-      const nx=stage().querySelector('#int-e5-next'); if(nx) nx.addEventListener('click',()=>{awardXP('integrador-estacion');next();});
+      const nx=stage().querySelector('#int-e5-next'); if(nx) nx.addEventListener('click',()=>{_awardEstacionOnce('e5');next();});
     }
     draw();
   }
@@ -277,7 +313,7 @@
       }
       stage().innerHTML = stationChrome(e, body);
       stage().querySelectorAll('[data-o]').forEach(b=>b.addEventListener('click',()=>{guess=b.getAttribute('data-o');respuestas.e6_guess=guess;draw();}));
-      const nx=stage().querySelector('#int-e6-next'); if(nx) nx.addEventListener('click',()=>{awardXP('integrador-estacion');next();});
+      const nx=stage().querySelector('#int-e6-next'); if(nx) nx.addEventListener('click',()=>{_awardEstacionOnce('e6');next();});
     }
     draw();
   }
@@ -304,7 +340,7 @@
       stage().innerHTML = stationChrome(e, body);
       stage().querySelectorAll('[data-o1]').forEach(b=>b.addEventListener('click',()=>{respuestas.e7_o1=b.getAttribute('data-o1');paso=2;respuestas.e7_paso=2;draw();}));
       stage().querySelectorAll('[data-o2]').forEach(b=>b.addEventListener('click',()=>{g1=b.getAttribute('data-o2');respuestas.e7_g1=g1;paso=3;respuestas.e7_paso=3;draw();}));
-      const nx=stage().querySelector('#int-e7-next'); if(nx) nx.addEventListener('click',()=>{awardXP('integrador-estacion');next();});
+      const nx=stage().querySelector('#int-e7-next'); if(nx) nx.addEventListener('click',()=>{_awardEstacionOnce('e7');next();});
     }
     draw();
   }
@@ -440,7 +476,18 @@
         const st = loadState();
         if (st.completado) cursor = ESTACIONES.length - 1; /* si ya lo completó, entra directo al informe */
         render();
-        awardXP('section-visited');
+        /* AUDITORÍA FASE 2 — Hallazgo CRÍTICO #1: awardXP('section-visited')
+           se otorgaba en cada init() del módulo sin ninguna bandera
+           persistida, y Router.navigate() ejecuta destroy()+init() en cada
+           visita — cualquier ida y vuelta a esta sección otorgaba 5 XP de
+           forma indefinida. Se persiste ahora en el mismo estado ya
+           guardado por loadState()/saveState() (misma clave KEY), con el
+           mismo patrón de bandera de una sola vez usado en el resto del
+           sistema (topicsRead, examXpAwarded, etc.). */
+        if (!st.sectionVisited) {
+          saveState(Object.assign({}, st, { sectionVisited: true }));
+          awardXP('section-visited');
+        }
       },
       destroy: function () {}
     });
