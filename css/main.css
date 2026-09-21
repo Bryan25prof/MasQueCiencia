@@ -625,6 +625,9 @@ code, .formula {
   padding: 0.6rem 1rem;
   border-bottom: 1px solid var(--border);
   background: rgba(255, 255, 255, 0.02);
+  position: relative; /* necesario para que .mqc-apoyo-ribbon (position:absolute)
+                          se posicione respecto de ESTA tarjeta, y no de un
+                          ancestro más grande — eso era lo que la cortaba */
 }
 
 .user-avatar {
@@ -841,6 +844,91 @@ code, .formula {
 .btn-lg { padding: 0.85rem 2rem; font-size: 1rem; }
 .btn-sm { padding: 0.35rem 0.85rem; font-size: 0.8rem; border-radius: var(--radius-sm); }
 .btn-block { width: 100%; }
+
+/* ----------------------------------------------------------------
+   9.5 NAVEGACIÓN DE EXAMEN/SIMULACRO — barra compacta y centrada
+   (Auditoría Integral MQC — Fase 1, Punto 7: ÚNICA corrección de
+   código autorizada en esta fase. Componente/CSS compartido para
+   que cualquier motor de evaluación que reutilice esta navegación
+   —simulacro nacional hoy; finales/PNE de dominio a futuro— reciba
+   el mismo layout responsive sin duplicar reglas por archivo.)
+
+   Estructura esperada:
+     <div class="mqc-exam-nav">
+       <div class="mqc-exam-nav__group">
+         [← Anterior] [🔢 Ver todas las preguntas] [Siguiente →]
+       </div>
+       <div class="mqc-exam-nav__submit">
+         [Entregar simulacro/examen]
+       </div>
+     </div>
+
+   Reglas de diseño:
+   - El grupo de navegación secuencial vive en su propio contenedor
+     "compacto" (ancho ajustado al contenido, no ancho completo) para
+     que en escritorio no se vea como 3 botones sueltos y separados.
+   - flex-wrap controlado: si no cabe en una línea, los botones bajan
+     de línea PERO sin salir de su contenedor agrupado (nunca se
+     dispersan por el ancho completo de la pantalla).
+   - El botón "Entregar" va debajo, como acción independiente.
+   - El padding-bottom del bloque completo (aplicado UNA sola vez, al
+     final de todo el bloque, no entre filas) es mayor que la altura del
+     chip flotante de perfil (#mqc-chip, position:fixed;bottom:1rem)
+     para que nunca se superponga, en cualquier breakpoint. No se usa
+     z-index para "resolver" la superposición: se resuelve con
+     espacio real reservado en el flujo del documento.
+---------------------------------------------------------------- */
+.mqc-exam-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  max-width: 760px;
+  margin: 1rem auto 0;
+  padding-bottom: calc(4.75rem + env(safe-area-inset-bottom, 0px));
+  box-sizing: border-box;
+}
+
+.mqc-exam-nav__group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem 0.6rem;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto;
+  padding: 0.4rem 0.6rem;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-sizing: border-box;
+}
+
+.mqc-exam-nav__group .btn {
+  flex: 0 1 auto;
+  white-space: nowrap;
+}
+
+.mqc-exam-nav__submit {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.mqc-exam-nav__submit .btn { width: auto; min-width: 180px; }
+
+/* En pantallas angostas (320-412px de referencia) el texto de
+   "Ver todas las preguntas" es el más largo del grupo: se permite
+   que el grupo pase a 2 líneas SIN romper el contenedor agrupado, y
+   se recorta un poco el padding/tamaño para que los 3 controles
+   sigan leyéndose como una sola unidad compacta. */
+@media (max-width: 480px) {
+  .mqc-exam-nav__group { gap: 0.45rem 0.5rem; padding: 0.35rem 0.5rem; }
+  .mqc-exam-nav__group .btn { font-size: 0.78rem; padding: 0.4rem 0.65rem; }
+  .mqc-exam-nav__submit .btn { width: 100%; min-width: 0; }
+}
 
 /* ----------------------------------------------------------------
    10. CARDS & PANELS
@@ -1908,25 +1996,95 @@ code, .formula {
 }
 
 /* ----------------------------------------------------------------
-   19. ABOUT PAGE
+   19. ABOUT PAGE (PENDIENTE A — Fase 2: contenido real por bloques/
+   cards cortos, en vez de una pared de texto. Reemplaza el diseño
+   anterior de esta sección, que nunca llegó a conectarse a ninguna
+   pantalla real — ver js/core/router.js, _aboutPageHTML).
 ---------------------------------------------------------------- */
-.about-page { max-width: 700px; margin: 0 auto; animation: pageIn 0.4s ease; }
-
-.about-hero {
-  text-align: center;
-  padding: 2rem 1rem;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 1.5rem;
+.about-page {
+  max-width: 640px;
+  margin: 0 auto;
+  text-align: center; /* hereda de .placeholder-page para el logo/título */
 }
 
-.about-icon { font-size: 4rem; display: block; margin-bottom: 1rem; animation: float 4s ease-in-out infinite; }
-
-.about-section {
+.about-card {
   background: var(--bg-card);
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 1.25rem;
-  margin-bottom: 1rem;
+  padding: 1.25rem 1.4rem;
+  margin: 0 0 1rem;
+  text-align: left; /* el contenido de cada card se lee mejor alineado a la izquierda */
+  animation: pageIn 0.4s ease;
+}
+
+.about-card p {
+  color: var(--text-secondary);
+  line-height: 1.75;
+  margin: 0 0 0.75rem;
+}
+.about-card p:last-child { margin-bottom: 0; }
+
+.about-card-title {
+  margin: 0 0 0.6rem;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.about-card-credit {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.about-card-note {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.about-list {
+  margin: 0 0 0.75rem 1.1rem;
+  padding: 0;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
+.about-list li { margin-bottom: 0.25rem; }
+
+.about-status-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.about-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-full);
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  white-space: nowrap;
+}
+.about-status-pill.available {
+  border-color: rgba(31, 219, 255, 0.4);
+  background: rgba(31, 219, 255, 0.08);
+  color: var(--cyan);
+}
+.about-status-pill.soon {
+  border-color: rgba(123, 47, 255, 0.4);
+  background: rgba(123, 47, 255, 0.08);
+  color: var(--violet);
+}
+
+.about-card-principles { text-align: center; }
+
+/* La tarjeta "♡ Apoyar MQC" (inyectada por js/shared/support.js al
+   final de .placeholder-page) hereda el mismo espaciado que el resto
+   de bloques de esta página — sin reglas especiales necesarias acá. */
+
+@media (max-width: 480px) {
+  .about-card { padding: 1.1rem; }
 }
 
 /* ----------------------------------------------------------------
@@ -2738,8 +2896,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 }
 .mqc-apoyo-ribbon {
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: 3px;
+  right: 3px;
   background: #F9FF4D;
   color: #04141c;
   font-size: 0.56rem;
