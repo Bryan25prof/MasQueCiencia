@@ -51,9 +51,11 @@ const Router = (() => {
    * @param {boolean} [noHistory] — No guardar en _prevSection
    */
   function navigate(section, params, noHistory) {
-    /* Si no existe el módulo, mostrar placeholder */
+    /* Si no existe el módulo, mostrar placeholder (o, para "about",
+       su página dedicada — ver PENDIENTE A) */
     if (!_modules[section]) {
-      _showPlaceholder(section);
+      if (section === 'about') _showAbout();
+      else _showPlaceholder(section);
       _setActive(section);
       _closeSidebarMobile();
       if (!noHistory) _prevSection = _current;
@@ -153,13 +155,12 @@ const Router = (() => {
        en un contenedor propio (.placeholder-image-wrap, ver main.css),
        en vez de depender de que <img> herede text-align del padre — así
        queda centrado de forma robusta y responsive, sin márgenes fijos.
-       PARTE 11: el id="mqc-about-logo" SOLO se agrega cuando la imagen es
-       específicamente el logo de "Acerca de" — es el único punto donde
-       engancha el disparador oculto del panel de desarrollador
-       (ver js/shared/devtools.js). Ninguna otra imagen del sitio lo tiene. */
-    const imgId = (section === 'about') ? ' id="mqc-about-logo"' : '';
+       PENDIENTE A: "about" ya no pasa por esta función genérica (tiene
+       su propia página dedicada, ver _showAbout más abajo), así que el
+       id="mqc-about-logo" para el disparador oculto de devtools.js ahora
+       se agrega directamente ahí — este helper genérico ya no lo necesita. */
     const imageHTML = meta.image
-      ? `<div class="placeholder-image-wrap"><img${imgId} src="${meta.image}" alt="${meta.imageAlt || ''}" class="placeholder-image"></div>`
+      ? `<div class="placeholder-image-wrap"><img src="${meta.image}" alt="${meta.imageAlt || ''}" class="placeholder-image"></div>`
       : '';
     const accentStyle = meta.accent ? ` style="color:${meta.accent};text-shadow:0 0 16px ${meta.accent}55"` : '';
 
@@ -178,31 +179,106 @@ const Router = (() => {
     `;
   }
 
+  /* ================================================================
+     PENDIENTE A — "Acerca de la Plataforma" (página dedicada)
+     ================================================================
+     Antes usaba el mecanismo genérico _showPlaceholder (una descripción
+     corta + insignia "En Construcción"). Se separa en una función propia
+     porque el contenido real ya no es un placeholder — es contenido
+     permanente y más extenso, organizado en bloques/cards cortos (nunca
+     una pared de texto ni una pantalla de términos y condiciones).
+
+     Compatibilidad deliberada con código externo que observa este DOM
+     desde afuera ("archivo congelado", según sus propios comentarios):
+       - conserva la clase .placeholder-page como contenedor raíz y el
+         texto literal "Acerca de la Plataforma" en un <h2> — de eso
+         depende js/shared/support.js (_watchContent/_injectAboutCard)
+         para inyectar el botón "♡ Apoyar MQC" al final de esta página,
+         sin que este archivo necesite saber que existe.
+       - conserva id="mqc-about-logo" en la imagen del logo — de eso
+         depende js/shared/devtools.js (disparador oculto del panel de
+         desarrollador, 5 toques sobre el logo).
+     ================================================================ */
+  function _showAbout() {
+    const content = document.getElementById('content');
+    if (!content) return;
+    content.innerHTML = _aboutPageHTML();
+  }
+
+  function _aboutPageHTML() {
+    return `
+      <div class="placeholder-page about-page">
+        <div class="placeholder-image-wrap">
+          <img id="mqc-about-logo" src="assets/branding/mqc-logo-ciencias.jpg" alt="MásQueCiencia — Ciencias Interactivas" class="placeholder-image">
+        </div>
+        <h2 class="placeholder-title">Acerca de la Plataforma</h2>
+
+        <div class="about-card">
+          <p>MásQueCiencia es una plataforma educativa interactiva orientada al aprendizaje de las ciencias para estudiantes de 10.º y 11.º año del sistema educativo costarricense. Actualmente, los módulos de Química y Física se encuentran habilitados, mientras que Biología constituye la próxima etapa de desarrollo del proyecto. MQC integra contenidos, actividades, simulaciones, juegos y experiencias de evaluación diseñadas para favorecer la comprensión, el razonamiento científico y la aplicación de los conocimientos.</p>
+          <p class="about-card-credit">Un proyecto del Lic. Bryan Chavarría C., pensado para estudiantes de secundaria del sistema educativo de Costa Rica.</p>
+        </div>
+
+        <div class="about-card">
+          <h3 class="about-card-title">🔬 Estado actual de las ciencias</h3>
+          <div class="about-status-row">
+            <span class="about-status-pill available">✅ Química — Disponible</span>
+            <span class="about-status-pill available">✅ Física — Disponible</span>
+            <span class="about-status-pill soon">🧬 Biología — Próxima etapa de desarrollo</span>
+          </div>
+        </div>
+
+        <div class="about-card">
+          <h3 class="about-card-title">🤖 Transparencia sobre inteligencia artificial</h3>
+          <p>MQC es un proyecto de autoría y dirección docente, desarrollado con apoyo de herramientas de inteligencia artificial. En su desarrollo se utilizaron específicamente ChatGPT (OpenAI) y Claude (Anthropic) como herramientas de apoyo para programación, organización, análisis, generación de propuestas y desarrollo de experiencias interactivas.</p>
+          <p>El contenido y las decisiones finales están sujetos a revisión y criterio profesional humano: la inteligencia artificial no sustituye la responsabilidad académica, pedagógica ni científica del autor. MQC no se presenta como un producto "creado por IA".</p>
+        </div>
+
+        <div class="about-card">
+          <h3 class="about-card-title">📚 Fuentes y reconocimiento académico</h3>
+          <p>MQC utiliza como referencia materiales educativos y académicos pertinentes, entre ellos:</p>
+          <ul class="about-list">
+            <li>materiales y evaluaciones oficiales del Ministerio de Educación Pública de Costa Rica (MEP), especialmente como orientación para prácticas y simulaciones tipo PNE;</li>
+            <li>Didáctica Multimedia;</li>
+            <li>Editorial Porras;</li>
+            <li>bibliografía universitaria;</li>
+            <li>otras fuentes académicas pertinentes.</li>
+          </ul>
+          <p class="about-card-note">MQC reconoce estas fuentes y respeta la propiedad intelectual correspondiente. Esta plataforma no afirma afiliación, patrocinio ni aval oficial de estas instituciones ni editoriales.</p>
+        </div>
+
+        <div class="about-card">
+          <h3 class="about-card-title">🔓 Acceso gratuito</h3>
+          <p>MásQueCiencia es una plataforma educativa de acceso gratuito: no requiere suscripción ni compra para acceder a los contenidos académicos.</p>
+          <p>MQC puede ofrecer mecanismos de apoyo o donación voluntaria destinados al mantenimiento y desarrollo del proyecto, pero ese apoyo nunca condiciona el acceso a contenidos, evaluaciones, progreso ni funciones académicas.</p>
+        </div>
+
+        <div class="about-card">
+          <h3 class="about-card-title">🗂️ Datos, perfiles y Analytics</h3>
+          <p>Determinadas funciones y datos del perfil —como el progreso guardado— funcionan de manera local en el dispositivo. De forma separada, determinadas métricas autorizadas de seguimiento y análisis pueden apoyarse en infraestructura de Supabase.</p>
+          <p>MQC utiliza infraestructura tecnológica de Supabase para apoyar determinadas funciones de seguimiento y análisis estadístico. La información recopilada mediante estos mecanismos está destinada al análisis del funcionamiento y rendimiento académico dentro de la plataforma, con el propósito de identificar tendencias, evaluar el desempeño general y orientar mejoras educativas y técnicas de MQC. Estos datos no tienen como finalidad su publicación como información individual de los estudiantes y su acceso se encuentra sujeto a los controles de seguridad y permisos configurados en la plataforma.</p>
+        </div>
+
+        <div class="about-card about-card-principles">
+          <h3 class="about-card-title">🧭 Principios del proyecto</h3>
+          <p>MQC busca un uso responsable, crítico y transparente de la tecnología, reconoce las fuentes y la propiedad intelectual involucradas, y mantiene el criterio profesional docente como elemento central de las decisiones educativas de la plataforma.</p>
+        </div>
+
+        <button class="btn btn-ghost" style="margin-top:0.5rem" data-nav="home">
+          ← Volver al Inicio
+        </button>
+      </div>
+    `;
+  }
+
   /** Metadatos de las secciones placeholder (el mecanismo genérico de
-      fallback se mantiene intacto para cualquier ruta no registrada) */
+      fallback se mantiene intacto para cualquier ruta no registrada).
+      PENDIENTE A: 'about' ya no vive acá — tiene su propia página
+      dedicada (_showAbout/_aboutPageHTML). 'fisica-proximamente' se
+      retiró: confirmado por grep en todo el repo que no tenía ninguna
+      referencia funcional (ningún data-section apunta a esa ruta desde
+      que Física 10.º/11.º pasaron a ser rutas reales y públicas). */
   function _placeholderMeta(section) {
     const map = {
-      'about': {
-        /* SPRINT MULTICIENCIA — FASE 1: ahora usa el logo oficial nuevo
-           (Química/Física/Biología) en vez del emoji de átomo solo, y el
-           texto ya no presenta a MQC como exclusivamente Química. */
-        image: 'assets/branding/mqc-logo-ciencias.jpg',
-        imageAlt: 'MásQueCiencia — Ciencias Interactivas',
-        icon: '⚛️',
-        iconGlow: true,
-        title: 'Acerca de la Plataforma',
-        desc: 'MásQueCiencia es una plataforma interactiva orientada al aprendizaje de Química, Física y Biología para 10.º y 11.º. Química ya está disponible y en funcionamiento completo; Física y Biología se irán incorporando en próximas fases. Un proyecto del Lic. Bryan Chavarría C., pensado para estudiantes de secundaria del sistema educativo de Costa Rica.'
-      },
-      /* SPRINT MULTICIENCIA — FASE 1: Física y Biología, "en desarrollo".
-         Sin contenido curricular real todavía — solo branding y
-         navegación, tal como pide el sprint (punto 11). */
-      'fisica-proximamente': {
-        icon: '⚛️',
-        iconGlow: true,
-        accent: '#7B2FFF',
-        title: 'Física — En Desarrollo',
-        desc: 'Física 10.º y 11.º ya forman parte de la visión de MásQueCiencia. Próximamente nuevas experiencias de aprendizaje: unidades, simuladores y juegos interactivos, con la misma calidad que ya conocés en Química.'
-      },
       'biologia-proximamente': {
         icon: '🧬',
         iconGlow: true,
