@@ -332,12 +332,13 @@
           <span class="nav-label">Proyecto Integrador</span>
         </li>
 
-        <!-- SPRINT MULTICIENCIA — FASE 1: Física y Biología, en desarrollo.
-             data-section apunta a rutas NO registradas en Router
-             ('fisica-proximamente'/'biologia-proximamente') — al no existir,
-             el propio router.js cae en su mecanismo genérico de fallback
-             (_showPlaceholder), ya usado por cualquier sección futura sin
-             construir. No se generó ningún contenido curricular nuevo. -->
+        <!-- PENDIENTE A (actualización): Física ya es una ruta real y
+             pública ('fisica10', registrada en Router — ver más abajo el
+             script inline que retira la insignia "Pronto"), así que ya
+             no cae en el fallback genérico de placeholder. Biología sí
+             sigue apuntando a una ruta NO registrada ('biologia-proximamente'),
+             así que para esa el propio router.js todavía cae en su
+             mecanismo genérico de fallback (_showPlaceholder). -->
         <!-- SPRINT MULTICIENCIA — FASE 1 (ajuste v2, por pedido explícito):
              Física y Biología pasan a ser grupos PARALELOS a Química, con
              la misma jerarquía visual (mismo estilo de separador), en vez
@@ -545,6 +546,7 @@
 
 <!-- 2. Core -->
 <script src="js/core/storage.js"></script>
+<script src="js/core/xp2.js"></script>
 <script src="js/core/gamification.js"></script>
 <script src="js/core/router.js"></script>
 <script src="js/data/catalogo-colegios.js"></script>
