@@ -1,52 +1,36 @@
-MQC — LOTE PREVIO DE INTEGRIDAD (previo a la migración XP 2.0)
-================================================================
+MQC — PENDIENTE A: Actualización de "Acerca de la Plataforma"
+==================================================================
 
 Qué es este paquete
 --------------------
-Es la Parte A del "lote previo de integridad" que pediste antes de
-autorizar la migración XP 2.0: la corrección de un bug real de
-farmeo de XP en el Proyecto Integrador Final ("Alerta en el Río
-Pacuare").
+Es la actualización de contenido y presentación de la pantalla
+"Acerca de la Plataforma" que pediste: corrige que Física ya está
+disponible (ya no se presenta como "próxima fase"), agrega
+transparencia sobre el uso de IA (ChatGPT/OpenAI y Claude/Anthropic),
+reconocimiento de fuentes académicas (MEP, Didáctica Multimedia,
+Editorial Porras, bibliografía universitaria), una declaración de
+acceso gratuito, una explicación de datos/perfiles/Analytics/Supabase,
+y un cierre de "Principios del proyecto" — todo organizado en 7 cards
+cortas y visualmente jerarquizadas (nada de pared de texto ni pantalla
+de términos y condiciones), manteniendo el lenguaje visual "Cosmos de
+Laboratorio" de siempre.
 
-El bug: cada una de las 7 estaciones del proyecto otorgaba sus 30 XP
-sin ninguna guarda persistida. El único camino de regreso del flujo
-("← Revisar el caso", en la pantalla final) llevaba de nuevo a la
-estación 7, y su botón "Continuar" volvía a otorgar los 30 XP cada
-vez — de forma indefinida, con un botón real de la interfaz, sin
-necesidad de herramientas de desarrollador ni trucos. Confirmado con
-una prueba funcional real (no solo lectura de código): se repitió el
-ciclo dos veces y ambas veces se otorgaron 30 XP de más.
+Este paquete NO toca Storage, XP, progreso, exámenes, desbloqueos,
+Suficiencia, PNE, Analytics, Supabase, perfiles ni rutas académicas —
+es exclusivamente contenido/presentación de esa pantalla, tal como
+pediste. Se probó con Playwright contra los archivos reales (28
+verificaciones automatizadas, ver
+MQC_PENDIENTE_A_IMPLEMENTACION_REPORTE.md para el detalle completo),
+incluyendo una verificación específica de que el botón "♡ Apoyar MQC"
+(inyectado por support.js) y el disparador oculto del panel de
+desarrollador (devtools.js, 5 toques sobre el logo) siguen funcionando
+exactamente igual que antes.
 
-La corrección es puramente ADITIVA:
-- Se agrega una guarda nueva ("estacionesPremiadas") dentro del mismo
-  objeto que ya se guardaba para este módulo (junto a "completado",
-  "informe", "xpAwarded" — mismo patrón, ninguna estructura nueva en
-  Storage).
-- No se borra ninguna respuesta del estudiante.
-- No se cambia el significado de "completado" (los 300 XP del informe
-  final siguen otorgándose exactamente igual que antes, con su propia
-  guarda intacta).
-- No se resta XP a nadie ni se modifica ningún perfil existente: un
-  perfil que ya había completado el proyecto antes de este fix
-  simplemente ya no tiene ocasión de volver a recibir XP de estación
-  después de completado (eso se infiere de "completado:true", sin
-  escribir nada retroactivo en su perfil).
+Archivos incluidos (3 en total), con su ruta EXACTA dentro del repo:
 
-Verificado con 3 pruebas funcionales automatizadas (detalle completo
-en MQC_LOTE_PREINTEGRIDAD_XP2_REPORTE.md):
-  A) La secuencia exacta que pediste: primera finalización de la
-     estación 7 → +30 XP · "Revisar el caso" → "Continuar" → +0 ·
-     repetir de nuevo → +0.
-  B) Un perfil nuevo puede obtener exactamente una vez los 30 XP de
-     CADA una de las 7 estaciones, y el informe final sigue otorgando
-     sus 300 XP con su guarda original intacta.
-  C) Un perfil YA EXISTENTE (que ya tenía el proyecto completado antes
-     de este fix, sin la guarda nueva) queda protegido igual, sin
-     necesitar ninguna migración escrita sobre su perfil.
-
-Archivo incluido (1), con su ruta EXACTA dentro del repo:
-
-    js/modules/integrador.js
+    index.html          ← REEMPLAZA (solo un comentario actualizado, sin cambios funcionales)
+    js/core/router.js   ← REEMPLAZA
+    css/main.css        ← REEMPLAZA
 
 Cómo subirlo a GitHub
 ----------------------
@@ -54,30 +38,38 @@ Cómo subirlo a GitHub
    carpeta "MasQueCiencia_Beta_v1.0/" con la misma estructura de
    subcarpetas que tu repo.
 
-2. Copiá el archivo a la misma ruta dentro de tu copia local del
-   repo:
-   - js/modules/integrador.js   → REEMPLAZA el que ya existe
+2. Copiá estos 3 archivos a las mismas rutas dentro de tu copia local
+   del repo, reemplazando los que ya existen.
 
-3. Confirmá el cambio con git y subilo a GitHub, por ejemplo:
+3. Confirmá los cambios con git y subilos a GitHub, por ejemplo:
 
-     git add js/modules/integrador.js
-     git commit -m "Lote previo de integridad XP 2.0: guarda persistida por estacion en Proyecto Integrador"
+     git add index.html js/core/router.js css/main.css
+     git commit -m "Pendiente A: actualizacion integral de Acerca de la Plataforma"
      git push
 
 Qué vas a notar distinto
 --------------------------
-Nada distinto en la experiencia normal de completar el proyecto una
-sola vez. La única diferencia observable es que "Revisar el caso" ya
-no vuelve a otorgar los 30 XP de la estación 7 (ni de ninguna otra) si
-se repite el flujo.
+La pantalla "Acerca de la Plataforma" (menú "Acerca de") ahora muestra
+7 bloques cortos en vez del párrafo único de antes: presentación de
+MQC (con crédito), estado de las ciencias (Química/Física disponibles,
+Biología próxima etapa — ya no dice que Física "se irá incorporando"),
+transparencia sobre IA, fuentes académicas, acceso gratuito, datos/
+Analytics/Supabase, y principios del proyecto. Todo dentro del mismo
+estilo visual de siempre (tarjetas oscuras, bordes violeta/cian).
 
-Sobre la Parte B (tabla de XP de juego) y la migración XP 2.0
----------------------------------------------------------------
-Este paquete NO incluye la Parte B (la tabla conceptual de XP de
-juego) porque esa parte es una propuesta técnica, no un cambio de
-código — está en el reporte .md, para tu aprobación.
+El botón "♡ Apoyar MQC" y el disparador oculto del panel de
+desarrollador (5 toques sobre el logo) siguen apareciendo exactamente
+igual que antes — no se tocó ninguno de esos dos mecanismos, solo se
+verificó que siguen funcionando con el nuevo contenido.
 
-Tampoco incluye ningún cambio relacionado con la migración XP 2.0
-en sí (xpQuimica, xpFisica, rangos, etc.) — eso sigue sin
-implementarse, a la espera de tu aprobación explícita, tal como
-pediste.
+Qué NO incluye este paquete
+------------------------------
+- No agrega ningún modal de aceptación ni mecanismo legal.
+- No modifica Storage, XP, progreso, exámenes, desbloqueos,
+  Suficiencia, PNE, Analytics, Supabase, perfiles ni rutas académicas.
+- No inicia el sidebar académico (Pendiente B) ni Biología — quedan
+  en espera, tal como pediste.
+
+Todo el detalle técnico y las 28 verificaciones automatizadas están en
+MQC_PENDIENTE_A_IMPLEMENTACION_REPORTE.md, que te llega junto con este
+paquete.
