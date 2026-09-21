@@ -289,7 +289,7 @@ Router.register('fisica11', (() => {
         const data = Storage.load();
         const uData = data.fisica11[_currentUnitId] || {};
         if (!uData.started) {
-          Gamification.addXP('unit-started');
+          Gamification.addXP('unit-started', { disciplina: 'fisica', grado: 11 });
           Storage.updateFisica11Unit(_currentUnitId, { started: true });
         }
       });
@@ -321,7 +321,10 @@ Router.register('fisica11', (() => {
       </div>`;
   }
 
-  function init() {
+  /* PENDIENTE B — Decisión 4: mismo soporte aditivo de unitId que
+     fisica10.js/units.js/grade11.js. Ver comentarios equivalentes en
+     esos archivos. */
+  function init(params) {
     if (!_fisica11Habilitado()) {
       const content = document.getElementById('content');
       if (content) {
@@ -331,10 +334,26 @@ Router.register('fisica11', (() => {
       }
       return;
     }
-    _infoUnitId = null;
-    _currentUnitId = null;
     _currentTab = 'teoria';
+    const unitId = params && params.unitId;
+    if (unitId) {
+      const u = FISICA11_UNIDADES_DATA.find(x => x.id === unitId);
+      if (u && u.status === 'active') { _infoUnitId = null; _currentUnitId = unitId; }
+      else { _infoUnitId = unitId; _currentUnitId = null; }
+    } else {
+      _infoUnitId = null;
+      _currentUnitId = null;
+    }
     _rerender();
+
+    if (_currentUnitId) {
+      const data = Storage.load();
+      const uData = data.fisica11[_currentUnitId] || {};
+      if (!uData.started) {
+        Gamification.addXP('unit-started', { disciplina: 'fisica', grado: 11 });
+        Storage.updateFisica11Unit(_currentUnitId, { started: true });
+      }
+    }
   }
 
   function destroy() { _infoUnitId = null; _currentUnitId = null; }

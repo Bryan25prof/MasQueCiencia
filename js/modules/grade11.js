@@ -227,7 +227,7 @@ Router.register('grade11', (() => {
         const data = Storage.load();
         const uData = data.grade11[_currentUnitId] || {};
         if (!uData.started) {
-          Gamification.addXP('unit-started');
+          Gamification.addXP('unit-started', { disciplina: 'quimica', grado: 11 });
           Storage.updateGrade11Unit(_currentUnitId, { started: true });
         }
       });
@@ -246,11 +246,45 @@ Router.register('grade11', (() => {
     }
   }
 
-  function init() {
-    _infoUnitId = null;
-    _currentUnitId = null;
+  /* PENDIENTE B — Decisión 4: soporte aditivo de unitId, mismo patrón
+     exacto que ya usa units.js (Química 10.º) para permitir que el
+     panel contextual del sidebar navegue directo a una unidad, sin
+     pasar por la grilla. No cambia ningún ID ni ruta existente.
+
+     Respeta el candado real de Química 11.º: si el grado sigue
+     bloqueado, un unitId recibido por parámetro se ignora por
+     completo y se muestra la misma pantalla de "todavía no está
+     desbloqueada" de siempre — nunca se salta el candado por esta
+     vía. Si la unidad pedida no está 'active' (en desarrollo), se
+     abre la misma vista informativa que ya usa la tarjeta bloqueada
+     de la grilla (_renderInfo), nunca una vista de pestañas vacía. */
+  function init(params) {
     _currentTab = 'teoria';
+    const unitId = params && params.unitId;
+    const g11 = Storage.load().grade11Unlock || { unlocked: false };
+
+    if (unitId && g11.unlocked) {
+      const u = GRADE11_UNIDADES_DATA.find(x => x.id === unitId);
+      if (u && u.status === 'active') { _infoUnitId = null; _currentUnitId = unitId; }
+      else { _infoUnitId = unitId; _currentUnitId = null; }
+    } else {
+      _infoUnitId = null;
+      _currentUnitId = null;
+    }
+
     _rerender();
+
+    if (_currentUnitId) {
+      /* Mismo XP de primera visita que ya otorga el clic normal sobre
+         la tarjeta (data-action="open-g11-unit") — no se duplica ni
+         se omite. */
+      const data = Storage.load();
+      const uData = data.grade11[_currentUnitId] || {};
+      if (!uData.started) {
+        Gamification.addXP('unit-started', { disciplina: 'quimica', grado: 11 });
+        Storage.updateGrade11Unit(_currentUnitId, { started: true });
+      }
+    }
   }
 
   function destroy() { _infoUnitId = null; _currentUnitId = null; }
