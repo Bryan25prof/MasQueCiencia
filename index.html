@@ -299,95 +299,54 @@
           <span class="nav-label">Inicio académico</span>
         </li>
 
-        <!-- SPRINT MULTICIENCIA — FASE 1: Química agrupada visualmente como
-             una de las tres disciplinas. Los data-section de abajo NO
-             cambiaron (siguen siendo 'home','units','grade11', etc.),
-             solo se agregó el separador de grupo — cero riesgo de romper
-             el router ni el progreso existente. -->
-        <li class="nav-separator" role="separator"><span>🧪 Química</span></li>
-        <li class="nav-item active" data-section="home" role="button" tabindex="0" aria-current="page">
-          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-<path d="M4 11 12 4l8 7"/><path d="M6 10v9h12v-9"/><path d="M10 19v-5h4v5"/>
-</svg></span>
-          <span class="nav-label">Inicio</span>
-        </li>
-        <li class="nav-item" data-section="units" role="button" tabindex="0">
-          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-<path d="M4 5h7v14H4z"/><path d="M13 5h7v14h-7z"/><path d="M4 9h7M13 9h7"/>
-</svg></span>
-          <span class="nav-label">Unidades</span>
-        </li>
-        <li class="nav-item" data-section="grade11" role="button" tabindex="0">
-          <span class="nav-icon" aria-hidden="true">🎓</span>
-          <span class="nav-label">Química 11.º</span>
-        </li>
-        <li class="nav-item" data-section="atlas-quimico" role="button" tabindex="0">
-          <span class="nav-icon" aria-hidden="true">🧬</span>
-          <span class="nav-label">Atlas Químico</span>
-        </li>
-        <li class="nav-item" data-section="integrador" role="button" tabindex="0">
-          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-<path d="M12 3l3 3-3 3-3-3z"/><path d="M21 12l-3 3-3-3 3-3z"/><path d="M12 21l-3-3 3-3 3 3z"/><path d="M3 12l3-3 3 3-3 3z"/>
-</svg></span>
-          <span class="nav-label">Proyecto Integrador</span>
-        </li>
+        <!-- PENDIENTE B — REESTRUCTURACIÓN DEL SIDEBAR ACADÉMICO
+             (setiembre 2026): las 5 filas sueltas de Química (Inicio/
+             Unidades/Química 11.º/Atlas Químico/Proyecto Integrador) y
+             la fila única de Física se reemplazan por 3 filas
+             compactas ("⚗️ Química ›", "🧲 Física ›", "🧬 Biología ›")
+             que abren un panel contextual (escritorio ≥1024px, columna
+             a la derecha) o una navegación progresiva dentro del propio
+             sidebar (<1024px) — ver js/shared/sidebar-nav.js.
 
-        <!-- PENDIENTE A (actualización): Física ya es una ruta real y
-             pública ('fisica10', registrada en Router — ver más abajo el
-             script inline que retira la insignia "Pronto"), así que ya
-             no cae en el fallback genérico de placeholder. Biología sí
-             sigue apuntando a una ruta NO registrada ('biologia-proximamente'),
-             así que para esa el propio router.js todavía cae en su
-             mecanismo genérico de fallback (_showPlaceholder). -->
-        <!-- SPRINT MULTICIENCIA — FASE 1 (ajuste v2, por pedido explícito):
-             Física y Biología pasan a ser grupos PARALELOS a Química, con
-             la misma jerarquía visual (mismo estilo de separador), en vez
-             de quedar agrupadas bajo un genérico "Otras ciencias" que se
-             leía subordinado a Química. Cada una con una sola fila (el
-             detalle 10.º/11.º ya vive en "Inicio académico", así se evita
-             duplicar esa granularidad acá y el sidebar queda liviano). -->
-        <li class="nav-separator" role="separator"><span>⚛️ Física</span></li>
-        <li class="nav-item nav-item-soon" data-section="fisica10" id="nav-fisica10" role="button" tabindex="0">
-          <span class="nav-icon" aria-hidden="true">⚛️</span>
-          <span class="nav-label" id="nav-fisica10-label">Física</span>
-          <span class="nav-badge soon" id="nav-fisica10-badge">Pronto</span>
+             CRÍTICO: estas 3 filas llevan `data-toggle-science`, NO
+             `data-section` — así la delegación de clics genérica de
+             router.js (que solo actúa sobre `[data-section]`, ver
+             router.js líneas 322-342) las ignora por completo. El
+             Router sigue sin saber que este menú existe; cero líneas
+             nuevas en router.js. El único que escucha estos toggles es
+             sidebar-nav.js.
+
+             Ninguna ruta ni dato cambia: 'home' (Inicio de Química
+             10.º) sigue existiendo y se llega a él igual que siempre
+             desde "🧭 Inicio académico" → Química → "Continuar en
+             Química 10.º" (grade-select.js, sin cambios) — no se
+             duplica ese acceso acá para no repetir la granularidad,
+             mismo criterio que ya se usó al agregar "Inicio académico"
+             en la Fase 1 Multigrado. 'units'/'grade11'/'fisica10'/
+             'fisica11'/'atlas-quimico'/'integrador' — todas siguen
+             siendo exactamente las mismas rutas de siempre, ahora
+             alcanzadas desde el panel contextual en vez de una fila
+             plana. Ver MQC_PENDIENTE_B_IMPLEMENTACION_REPORTE.md. -->
+        <li class="nav-item nav-science-toggle" data-toggle-science="quimica" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+          <span class="nav-icon" aria-hidden="true">⚗️</span>
+          <span class="nav-label">Química</span>
+          <span class="nav-chevron" aria-hidden="true">›</span>
         </li>
-        <script>
-          /* FIX10-U01: la etiqueta del sidebar refleja la bandera de
-             publicación de js/modules/fisica10.js (misma lógica, ver
-             ese archivo). Mientras no esté habilitado, dice "Física /
-             Pronto" para todos; con la vista previa activada en este
-             navegador, dice "Física 10.º" sin insignia — pero SIEMPRE
-             apunta a la misma ruta 'fisica10', que internamente decide
-             si mostrar la unidad real o "en desarrollo".
-
-             AUDITORÍA FASE 2 — corregido: además del flag manual de
-             vista previa (localStorage, para probar antes del
-             lanzamiento), ahora también revisa
-             window.MQC_FISICA_FLAGS.fisica10Publico (ver
-             js/shared/mqc-fisica-flags.js, cargado arriba en el
-             <head>) — que es lo que hace que la insignia "Pronto" por
-             fin desaparezca para todos los estudiantes reales, ahora
-             que Física 10.º ya es pública en producción. */
-          (function () {
-            try {
-              var publico = (window.MQC_FISICA_FLAGS && window.MQC_FISICA_FLAGS.fisica10Publico) ||
-                            localStorage.getItem('mqc_fisica10_preview') === '1';
-              if (publico) {
-                document.getElementById('nav-fisica10-label').textContent = 'Física 10.º';
-                var badge = document.getElementById('nav-fisica10-badge');
-                if (badge) badge.remove();
-                document.getElementById('nav-fisica10').classList.remove('nav-item-soon');
-              }
-            } catch (e) {}
-          })();
-        </script>
-
-        <li class="nav-separator" role="separator"><span>🧬 Biología</span></li>
-        <li class="nav-item nav-item-soon" data-section="biologia-proximamente" role="button" tabindex="0">
+        <li class="nav-item" data-section="periodic-table" role="button" tabindex="0">
+          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+<rect x="3" y="3" width="5" height="5"/><rect x="9.5" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="9.5" width="5" height="5"/><rect x="9.5" y="9.5" width="5" height="5"/><rect x="16" y="9.5" width="5" height="5"/>
+</svg></span>
+          <span class="nav-label">Tabla Periódica</span>
+        </li>
+        <li class="nav-item nav-science-toggle" data-toggle-science="fisica" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+          <span class="nav-icon" aria-hidden="true">🧲</span>
+          <span class="nav-label">Física</span>
+          <span class="nav-chevron" aria-hidden="true">›</span>
+        </li>
+        <li class="nav-item nav-item-soon nav-science-toggle" data-toggle-science="biologia" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
           <span class="nav-icon" aria-hidden="true">🧬</span>
           <span class="nav-label">Biología</span>
-          <span class="nav-badge soon">Pronto</span>
+          <span class="nav-chevron" aria-hidden="true">›</span>
         </li>
 
         <li class="nav-item" data-section="simulacro-nacional" role="button" tabindex="0">
@@ -398,12 +357,6 @@
         <!-- Separador -->
         <li class="nav-separator" role="separator"><span>Recursos</span></li>
 
-        <li class="nav-item" data-section="periodic-table" role="button" tabindex="0">
-          <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
-<rect x="3" y="3" width="5" height="5"/><rect x="9.5" y="3" width="5" height="5"/><rect x="16" y="3" width="5" height="5"/><rect x="3" y="9.5" width="5" height="5"/><rect x="9.5" y="9.5" width="5" height="5"/><rect x="16" y="9.5" width="5" height="5"/>
-</svg></span>
-          <span class="nav-label">Tabla Periódica</span>
-        </li>
         <li class="nav-item" data-section="progress" role="button" tabindex="0">
           <span class="nav-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
 <path d="M4 20V13M10 20V8M16 20V11M22 20V5" stroke-linecap="round"/><path d="M2 20h20"/>
@@ -415,6 +368,16 @@
           <span class="nav-label">Acerca de</span>
         </li>
       </ul>
+
+      <!-- PENDIENTE B: panel contextual (Ciencia → Grado → Contenidos).
+           Vacío y oculto por defecto (display:none vía CSS, clase
+           .open lo muestra) — js/shared/sidebar-nav.js es el único que
+           escribe su contenido y lo abre/cierra. En escritorio
+           (≥1024px) se vuelve una segunda columna fija a la derecha
+           del sidebar (ver css/main.css); en pantallas más angostas
+           reemplaza la lista de navegación dentro del propio sidebar
+           (navegación progresiva, sin acordeón). -->
+      <div id="sidebar-context-panel" class="sidebar-context-panel" role="navigation" aria-label="Navegación de la ciencia seleccionada"></div>
 
       <!-- EOP-023: Accesos rápidos — antes flotaban sobre la interfaz
            (js/shared/launcher.js), ahora viven de forma permanente
@@ -705,6 +668,13 @@
 <script src="js/shared/analytics-config.js"></script>
 <script src="js/shared/analytics-queue.js"></script>
 <script src="js/shared/analytics-hooks.js"></script>
+
+<!-- PENDIENTE B: controlador del panel contextual del sidebar académico
+     (Ciencia → Grado → Contenidos). Aditivo, no registrado en Router.
+     Debe cargar DESPUÉS de storage.js/router.js y de los catálogos que
+     lee (unidades.js, unidades-grade11.js, y los módulos grade11.js/
+     fisica10.js/fisica11.js/units.js, todos ya cargados arriba). -->
+<script src="js/shared/sidebar-nav.js"></script>
 
 <!-- 4. App init (siempre al final) -->
 <!-- HOTFIX-11: intro cinematográfica de ingreso — Photon aparece en forma provisional (no usa el componente oficial, ver nota en el propio archivo), se ejecuta antes que app.js para superponerse desde el primer frame -->
