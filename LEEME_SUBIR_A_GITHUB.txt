@@ -1,45 +1,55 @@
-PENDIENTE B — REESTRUCTURACIÓN DEL SIDEBAR ACADÉMICO
-======================================================
+PENDIENTE D (paso previo) — ACTIVACIÓN DOCENTE
+================================================
 
-Este paquete contiene ÚNICAMENTE los archivos modificados o nuevos
-de este trabajo (Pendiente B). Los archivos dentro de la carpeta
-"MasQueCiencia_Beta_v1.0" reflejan EXACTAMENTE la misma ruta que
-tienen en tu repositorio. Para aplicarlos:
+Este paquete contiene ÚNICAMENTE los archivos modificados o nuevos de
+este trabajo. Los archivos dentro de "MasQueCiencia_Beta_v1.0" reflejan
+EXACTAMENTE la misma ruta que tienen en tu repositorio.
 
-1. Copia cada archivo a la ruta equivalente en tu repositorio,
-   reemplazando el archivo existente (o creándolo, en el caso de
-   js/shared/sidebar-nav.js, que es nuevo).
-
-ARCHIVOS INCLUIDOS:
-
+ARCHIVOS DEL REPOSITORIO (copiar a la misma ruta):
   MODIFICADOS:
   - index.html
-  - css/main.css
-  - js/modules/grade11.js
-  - js/modules/fisica10.js
-  - js/modules/fisica11.js
+  - js/shared/profiles.js
+  - js/shared/profiles-ui.js
 
-  NUEVOS:
-  - js/shared/sidebar-nav.js
+  NUEVO:
+  - js/shared/teacher-activation.js
 
-NO SE INCLUYEN (porque no cambiaron):
-  - router.js — sin cambios, la delegación de clics existente ya
-    ignora las nuevas filas de "data-toggle-science" automáticamente.
-  - js/shared/mqc-fisica-flags.js — sin cambios, sigue siendo la
-    única fuente de verdad para Física 10.º/11.º.
-  - Cualquier otro archivo del proyecto.
+ARCHIVO SQL (NO va al repositorio de GitHub — se ejecuta directo en
+Supabase, ver más abajo):
+  - SUPABASE_MIGRATION_activacion_docente.sql
+
+PASOS PARA DEJAR ESTO FUNCIONANDO:
+
+1. Sube los 4 archivos del repositorio a las mismas rutas indicadas
+   arriba (reemplazando los 3 existentes, agregando el nuevo).
+
+2. Ejecuta SUPABASE_MIGRATION_activacion_docente.sql completo en el
+   SQL Editor de tu proyecto de Supabase (Dashboard → SQL Editor →
+   New query → pegar todo → Run). Es seguro, no toca nada existente.
+
+3. IMPORTANTE — sin este paso la activación queda instalada pero
+   inactiva: inserta tu código real (ver la sección 5 del reporte
+   MQC_PENDIENTE_D_ACTIVACION_DOCENTE_REPORTE.md para el comando
+   exacto). Nunca pegues tu código real en ningún chat ni documento —
+   solo directamente en el SQL Editor de Supabase.
+
+4. Confirma que tu MQC_ANALYTICS_CONFIG de producción (en
+   js/shared/analytics-config.js de TU despliegue real, no de este
+   repositorio de trabajo) tiene enabled:true con tu supabaseUrl y
+   supabaseAnonKey reales. Sin eso, la activación no tiene con qué
+   validar el código.
 
 REPORTE COMPLETO:
-  Ver MQC_PENDIENTE_B_IMPLEMENTACION_REPORTE.md (entregado junto
-  con este paquete) para la tabla componente/antes/después/archivo/
-  prueba/resultado, la lista de hallazgos adicionales, y la
-  confirmación de que no se tocó Storage, progreso, XP, badges,
-  desbloqueos, exámenes, Suficiencia, PNE, Analytics, Supabase ni
-  historial.
+  Ver MQC_PENDIENTE_D_ACTIVACION_DOCENTE_REPORTE.md (entregado junto
+  con este paquete) para el detalle de la protección contra fuerza
+  bruta, el procedimiento de rotación de códigos, el tratamiento de
+  perfiles docentes ya existentes, y las pruebas realizadas (incluidas
+  pruebas contra un Postgres real, no solo simuladas).
 
 IMPORTANTE:
-  - No se inicia Pendiente D (Acceso Docente Real) ni Biología en
-    este paquete — ambos quedan solo registrados como pendientes
-    futuros, tal como fue instruido.
-  - Pendiente A ("Acerca de la Plataforma") permanece intacto y no
-    fue tocado.
+  - No se implementó todavía AccessControl académico ni las guardas de
+    escritura del Pendiente D — solo este mecanismo de activación,
+    tal como se pidió. Eso queda para el siguiente lote.
+  - No se incluye ningún código docente real en ningún archivo de
+    este paquete.
+  - Pendientes A y B permanecen intactos y no fueron tocados.
