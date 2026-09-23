@@ -514,6 +514,13 @@
 <script src="js/core/router.js"></script>
 <script src="js/data/catalogo-colegios.js"></script>
 <script src="js/shared/profiles.js"></script>
+<!-- PENDIENTE D — paso previo (Activación Docente): único punto que habla
+     con el RPC de Supabase validar_codigo_docente(). Debe cargar antes de
+     profiles-ui.js, que es quien lo invoca desde las 4 pantallas de
+     selección de rol. No depende de analytics-config.js al cargar (lee la
+     config en el momento en que la persona pulsa "Verificar", no antes),
+     así que su posición relativa a ese archivo no importa. -->
+<script src="js/shared/teacher-activation.js"></script>
 <script src="js/shared/profiles-ui.js"></script>
 
 <!--
