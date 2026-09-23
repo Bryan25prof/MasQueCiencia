@@ -86,6 +86,17 @@ window.MQCProfiles = (function () {
   function _meta(id, alias, group, avatar, colegio, rol, schoolId, schoolRegion){
     return { id, alias: alias||'Estudiante', group: group||'', avatar: avatar||'🧪',
              colegio: (colegio||'').trim(), rol: rol === 'docente' ? 'docente' : 'estudiante',
+             /* PENDIENTE D — paso previo (Activación Docente): metadato de
+                VERIFICACIÓN, no un segundo campo de rol. `rol` sigue siendo
+                la única fuente de verdad de "qué es este perfil"; esto solo
+                registra CUÁNDO (si alguna vez) se validó un código real de
+                activación contra Supabase. Nace siempre en null — incluso
+                si se elige "Docente" al crear el perfil, la verificación es
+                un paso aparte (ver js/shared/profiles-ui.js). Un perfil
+                rol='docente' sin rolVerificadoEn no debe recibir ningún
+                bypass académico (ver MQC_PENDIENTE_D_MICROPROPUESTA_
+                ACTIVACION_DOCENTE.md). */
+             rolVerificadoEn: null,
              schoolId: schoolId || '', schoolRegion: schoolRegion || '',
              created: Date.now(), lastAccess: Date.now() };
   }
@@ -192,7 +203,31 @@ window.MQCProfiles = (function () {
   }
   function setRol(id, rol){
     ready(); if(!_reg.profiles[id]) return {ok:false};
-    _reg.profiles[id].rol = rol === 'docente' ? 'docente' : 'estudiante'; _saveReg(); return {ok:true};
+    const nuevo = rol === 'docente' ? 'docente' : 'estudiante';
+    const anterior = _reg.profiles[id].rol;
+    _reg.profiles[id].rol = nuevo;
+    /* PENDIENTE D: cualquier cambio REAL de rol invalida una verificación
+       previa. Así, estudiante→docente→estudiante→docente nunca conserva
+       un rolVerificadoEn viejo sin volver a pasar por el código — solo se
+       preserva cuando el rol pedido es igual al que ya tenía (sin cambio
+       real). Quien SÍ verificó un código en esta misma sesión de UI debe
+       llamar a setRolVerificado(id) inmediatamente después de esta
+       función (ver js/shared/profiles-ui.js). */
+    if (nuevo !== anterior) _reg.profiles[id].rolVerificadoEn = null;
+    _saveReg(); return {ok:true};
+  }
+
+  /* PENDIENTE D — Activación Docente: marca que este perfil, siendo
+     rol='docente', pasó la verificación real del código contra Supabase
+     (js/shared/teacher-activation.js). Nunca se llama por sí sola sin
+     haber recibido antes {ok:true} de MQCTeacherActivation.activar() —
+     esta función NO valida nada, solo registra el resultado ya validado.
+     No es una credencial criptográfica ni un sistema de identidad fuerte:
+     es un metadato local de autorización operativa de MQC. */
+  function setRolVerificado(id, timestamp){
+    ready(); if(!_reg.profiles[id]) return {ok:false};
+    _reg.profiles[id].rolVerificadoEn = timestamp || Date.now();
+    _saveReg(); return {ok:true};
   }
 
   function remove(id){
@@ -378,20 +413,44 @@ window.MQCProfiles = (function () {
     const iniciadas = porExperiencia.filter(e=>e.started).sort((a,b)=>_num(b.id)-_num(a.id));
     const ultima = iniciadas.length ? iniciadas[0] : null;
     const rawHist = ((d.xp && d.xp.history) || []).slice();
-    /* Multigrado (Fase 1): clasificar cada entrada por grado sin
-       modificar el texto histórico guardado — solo se calcula al
-       construir la Bitácora. Los registros que empiezan con 'pne-'
-       son del Desafío Final PNE; el resto, al no existir todavía XP
-       de Química 11.º, se interpretan como Química 10.º (regla
-       explícita para registros sin campo grade). */
-    const _gradeOf = (source) => {
+    /* XP 2.0 (AUDITORÍA FASE 2, set-2026) — Pendiente C resuelto: los
+       eventos NUEVOS de XP ya traen contexto explícito
+       ({disciplina,grado} o {transversal:true}, ver
+       Gamification.addXP() en js/core/gamification.js), así que ya NO
+       hace falta adivinar la disciplina/grado a partir del string
+       genérico de `source` para ellos — se usa esa fuente de verdad
+       exacta directamente.
+       Para entradas HISTÓRICAS (guardadas antes de XP 2.0, sin estos
+       campos) se mantiene EXACTAMENTE la misma regla que ya existía
+       desde Multigrado (Fase 1): 'pne-' → Desafío Final PNE, 'g11-' →
+       11, el resto → 10. Es una regla ya imperfecta (nunca distinguió
+       Física de Química, por ejemplo) pero deliberadamente NO se
+       reclasifica retroactivamente ese historial ya mostrado al
+       estudiante — "no inventar clasificación" aplica en ambas
+       direcciones: ni para adivinar de más hacia adelante, ni para
+       reescribir con nueva certeza (que tampoco tenemos con
+       seguridad) hacia atrás. */
+    const _gradeOf = (h) => {
+      const source = h && h.source;
+      /* El Desafío Final PNE (10.º) ya tenía SU PROPIA pestaña en la
+         vista cronológica (js/shared/profiles-ui.js) y esa
+         clasificación por prefijo 'pne-' siempre fue correcta (nunca
+         fue el bug reportado) — se respeta primero, incluso para
+         eventos nuevos marcados {transversal:true} (que sí es correcto
+         para el ENRUTAMIENTO de XP, ver gamification.js, pero la
+         Bitácora quiere seguir agrupando el PNE en su propia pestaña,
+         no en un genérico "transversal" sin pestaña todavía). */
       if (source && source.indexOf('pne-') === 0) return 'pne';
+      if (h && h.disciplina === 'quimica')  return h.grado === 11 ? 11 : 10;
+      if (h && h.disciplina === 'fisica')   return h.grado === 11 ? 'fisica11' : 'fisica10';
+      if (h && h.disciplina === 'biologia') return 'biologia';
+      if (h && h.transversal === true)      return 'transversal';
       if (source && source.indexOf('g11-') === 0) return 11;
       return 10;
     };
     const cronologia = rawHist.slice(-30).reverse().map(h=>({
       fecha: h.ts || null, amount: h.amount || 0, source: h.source || '', texto: _histText(h.source),
-      grade: _gradeOf(h.source)
+      grade: _gradeOf(h)
     }));
     const reflex = d.reflexiones || {};
     const reflexiones = Object.keys(reflex).map(uid=>{
@@ -459,7 +518,7 @@ window.MQCProfiles = (function () {
     MAX_PROFILES, MQC_VERSION,
     init, ready, count, canCreate, isGuest, activeId, hasActive,
     list, get, activeMeta,
-    create, select, rename, setAvatar, setGroup, setColegio, setEscuela, setRol, remove, resetProgress,
+    create, select, rename, setAvatar, setGroup, setColegio, setEscuela, setRol, setRolVerificado, remove, resetProgress,
     enterGuest, exitGuest,
     exportProfile, validateImport, importProfile, buildBitacora,
     getReflections, saveReflection, REFLECTION_QUESTIONS,

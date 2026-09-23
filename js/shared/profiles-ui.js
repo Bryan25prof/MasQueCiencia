@@ -314,6 +314,121 @@ window.MQCProfilesUI = (function () {
     ov.querySelector('#mqc-gate-privacy').addEventListener('click',openPrivacy);
   }
 
+  /* ================================================================
+     PENDIENTE D — paso previo: ACTIVACIÓN DOCENTE.
+     Bloque único reutilizado por las 4 pantallas que permiten elegir
+     rol (alta nueva, "completa tu perfil", editar perfil, "crear otro
+     perfil" del administrador). Misma filosofía que el selector de
+     colegio de arriba: una sola fuente de comportamiento, estado por
+     instancia guardado en _activacionDocenteState[idPrefix].
+
+     rolVerificadoEn (js/shared/profiles.js) es un metadato LOCAL de
+     autorización operativa de MQC — no es una credencial criptográfica
+     ni un sistema de identidad fuerte. La validación real del código
+     ocurre en Supabase (js/shared/teacher-activation.js), nunca aquí.
+
+     Regla de fricción (para no afectar a quien YA era docente antes de
+     este mecanismo, tal como decidió Bryan): solo se exige verificar un
+     código cuando el rol elegido AHORA sea 'docente' y sea distinto del
+     rol que el perfil ya tenía al abrir este formulario. Si ya era
+     'docente' y no se toca nada, se guarda exactamente igual que antes
+     — nadie pierde lo que ya tenía. Ver _activacionYaCubierta().
+     ================================================================ */
+  const _activacionDocenteState = {};
+
+  function _renderActivacionDocente(idPrefix) {
+    return `
+      <div id="${idPrefix}-activacion" class="mqc-activacion-docente" style="display:none;background:rgba(31,219,255,.06);border:1px solid var(--border);border-radius:8px;padding:.6rem;margin-bottom:.5rem">
+        <p style="font-size:.74rem;color:var(--text-secondary);margin:0 0 .4rem">
+          El acceso docente completo requiere un código de activación institucional. Pedíselo a la coordinación del proyecto.
+        </p>
+        <div style="display:flex;gap:.4rem">
+          <input type="text" id="${idPrefix}-codigo" placeholder="Código de activación" class="qi-overlay-input" style="flex:1" autocomplete="off">
+          <button type="button" id="${idPrefix}-verificar" class="btn btn-ghost btn-sm">Verificar</button>
+        </div>
+        <p id="${idPrefix}-codigo-msg" style="font-size:.76rem;margin:.4rem 0 0;min-height:1em"></p>
+      </div>`;
+  }
+
+  function _bindActivacionDocente(idPrefix, rolInicial) {
+    const rInicial = rolInicial === 'docente' ? 'docente' : 'estudiante';
+    _activacionDocenteState[idPrefix] = { rolInicial: rInicial, rolActual: rInicial, verificado: false };
+    const host = document.getElementById(idPrefix + '-activacion');
+    if (!host) return { setRolActual(){} };
+    const msg = host.querySelector('#' + idPrefix + '-codigo-msg');
+    const btn = host.querySelector('#' + idPrefix + '-verificar');
+    const input = host.querySelector('#' + idPrefix + '-codigo');
+
+    function _pintar(texto, tipo) {
+      if (!msg) return;
+      msg.textContent = texto || '';
+      msg.style.color = tipo === 'ok' ? 'var(--green,#00FF88)' : (tipo === 'error' ? 'var(--red,#FF6B6B)' : 'var(--text-muted)');
+    }
+    function _actualizarVisibilidad() {
+      host.style.display = !_activacionYaCubierta(idPrefix) ? 'block' : 'none';
+    }
+    _actualizarVisibilidad();
+
+    if (btn) btn.addEventListener('click', async () => {
+      const codigo = (input && input.value || '').trim();
+      if (!codigo) { _pintar('Ingresá el código que te compartió la coordinación del proyecto.', 'error'); return; }
+      _pintar('Verificando…', null);
+      btn.disabled = true;
+      let r;
+      try {
+        r = window.MQCTeacherActivation
+          ? await window.MQCTeacherActivation.activar(codigo)
+          : { ok:false, reason:'no-configurado' };
+      } catch (e) {
+        r = { ok:false, reason:'sin-conexion' };
+      }
+      btn.disabled = false;
+      if (r && r.ok) {
+        _activacionDocenteState[idPrefix].verificado = true;
+        _pintar('✓ Código válido. Acceso docente activado para este perfil.', 'ok');
+        _actualizarVisibilidad();
+      } else if (r && r.reason === 'sin-conexion') {
+        _pintar('Se necesita conexión a internet para activar el modo docente.', 'error');
+      } else if (r && r.reason === 'no-configurado') {
+        _pintar('La activación docente no está disponible en este momento.', 'error');
+      } else {
+        _pintar('Código inválido. Verificá con la coordinación del proyecto.', 'error');
+      }
+    });
+
+    return {
+      setRolActual(rol) {
+        const st = _activacionDocenteState[idPrefix];
+        const nuevo = (rol === 'docente' ? 'docente' : 'estudiante');
+        // Cualquier cambio REAL de selección (en cualquier dirección)
+        // invalida una verificación de esta misma sesión de formulario —
+        // así, docente→estudiante→docente nunca reutiliza el "✓" de la
+        // primera vez sin volver a escribir el código. Si el usuario
+        // simplemente vuelve al rol que el perfil YA tenía al abrir el
+        // formulario (rolInicial), _activacionYaCubierta() de todos
+        // modos lo deja pasar sin pedir nada — eso no cambia acá.
+        if (nuevo !== st.rolActual) st.verificado = false;
+        st.rolActual = nuevo;
+        _actualizarVisibilidad();
+      }
+    };
+  }
+
+  /* true si NO hace falta mostrar/exigir el código en este momento:
+     o no está en 'docente', o ya se verificó en este mismo formulario,
+     o el rol pedido es igual al que el perfil ya tenía al abrir el
+     formulario (nada cambia realmente → no se le pide nada nuevo). */
+  function _activacionYaCubierta(idPrefix) {
+    const st = _activacionDocenteState[idPrefix];
+    if (!st) return true;
+    return st.rolActual !== 'docente' || st.verificado || st.rolActual === st.rolInicial;
+  }
+  function _activacionPuedeConfirmar(idPrefix) { return _activacionYaCubierta(idPrefix); }
+  function _activacionFueVerificadaAhora(idPrefix) {
+    const st = _activacionDocenteState[idPrefix];
+    return !!(st && st.verificado);
+  }
+
   function _gateCreateForm(ov){
     const host = ov.querySelector('#mqc-gate-create');
     host.innerHTML = `<div class="mqc-gate-create-panel" style="background:var(--bg-deep,#0d0d24);border-radius:var(--radius-md,12px);padding:1rem;margin:.3rem 0 .8rem;border:1px solid var(--border)">
@@ -322,6 +437,7 @@ window.MQCProfilesUI = (function () {
         <button type="button" data-rol="estudiante" class="mqc-rol-btn active" style="flex:1;padding:.6rem;border-radius:8px;border:1px solid var(--cyan,#1FDBFF);background:rgba(31,219,255,.1);color:var(--cyan,#1FDBFF);cursor:pointer;font-size:.85rem">🎓 Estudiante</button>
         <button type="button" data-rol="docente" class="mqc-rol-btn" style="flex:1;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.85rem">👩‍🏫 Docente</button>
       </div>
+      ${_renderActivacionDocente('mqc-nf')}
       <div id="mqc-nf-group-wrap">${_renderSelectorGrupoObligatorio('mqc-nf-group')}</div>
       <p style="font-size:.72rem;color:var(--text-muted);margin:0 0 .3rem">Colegio / Centro educativo:</p>
       ${_renderSelectorColegio('mqc-nf-colegio', '', '')}
@@ -333,6 +449,7 @@ window.MQCProfilesUI = (function () {
     let av = AVATARS[0];
     let rol = 'estudiante';
     _bindSelectorColegio('mqc-nf-colegio');
+    const activacionNf = _bindActivacionDocente('mqc-nf', 'estudiante');
     host.querySelectorAll('[data-av]').forEach(b=>b.addEventListener('click',()=>{ av=b.getAttribute('data-av'); host.querySelectorAll('[data-av]').forEach(x=>x.classList.remove('active')); b.classList.add('active'); }));
     host.querySelectorAll('[data-rol]').forEach(b=>b.addEventListener('click',()=>{
       rol = b.getAttribute('data-rol');
@@ -340,8 +457,9 @@ window.MQCProfilesUI = (function () {
       b.classList.add('active'); b.style.borderColor='var(--cyan,#1FDBFF)'; b.style.background='rgba(31,219,255,.1)'; b.style.color='var(--cyan,#1FDBFF)';
       // Docente no tiene grupo/sección de estudiante — se oculta, no aplica.
       host.querySelector('#mqc-nf-group-wrap').style.display = (rol === 'docente') ? 'none' : 'block';
+      activacionNf.setRolActual(rol);
     }));
-    host.querySelector('#mqc-nf-go').addEventListener('click',()=>{
+    host.querySelector('#mqc-nf-go').addEventListener('click',async ()=>{
       const alias=host.querySelector('#mqc-nf-alias').value;
       const group=host.querySelector('#mqc-nf-group').value;
       const colegioSel = _valorSelectorColegio('mqc-nf-colegio');
@@ -349,8 +467,13 @@ window.MQCProfilesUI = (function () {
       if (rol === 'estudiante' && !group) { host.querySelector('#mqc-nf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
       // HOTFIX CATÁLOGO DE COLEGIOS — Parte 6: obligatorio seleccionar del catálogo (u "Otro" con nombre).
       if (!colegioSel.valido) { host.querySelector('#mqc-nf-err').textContent = 'Seleccioná tu colegio (o "Otro centro educativo", tu provincia y el nombre) para continuar.'; return; }
+      // PENDIENTE D: elegir "Docente" sin haber activado un código real
+      // nunca crea el perfil como docente — se bloquea acá, antes de
+      // llamar a P().create().
+      if (!_activacionPuedeConfirmar('mqc-nf')) { host.querySelector('#mqc-nf-err').textContent = 'Activá el código docente para continuar, o volvé a Estudiante.'; return; }
       const r=P().create(alias, rol === 'docente' ? '' : group, av, colegioSel.schoolName, rol, colegioSel.schoolId, colegioSel.schoolRegion);
       if(!r.ok){ host.querySelector('#mqc-nf-err').textContent=r.message||'No se pudo crear.'; return; }
+      if (rol === 'docente' && _activacionFueVerificadaAhora('mqc-nf') && P().setRolVerificado) P().setRolVerificado(r.id, Date.now());
       location.reload();
     });
   }
@@ -399,6 +522,7 @@ window.MQCProfilesUI = (function () {
         <button type="button" data-rol="estudiante" class="mqc-rol-btn" style="flex:1;padding:.55rem;border-radius:8px;border:1px solid ${rolActual==='estudiante'?'var(--cyan,#1FDBFF)':'var(--border)'};background:${rolActual==='estudiante'?'rgba(31,219,255,.1)':'transparent'};color:${rolActual==='estudiante'?'var(--cyan,#1FDBFF)':'var(--text-secondary)'};cursor:pointer;font-size:.82rem">🎓 Estudiante</button>
         <button type="button" data-rol="docente" class="mqc-rol-btn" style="flex:1;padding:.55rem;border-radius:8px;border:1px solid ${rolActual==='docente'?'var(--cyan,#1FDBFF)':'var(--border)'};background:${rolActual==='docente'?'rgba(31,219,255,.1)':'transparent'};color:${rolActual==='docente'?'var(--cyan,#1FDBFF)':'var(--text-secondary)'};cursor:pointer;font-size:.82rem">👩‍🏫 Docente</button>
       </div>
+      ${_renderActivacionDocente('mqc-cp')}
       <div id="mqc-cp-group-wrap" style="${(rolActual==='docente')?'display:none':''}">${_renderSelectorGrupoObligatorio('mqc-cp-group')}</div>
       `}
       ${_renderSelectorColegio('mqc-cp-colegio', meta.schoolId || '', meta.colegio || '')}
@@ -408,16 +532,25 @@ window.MQCProfilesUI = (function () {
     // Sin botón de cerrar ni clic-afuera-para-cerrar: es obligatorio, a propósito.
     let rolElegido = rolActual;
     _bindSelectorColegio('mqc-cp-colegio');
+    // PENDIENTE D: rolActual es el rol que el perfil YA tenía al abrir
+    // este modal — si no lo toca, _activacionYaCubierta() lo deja pasar
+    // sin pedirle nada nuevo (ver comentario del bloque compartido).
+    const activacionCp = esSoloActualizacionColegio ? { setRolActual(){} } : _bindActivacionDocente('mqc-cp', rolActual);
     ov.querySelectorAll('[data-rol]').forEach(b=>b.addEventListener('click',()=>{
       rolElegido = b.getAttribute('data-rol');
       ov.querySelectorAll('[data-rol]').forEach(x=>{ x.style.borderColor='var(--border)'; x.style.background='transparent'; x.style.color='var(--text-secondary)'; });
       b.style.borderColor='var(--cyan,#1FDBFF)'; b.style.background='rgba(31,219,255,.1)'; b.style.color='var(--cyan,#1FDBFF)';
       ov.querySelector('#mqc-cp-group-wrap').style.display = (rolElegido === 'docente') ? 'none' : 'block';
+      activacionCp.setRolActual(rolElegido);
     }));
     ov.querySelector('#mqc-cp-go').addEventListener('click', () => {
       const activeId = p.activeId ? p.activeId() : null;
       const colegioSel = _valorSelectorColegio('mqc-cp-colegio');
       if (!colegioSel.valido) { ov.querySelector('#mqc-cp-err').textContent = 'Seleccioná tu colegio (o "Otro", tu provincia y el nombre) para continuar.'; return; }
+      // PENDIENTE D: elegir "Docente" sin haber activado un código real
+      // (y sin que ya fuera docente antes de abrir este modal) bloquea
+      // el guardado — nunca se persiste el rol sin verificar.
+      if (!esSoloActualizacionColegio && !_activacionPuedeConfirmar('mqc-cp')) { ov.querySelector('#mqc-cp-err').textContent = 'Activá el código docente para continuar, o volvé a Estudiante.'; return; }
       if (!esSoloActualizacionColegio && rolElegido === 'estudiante') {
         const group = ov.querySelector('#mqc-cp-group').value;
         if (!group) { ov.querySelector('#mqc-cp-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
@@ -427,7 +560,10 @@ window.MQCProfilesUI = (function () {
       }
       if (activeId) {
         p.setEscuela(activeId, colegioSel.schoolId, colegioSel.schoolName, colegioSel.schoolRegion);
-        if (!esSoloActualizacionColegio && p.setRol) p.setRol(activeId, rolElegido);
+        if (!esSoloActualizacionColegio && p.setRol) {
+          p.setRol(activeId, rolElegido);
+          if (rolElegido === 'docente' && _activacionFueVerificadaAhora('mqc-cp') && p.setRolVerificado) p.setRolVerificado(activeId, Date.now());
+        }
       }
       ov.remove();
     });
@@ -440,9 +576,17 @@ window.MQCProfilesUI = (function () {
     const meta = p.isGuest() ? { alias:'Invitado', avatar:'👤' } : (p.activeMeta() || { alias:'Perfil', avatar:'🧪' });
     const chip = document.createElement('button');
     chip.id = 'mqc-chip';
-    chip.title = 'Perfiles Locales MQC';
+    /* PENDIENTE D: indicador discreto de "modo docente", solo cuando el
+       rol es docente Y ya pasó la verificación real (rolVerificadoEn) —
+       un perfil docente sin verificar no muestra esta insignia, para no
+       insinuar un acceso que todavía no tiene. Puramente visual: no
+       depende de esto ningún AccessControl (aún no implementado). */
+    const esDocenteVerificado = !!meta.rolVerificadoEn && meta.rol === 'docente';
+    chip.title = esDocenteVerificado
+      ? 'Perfiles Locales MQC — Modo docente: tus resultados de exploración no se guardan como progreso académico.'
+      : 'Perfiles Locales MQC';
     chip.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:8500;display:flex;align-items:center;gap:.5rem;background:var(--bg-elevated,#1e1e4a);border:1px solid var(--border,#1e1e4a);border-radius:999px;padding:.4rem .8rem .4rem .5rem;color:var(--text-primary,#E8E8FF);cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.35);font-family:var(--font-body,sans-serif);font-size:.85rem';
-    chip.innerHTML = `<span style="font-size:1.3rem">${esc(meta.avatar)}</span><span style="font-weight:700">${esc(meta.alias)}</span>`;
+    chip.innerHTML = `<span style="font-size:1.3rem">${esc(meta.avatar)}</span><span style="font-weight:700">${esc(meta.alias)}</span>${esDocenteVerificado ? '<span style="font-size:.72rem;font-weight:700;color:var(--cyan,#1FDBFF);background:rgba(31,219,255,.12);border-radius:999px;padding:.15rem .5rem;white-space:nowrap">👩‍🏫 Modo docente</span>' : ''}`;
     chip.addEventListener('click',()=>{ (p.isGuest()) ? openManager() : openChipMenu(); });
     document.body.appendChild(chip);
     _mostrarCompletarPerfilSiHaceFalta();
@@ -534,28 +678,42 @@ window.MQCProfilesUI = (function () {
         <button type="button" data-rol="estudiante" class="mqc-rol-btn" style="flex:1;padding:.5rem;border-radius:8px;border:1px solid ${rolActual==='estudiante'?'var(--cyan,#1FDBFF)':'var(--border)'};background:${rolActual==='estudiante'?'rgba(31,219,255,.1)':'transparent'};color:${rolActual==='estudiante'?'var(--cyan,#1FDBFF)':'var(--text-secondary)'};cursor:pointer;font-size:.8rem">🎓 Estudiante</button>
         <button type="button" data-rol="docente" class="mqc-rol-btn" style="flex:1;padding:.5rem;border-radius:8px;border:1px solid ${rolActual==='docente'?'var(--cyan,#1FDBFF)':'var(--border)'};background:${rolActual==='docente'?'rgba(31,219,255,.1)':'transparent'};color:${rolActual==='docente'?'var(--cyan,#1FDBFF)':'var(--text-secondary)'};cursor:pointer;font-size:.8rem">👩‍🏫 Docente</button>
       </div>
+      ${_renderActivacionDocente('mqc-ed')}
       <div id="mqc-ed-group-wrap" style="${rolActual==='docente'?'display:none':''}">${_renderSelectorGrupo('mqc-ed-group', meta.group)}</div>
       ${_renderSelectorColegio('mqc-ed-colegio', meta.schoolId || '', meta.colegio || '')}
       <div style="display:flex;flex-wrap:wrap;gap:.3rem;margin-bottom:.7rem">${AVATARS.map(a=>`<button data-av="${a}" style="font-size:1.3rem;background:${a===meta.avatar?_accent():'var(--bg-elevated,#1e1e4a)'};border:none;border-radius:8px;padding:.2rem .4rem;cursor:pointer">${a}</button>`).join('')}</div>
+      <p id="mqc-ed-err" style="color:var(--red,#FF6B6B);font-size:.8rem;margin:0 0 .4rem;min-height:1em"></p>
       <div style="display:flex;gap:.5rem"><button id="mqc-ed-save" class="btn btn-primary btn-sm" style="flex:1">Guardar</button><button id="mqc-ed-cancel" class="btn btn-ghost btn-sm" style="flex:1">Cancelar</button></div>
     </div>`,420);
     let av=meta.avatar;
     let rol=rolActual;
     _bindSelectorColegio('mqc-ed-colegio');
+    // PENDIENTE D: rolActual es el rol que este perfil YA tenía al abrir
+    // "Editar perfil" — si no se toca, se sigue guardando sin pedir nada
+    // nuevo (no se degrada a ningún docente ya existente).
+    const activacionEd = _bindActivacionDocente('mqc-ed', rolActual);
     ov.querySelectorAll('[data-av]').forEach(b=>b.addEventListener('click',()=>{av=b.getAttribute('data-av');ov.querySelectorAll('[data-av]').forEach(x=>x.style.background='var(--bg-elevated,#1e1e4a)');b.style.background=_accent();}));
     ov.querySelectorAll('[data-rol]').forEach(b=>b.addEventListener('click',()=>{
       rol = b.getAttribute('data-rol');
       ov.querySelectorAll('[data-rol]').forEach(x=>{ x.style.borderColor='var(--border)'; x.style.background='transparent'; x.style.color='var(--text-secondary)'; });
       b.style.borderColor='var(--cyan,#1FDBFF)'; b.style.background='rgba(31,219,255,.1)'; b.style.color='var(--cyan,#1FDBFF)';
       ov.querySelector('#mqc-ed-group-wrap').style.display = (rol === 'docente') ? 'none' : 'block';
+      activacionEd.setRolActual(rol);
     }));
     ov.querySelector('#mqc-ed-cancel').addEventListener('click',()=>{ov.remove();openManager();});
     ov.querySelector('#mqc-ed-save').addEventListener('click',()=>{
+      // PENDIENTE D: elegir "Docente" sin haber activado un código real
+      // (y sin que ya fuera docente antes de abrir este diálogo) bloquea
+      // el guardado completo — nunca se persiste el rol sin verificar.
+      if (!_activacionPuedeConfirmar('mqc-ed')) { ov.querySelector('#mqc-ed-err').textContent = 'Activá el código docente para continuar, o volvé a Estudiante.'; return; }
       p.rename(id, ov.querySelector('#mqc-ed-alias').value);
       if (rol === 'docente') { p.setGroup(id, ''); } else { p.setGroup(id, ov.querySelector('#mqc-ed-group').value); }
       const colegioSel = _valorSelectorColegio('mqc-ed-colegio');
       if (colegioSel.valido) p.setEscuela(id, colegioSel.schoolId, colegioSel.schoolName, colegioSel.schoolRegion);
-      if (p.setRol) p.setRol(id, rol);
+      if (p.setRol) {
+        p.setRol(id, rol);
+        if (rol === 'docente' && _activacionFueVerificadaAhora('mqc-ed') && p.setRolVerificado) p.setRolVerificado(id, Date.now());
+      }
       p.setAvatar(id, av);
       ov.remove(); openManager();
     });
@@ -569,6 +727,7 @@ window.MQCProfilesUI = (function () {
         <button type="button" data-rol="estudiante" class="mqc-rol-btn active" style="flex:1;padding:.5rem;border-radius:8px;border:1px solid var(--cyan,#1FDBFF);background:rgba(31,219,255,.1);color:var(--cyan,#1FDBFF);cursor:pointer;font-size:.8rem">🎓 Estudiante</button>
         <button type="button" data-rol="docente" class="mqc-rol-btn" style="flex:1;padding:.5rem;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-secondary);cursor:pointer;font-size:.8rem">👩‍🏫 Docente</button>
       </div>
+      ${_renderActivacionDocente('mqc-cf')}
       <div id="mqc-cf-group-wrap">${_renderSelectorGrupoObligatorio('mqc-cf-group')}</div>
       <p style="font-size:.72rem;color:var(--text-muted);margin:0 0 .3rem">Colegio / Centro educativo:</p>
       ${_renderSelectorColegio('mqc-cf-colegio', '', '')}
@@ -578,12 +737,14 @@ window.MQCProfilesUI = (function () {
     let av=AVATARS[0];
     let rol='estudiante';
     _bindSelectorColegio('mqc-cf-colegio');
+    const activacionCf = _bindActivacionDocente('mqc-cf', 'estudiante');
     host.querySelectorAll('[data-av]').forEach(b=>b.addEventListener('click',()=>{av=b.getAttribute('data-av');host.querySelectorAll('[data-av]').forEach(x=>x.style.background='var(--bg-elevated,#1e1e4a)');b.style.background=_accent();}));
     host.querySelectorAll('[data-rol]').forEach(b=>b.addEventListener('click',()=>{
       rol = b.getAttribute('data-rol');
       host.querySelectorAll('[data-rol]').forEach(x=>{ x.style.borderColor='var(--border)'; x.style.background='transparent'; x.style.color='var(--text-secondary)'; });
       b.style.borderColor='var(--cyan,#1FDBFF)'; b.style.background='rgba(31,219,255,.1)'; b.style.color='var(--cyan,#1FDBFF)';
       host.querySelector('#mqc-cf-group-wrap').style.display = (rol === 'docente') ? 'none' : 'block';
+      activacionCf.setRolActual(rol);
     }));
     host.querySelector('#mqc-cf-go').addEventListener('click',()=>{
       const group = host.querySelector('#mqc-cf-group').value;
@@ -591,8 +752,12 @@ window.MQCProfilesUI = (function () {
       // SPRINT ANALYTICS — PARTE 6: grupo/sección obligatorio para estudiantes nuevos.
       if (rol === 'estudiante' && !group) { host.querySelector('#mqc-cf-err').textContent = 'Elegí tu grupo/sección para continuar.'; return; }
       if (!colegioSel.valido) { host.querySelector('#mqc-cf-err').textContent = 'Seleccioná tu colegio (o "Otro", tu provincia y el nombre) para continuar.'; return; }
+      // PENDIENTE D: elegir "Docente" sin haber activado un código real
+      // nunca crea el perfil como docente.
+      if (!_activacionPuedeConfirmar('mqc-cf')) { host.querySelector('#mqc-cf-err').textContent = 'Activá el código docente para continuar, o volvé a Estudiante.'; return; }
       const r=P().create(host.querySelector('#mqc-cf-alias').value, rol === 'docente' ? '' : group, av, colegioSel.schoolName, rol, colegioSel.schoolId, colegioSel.schoolRegion);
       if(!r.ok){host.querySelector('#mqc-cf-err').textContent=r.message||'No se pudo crear.';return;}
+      if (rol === 'docente' && _activacionFueVerificadaAhora('mqc-cf') && P().setRolVerificado) P().setRolVerificado(r.id, Date.now());
       location.reload();
     });
   }
@@ -724,6 +889,9 @@ window.MQCProfilesUI = (function () {
           : 'No hay actividad registrada en esta categoría todavía.';
         return `<p style="color:var(--text-muted,#8484D6);text-align:center;font-size:.86rem">${msg}</p>`;
       }
+      /* XP 2.0: no se listan aquí los campos internos disciplina/grado/
+         transversal — la vista sigue mostrando solo texto+fecha+XP,
+         igual que siempre. */
       return list.map(c=>`
         <div style="display:flex;gap:.7rem;padding:.5rem 0;border-bottom:1px solid var(--border,#1e1e4a)">
           <div style="width:8px;height:8px;border-radius:50%;background:var(--cyan,#1FDBFF);margin-top:.35rem;flex-shrink:0"></div>
@@ -741,7 +909,12 @@ window.MQCProfilesUI = (function () {
        que jamás podría aparecer bajo este filtro — solo se corrige el
        texto visible, para que el término "PNE" quede reservado
        exclusivamente a la evaluación de 11.º, tal como pide el ticket. */
-    const FILTERS = [['all','Todo'],[10,'Química 10.º'],['pne','Examen Final 10.º'],[11,'Química 11.º']];
+    /* XP 2.0 (AUDITORÍA FASE 2, set-2026) — se agregan 'fisica10'/
+       'fisica11' porque, con el contexto explícito nuevo, la actividad
+       de Física ya se clasifica correctamente en vez de caer (mal)
+       bajo "Química 10.º" como antes (ver profiles.js:_gradeOf). Sin
+       pestaña de Biología todavía: no hay contenido real que mostrar. */
+    const FILTERS = [['all','Todo'],[10,'Química 10.º'],['pne','Examen Final 10.º'],[11,'Química 11.º'],['fisica10','Física 10.º'],['fisica11','Física 11.º']];
     const filterBtns = FILTERS.map(([val,label],i)=>
       `<button class="btn btn-ghost btn-sm mqc-tl-filter" data-filter="${val}" style="${i===0?'border-color:var(--cyan,#1FDBFF)':''}">${label}</button>`
     ).join('');
@@ -756,7 +929,10 @@ window.MQCProfilesUI = (function () {
         ov.querySelectorAll('.mqc-tl-filter').forEach(b=>b.style.borderColor='');
         btn.style.borderColor='var(--cyan,#1FDBFF)';
         const raw = btn.getAttribute('data-filter');
-        const filter = (raw==='all'||raw==='pne') ? raw : parseInt(raw,10);
+        /* XP 2.0: 'fisica10'/'fisica11' (y 'transversal'/'biologia' si
+           se agregan pestañas más adelante) son strings, igual que
+           'all'/'pne' — solo 10/11 (Química) siguen siendo números. */
+        const filter = (/^\d+$/.test(raw)) ? parseInt(raw,10) : raw;
         ov.querySelector('#mqc-tl-items').innerHTML = _renderItems(filter);
       });
     });
