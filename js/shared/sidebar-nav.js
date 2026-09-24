@@ -31,11 +31,16 @@
    - ≥1024px: el panel contextual aparece como una segunda columna fija
      a la derecha del sidebar compacto, sin ocultar el menú principal.
 
-   Rol docente (Decisión 2): este archivo NO agrega ni modifica ningún
-   candado. Refleja exactamente el estado de acceso que ya entrega
-   cada módulo (data.grade11Unlock, banderas de Física) — un docente
-   ve hoy exactamente lo mismo que vería un estudiante en su lugar.
-   El acceso total por rol queda registrado aparte como PENDIENTE D.
+   Rol docente (Decisión 2, diagnóstico de Pendiente D): este archivo
+   sigue sin agregar ningún candado propio. Desde la implementación de
+   Pendiente D — paso 2 (AccessControl), la única excepción es
+   _quimica11Unlocked(): refleja AccessControl.canExplore(), el mismo
+   criterio real que ya usa grade11.js para decidir el acceso — nunca
+   inventa una condición nueva, solo evita que este panel mienta
+   mostrando 🔒 a un docente verificado que en la práctica ya puede
+   entrar. El resto de las filas (Física 10.º/11.º, Atlas Químico,
+   Proyecto Integrador) sigue reflejando el estado real sin candado
+   propio, exactamente como antes.
 ================================================================ */
 
 window.MQCSidebarNav = (function () {
@@ -111,7 +116,19 @@ window.MQCSidebarNav = (function () {
   }
 
   function _quimica11Unlocked() {
-    try { return !!(Storage.load().grade11Unlock || {}).unlocked; } catch (e) { return false; }
+    // PENDIENTE D — paso 2 (AccessControl): a diferencia del resto de
+    // este archivo (100% de solo presentación, sin candados propios),
+    // este único punto SÍ necesita conocer al docente verificado — de
+    // lo contrario el panel seguiría mostrando el 🔒 de Química 11.º a
+    // un docente que en la práctica ya tiene acceso total (grade11.js
+    // ya lo deja entrar vía AccessControl.canExplore), mintiendo sobre
+    // el estado real de acceso. No agrega ningún candado nuevo: solo
+    // refleja fielmente el mismo AccessControl.canExplore() que ya usa
+    // grade11.js para la decisión real.
+    try {
+      const real = !!(Storage.load().grade11Unlock || {}).unlocked;
+      return (typeof AccessControl !== 'undefined' && AccessControl.canExplore) ? AccessControl.canExplore(real) : real;
+    } catch (e) { return false; }
   }
 
   function _fisicaHabilitada(clave) {
