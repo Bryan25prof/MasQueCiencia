@@ -85,7 +85,11 @@ Router.register('units', (() => {
     });
     const passedCount = passCounts.reduce((a, b) => a + b, 0);
     const totalUnits = UNIDADES_DATA.length;
-    const pneUnlocked = passedCount >= PNE_MIN_UNITS;
+    // PENDIENTE D — paso 2 (AccessControl): un docente verificado ve la
+    // tarjeta como desbloqueada aunque passedCount < PNE_MIN_UNITS. El
+    // candado real (5/9 exámenes) no se toca — pne-final.js hace su
+    // propia verificación independiente al entrar (misma guarda).
+    const pneUnlocked = AccessControl.canExplore(passedCount >= PNE_MIN_UNITS);
     const pneData = data.pne || {};
 
     const pneCard = `
@@ -395,7 +399,7 @@ Router.register('units', (() => {
         const data  = Storage.load();
         const uData = data.units[_currentUnitId];
         if (!uData.started) {
-          Gamification.addXP('unit-started');
+          Gamification.addXP('unit-started', { disciplina: 'quimica', grado: 10 });
           Storage.updateUnit(_currentUnitId, { started: true });
         }
       });
@@ -447,7 +451,7 @@ Router.register('units', (() => {
         if (uData && uData.topicsRead.includes(topicId)) return; // ya leído
 
         Storage.markTopicRead(_currentUnitId, topicId);
-        Gamification.addXP('topic-read');
+        Gamification.addXP('topic-read', { disciplina: 'quimica', grado: 10 });
 
         /* Re-renderizar tab de teoría */
         /* BUG-02: usa UNIDADES_DATA */
@@ -478,7 +482,7 @@ Router.register('units', (() => {
       const data  = Storage.load();
       const uData = data.units[_currentUnitId];
       if (!uData.started) {
-        Gamification.addXP('unit-started');
+        Gamification.addXP('unit-started', { disciplina: 'quimica', grado: 10 });
         Storage.updateUnit(_currentUnitId, { started: true });
       }
     } else {

@@ -95,8 +95,11 @@ try {
   if (params.get('fisica11preview') === '1') localStorage.setItem(FISICA11_PREVIEW_KEY, '1');
 } catch (e) { /* URLSearchParams no disponible: se ignora, sigue oculto por defecto */ }
 function _fisica11Habilitado() {
-  if (FISICA11_PUBLICO) return true;
-  try { return localStorage.getItem(FISICA11_PREVIEW_KEY) === '1'; } catch (e) { return false; }
+  // PENDIENTE D — paso 2: mismo comentario que _fisica10Habilitado().
+  const habilitadoReal = FISICA11_PUBLICO || (function () {
+    try { return localStorage.getItem(FISICA11_PREVIEW_KEY) === '1'; } catch (e) { return false; }
+  })();
+  return (typeof AccessControl !== 'undefined' && AccessControl.canExplore) ? AccessControl.canExplore(habilitadoReal) : habilitadoReal;
 }
 
 Router.register('fisica11', (() => {

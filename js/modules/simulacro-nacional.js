@@ -38,7 +38,15 @@ Router.register('simulacro-nacional', (() => {
     const data = Storage.load();
     return data.simulacroNacional || { enProgreso: null, historial: [], attempts: 0 };
   }
-  function _guardar(sn) { Storage.set('simulacroNacional', sn); }
+  function _guardar(sn) {
+    // PENDIENTE D — paso 2 (AccessControl): único punto de escritura de
+    // 'simulacroNacional' (autoguardado en progreso y entrega final).
+    // Un docente verificado puede intentar el Simulacro y ver sus
+    // resultados en pantalla (_ultimoResultado, variable en memoria de
+    // este módulo, nunca releída de Storage), pero nada se persiste.
+    if (typeof AccessControl !== 'undefined' && AccessControl.isTeacher && AccessControl.isTeacher()) return;
+    Storage.set('simulacroNacional', sn);
+  }
 
   function _guardarProgreso() {
     if (!_intento) return;
@@ -79,7 +87,7 @@ Router.register('simulacro-nacional', (() => {
         <div style="text-align:left;margin-bottom:1rem">
           <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:.3rem">Ruta 1 — Química 11.º ya desbloqueada</div>
           <div class="progress-bar"><div class="progress-fill" style="width:${estado.rutaGrade11Unlocked ? 100 : 0}%;background:var(--green)"></div></div>
-          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem">${estado.rutaGrade11Unlocked ? '✓ Cumplida' : 'Aprobá 6 de 9 exámenes de Química 10.º, o alcanzá 80+ en el Examen Final de 10.º'}</div>
+          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem">${estado.rutaGrade11Unlocked ? '✓ Cumplida' : 'Aprobá 6 de 9 exámenes de Química 10.º, o alcanzá 80+ en el Desafío Final de 10.º'}</div>
         </div>
 
         <div style="text-align:left;margin-bottom:1.2rem">
@@ -250,16 +258,17 @@ Router.register('simulacro-nacional', (() => {
           </div>
         </div>
 
-        <div style="display:flex;justify-content:space-between;margin-top:1rem;gap:.6rem">
-          <button class="btn btn-ghost btn-sm" id="sn-anterior" ${_intento.indiceActual === 0 ? 'disabled' : ''}>← Anterior</button>
-          <button class="btn btn-ghost btn-sm" id="sn-abrir-navegador">🔢 Ver todas las preguntas</button>
-          ${esUltimaPregunta
-            ? `<button class="btn btn-primary btn-sm" id="sn-siguiente-o-entregar">Entregar simulacro ✓</button>`
-            : `<button class="btn btn-ghost btn-sm" id="sn-siguiente-o-entregar">Siguiente →</button>`}
-        </div>
-
-        <div style="text-align:center;margin-top:1rem">
-          <button class="btn btn-primary btn-sm" id="sn-entregar">Entregar simulacro</button>
+        <div class="mqc-exam-nav">
+          <div class="mqc-exam-nav__group">
+            <button class="btn btn-ghost btn-sm" id="sn-anterior" ${_intento.indiceActual === 0 ? 'disabled' : ''}>← Anterior</button>
+            <button class="btn btn-ghost btn-sm" id="sn-abrir-navegador">🔢 Ver todas las preguntas</button>
+            ${esUltimaPregunta
+              ? `<button class="btn btn-primary btn-sm" id="sn-siguiente-o-entregar">Entregar simulacro ✓</button>`
+              : `<button class="btn btn-ghost btn-sm" id="sn-siguiente-o-entregar">Siguiente →</button>`}
+          </div>
+          <div class="mqc-exam-nav__submit">
+            <button class="btn btn-primary btn-sm" id="sn-entregar">Entregar simulacro</button>
+          </div>
         </div>
 
         <div id="sn-navegador-overlay"></div>
@@ -622,9 +631,11 @@ Router.register('simulacro-nacional', (() => {
           </div>
           ${!elegida ? `<p style="color:var(--text-muted);font-size:.82rem;margin-top:.7rem">No respondiste esta pregunta.</p>` : ''}
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:1rem">
-          <button class="btn btn-ghost btn-sm" id="sn-rev-ant" ${_revisionIndice === 0 ? 'disabled' : ''}>← Anterior</button>
-          <button class="btn btn-ghost btn-sm" id="sn-rev-sig" ${_revisionIndice === r.preguntas.length - 1 ? 'disabled' : ''}>Siguiente →</button>
+        <div class="mqc-exam-nav">
+          <div class="mqc-exam-nav__group">
+            <button class="btn btn-ghost btn-sm" id="sn-rev-ant" ${_revisionIndice === 0 ? 'disabled' : ''}>← Anterior</button>
+            <button class="btn btn-ghost btn-sm" id="sn-rev-sig" ${_revisionIndice === r.preguntas.length - 1 ? 'disabled' : ''}>Siguiente →</button>
+          </div>
         </div>
         <div id="sn-navegador-overlay"></div>
       </div>`;
@@ -664,6 +675,14 @@ Router.register('simulacro-nacional', (() => {
               <span style="font-size:.85rem;color:var(--text-secondary)">PNE: ${h.aciertos}/${h.total} (${h.notaPNE}%) · Presentación: ${h.presentacion}/60</span>
               <strong style="font-family:var(--font-display)">${h.proyeccionFinal}/100</strong>
             </div>
+            ${Array.isArray(h.porCiencia) ? `
+            <div style="margin-top:.7rem;padding-top:.7rem;border-top:1px solid var(--border)">
+              ${h.porCiencia.map(c => `
+                <div style="display:flex;justify-content:space-between;align-items:center;font-size:.78rem;margin-bottom:.35rem">
+                  <span>${ICONO_CIENCIA[c.ciencia] || ''} ${c.ciencia}</span>
+                  <span style="color:${c.porcentaje >= 70 ? 'var(--green)' : 'var(--red)'}">${c.correctas}/${c.total} · ${c.porcentaje}%</span>
+                </div>`).join('')}
+            </div>` : ''}
           </div>`).join('')}
         <div style="text-align:center;margin-top:1rem">
           <button class="btn btn-ghost btn-sm" id="sn-hist-volver">← Volver</button>
@@ -695,7 +714,10 @@ Router.register('simulacro-nacional', (() => {
     _ultimoResultado = null;
 
     const estado = S.estadoDesbloqueo();
-    if (!estado.desbloqueado) {
+    // PENDIENTE D — paso 2: un docente verificado entra al Simulacro
+    // Nacional aunque estado.desbloqueado sea false — el candado real
+    // (grade11Unlock o progreso/exámenes de Química 11.º) no se toca.
+    if (!AccessControl.canExplore(estado.desbloqueado)) {
       const root = document.getElementById('content');
       if (root) {
         root.innerHTML = _renderBloqueado(estado);

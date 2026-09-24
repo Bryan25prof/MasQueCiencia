@@ -42,7 +42,11 @@ Router.register('grade11', (() => {
     const data = Storage.load();
     const g11 = data.grade11Unlock || { unlocked: false };
 
-    if (!g11.unlocked) {
+    // PENDIENTE D — paso 2 (AccessControl): un docente verificado ve la
+    // grilla de unidades aunque g11.unlocked sea false — el candado
+    // real (6/9 exámenes o PNE 80+) no se toca ni se reimplementa, solo
+    // se envuelve. Ver js/shared/access-control.js.
+    if (!AccessControl.canExplore(g11.unlocked)) {
       return `
         <div class="section-header"><p class="section-title">Undécimo Año</p><h2 class="section-heading">Química 11.º</h2></div>
         <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;text-align:center;max-width:520px;margin:0 auto">
@@ -263,7 +267,13 @@ Router.register('grade11', (() => {
     const unitId = params && params.unitId;
     const g11 = Storage.load().grade11Unlock || { unlocked: false };
 
-    if (unitId && g11.unlocked) {
+    // PENDIENTE D — paso 2: mismo canExplore que _renderGrid — un
+    // docente verificado puede abrir cualquier unidad por unitId
+    // directo aunque g11.unlocked sea false. El XP/started que se
+    // otorgaría más abajo (líneas siguientes) queda de todos modos
+    // bloqueado por la guarda centralizada de Gamification.addXP /
+    // Storage.updateGrade11Unit — nunca se persiste para un docente.
+    if (unitId && AccessControl.canExplore(g11.unlocked)) {
       const u = GRADE11_UNIDADES_DATA.find(x => x.id === unitId);
       if (u && u.status === 'active') { _infoUnitId = null; _currentUnitId = unitId; }
       else { _infoUnitId = unitId; _currentUnitId = null; }

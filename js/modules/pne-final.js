@@ -324,13 +324,21 @@ Router.register('pne-final', (() => {
     pne.lastAttemptQuestionIds = exam.qs.map(q => q.id);
     pne.recentMissedQuestionIds = (pne.recentMissedQuestionIds || []).concat(missedIds).slice(-15);
 
-    Storage.set('pne', pne);
+    // PENDIENTE D — paso 2: un docente verificado puede presentar el
+    // Desafío Final PNE y ver su resultado (_renderResults más abajo
+    // usa las variables locales score/correct/total/passed, nunca
+    // relee Storage), pero bestScore/attempts/passCount/historial no
+    // se persisten. Gamification.addXP('pne-first-pass'|'pne-improved')
+    // ya está bloqueado de forma centralizada, pero este Storage.set es
+    // el único punto de escritura de 'pne' — necesita su propia guarda.
+    const _esDocente = (typeof AccessControl !== 'undefined' && AccessControl.isTeacher && AccessControl.isTeacher());
+    if (!_esDocente) Storage.set('pne', pne);
 
     if (typeof Gamification !== 'undefined' && Gamification.addXP) {
       if (isFirstPass) {
-        Gamification.addXP('pne-first-pass');
+        Gamification.addXP('pne-first-pass', { transversal: true });
       } else if (improved) {
-        Gamification.addXP('pne-improved');
+        Gamification.addXP('pne-improved', { transversal: true });
       }
       Gamification.checkBadges();
     }
@@ -464,7 +472,10 @@ Router.register('pne-final', (() => {
     const content = document.getElementById('content');
     if (!content) return;
     const status = _unlockStatus();
-    if (!status.unlocked) {
+    // PENDIENTE D — paso 2: un docente verificado entra al Desafío
+    // Final PNE aunque status.unlocked sea false (5/9 exámenes no
+    // cumplidos) — ver AccessControl.canExplore().
+    if (!AccessControl.canExplore(status.unlocked)) {
       content.innerHTML = _renderLocked(status);
     } else {
       content.innerHTML = _renderInstructions();

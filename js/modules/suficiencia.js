@@ -42,6 +42,12 @@ Router.register('suficiencia', (() => {
     return (data.suficiencia && data.suficiencia[_curso]) || _vacio();
   }
   function _guardar(obj) {
+    // PENDIENTE D — paso 2 (AccessControl, decisión 2 de Bryan: mismo
+    // principio "DOCENTE EXPLORA; ESTUDIANTE PROGRESA" aplicado a
+    // Suficiencia). Un docente verificado puede presentar el examen y
+    // ver su resultado (_ultimoResultado en memoria, nunca releído de
+    // Storage), pero acreditado/bestScore/historial nunca se persisten.
+    if (typeof AccessControl !== 'undefined' && AccessControl.isTeacher && AccessControl.isTeacher()) return;
     const data = Storage.load();
     const suf = Object.assign({}, data.suficiencia, { [_curso]: obj });
     Storage.set('suficiencia', suf);

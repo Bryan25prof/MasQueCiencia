@@ -27,9 +27,23 @@
   const KEY = 'integrador';
 
   function CHEM(){ return (typeof MQCChem!=='undefined')?MQCChem:null; }
-  function awardXP(s){ if(typeof Gamification!=='undefined'&&Gamification&&Gamification.addXP){try{Gamification.addXP(s);}catch(e){}} }
+  /* XP 2.0 (AUDITORÍA FASE 2, set-2026): contexto disciplinar explícito.
+     Se cuenta por convención bajo Química (mismo tratamiento que ya
+     tenía en la reconstrucción histórica de XP_VERIFICABLE_QUIMICA —
+     ver js/core/xp2.js y el reporte del lote de preintegridad). */
+  function awardXP(s){ if(typeof Gamification!=='undefined'&&Gamification&&Gamification.addXP){try{Gamification.addXP(s,{disciplina:'quimica',grado:10});}catch(e){}} }
   function loadState(){ if(typeof Storage!=='undefined'&&Storage&&Storage.get){try{return Storage.get(KEY)||{};}catch(e){return {};}} return {}; }
-  function saveState(v){ if(typeof Storage!=='undefined'&&Storage&&Storage.set){try{Storage.set(KEY,v);}catch(e){}} }
+  /* PENDIENTE D — paso 2 (AccessControl): único punto de escritura de
+     'integrador' — cubre estacionesPremiadas/completado/informe/
+     xpAwarded. Un docente verificado puede recorrer el caso y entregar
+     el informe (la UI sigue funcionando con el estado en memoria de
+     este módulo), pero nada queda marcado como completado. El XP de
+     _awardEstacionOnce/_submitInformeOnce ya está bloqueado de forma
+     centralizada en Gamification.addXP. */
+  function saveState(v){
+    if (typeof AccessControl!=='undefined' && AccessControl.isTeacher && AccessControl.isTeacher()) return;
+    if(typeof Storage!=='undefined'&&Storage&&Storage.set){try{Storage.set(KEY,v);}catch(e){}}
+  }
   function sub(f){ return String(f).replace(/(\d+)/g,'<sub>$1</sub>'); }
 
   /* AUDITORÍA FASE 2 — LOTE PREINTEGRIDAD XP 2.0: guarda persistida por

@@ -136,8 +136,14 @@ try {
   if (params.get('fisica10preview') === '1') localStorage.setItem(FISICA10_PREVIEW_KEY, '1');
 } catch (e) { /* URLSearchParams no disponible: se ignora, sigue oculto por defecto */ }
 function _fisica10Habilitado() {
-  if (FISICA10_PUBLICO) return true;
-  try { return localStorage.getItem(FISICA10_PREVIEW_KEY) === '1'; } catch (e) { return false; }
+  // PENDIENTE D — paso 2: guarda preventiva (hoy FISICA10_PUBLICO ya es
+  // true para todos, así que este candado es un no-op real). Se envuelve
+  // igual con AccessControl.canExplore() para que un docente verificado
+  // nunca dependa de esta bandera si en el futuro vuelve a "false".
+  const habilitadoReal = FISICA10_PUBLICO || (function () {
+    try { return localStorage.getItem(FISICA10_PREVIEW_KEY) === '1'; } catch (e) { return false; }
+  })();
+  return (typeof AccessControl !== 'undefined' && AccessControl.canExplore) ? AccessControl.canExplore(habilitadoReal) : habilitadoReal;
 }
 
 Router.register('fisica10', (() => {
