@@ -508,6 +508,13 @@
 <script src="js/data/banco-pne-u09.js"></script>
 
 <!-- 2. Core -->
+<!-- PENDIENTE D — paso 2: AccessControl.isTeacher()/canExplore(), usado
+     de forma defensiva por storage.js/gamification.js y directamente
+     por los módulos de grado/exámenes cargados más abajo. Solo necesita
+     estar definido antes de que la app arranque (js/app.js, el último
+     script) — MQCProfiles se consulta en tiempo de ejecución, no de
+     carga, así que el orden exacto respecto a profiles.js no es crítico. -->
+<script src="js/shared/access-control.js"></script>
 <script src="js/core/storage.js"></script>
 <script src="js/core/xp2.js"></script>
 <script src="js/core/gamification.js"></script>
