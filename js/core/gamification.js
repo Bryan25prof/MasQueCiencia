@@ -3,7 +3,7 @@
    js/core/gamification.js  |  Sistema de XP, Niveles y Medallas
    ================================================================
    Maneja toda la lógica de gamificación:
-   - 10 niveles de progresión
+   - 12 niveles de progresión
    - Ganancias de XP por actividad
    - 12 medallas (badges)
    - Notificaciones de subida de nivel
@@ -38,7 +38,17 @@ const Gamification = (() => {
     { level: 7,  name: 'Químico Avanzado',      icon: '🌟',  xp: 5500  },
     { level: 8,  name: 'Maestro Cuántico',      icon: '💎',  xp: 8000  },
     { level: 9,  name: 'Profesor Honorario',    icon: '🏆',  xp: 11000 },
-    { level: 10, name: 'Leyenda Química',       icon: '👑',  xp: 15000 }
+    { level: 10, name: 'Leyenda Química',       icon: '👑',  xp: 15000 },
+    // AUDITORÍA FASE 2 (tope XP/niveles, set-2026): el máximo legítimo de
+    // XP sumando los 4 cursos (Química 10.º/11.º + Física 10.º/11.º) es
+    // 17570 — por encima del tope anterior (15000). Se agregan 2 niveles
+    // nuevos SIN alterar ninguno de los 10 anteriores (mismos umbrales,
+    // nombres e íconos), para no afectar el nivel ya calculado de ningún
+    // estudiante existente. El tope de XP (MAX_XP en addXP) y _calcLevel()
+    // ya se derivan dinámicamente del último elemento de este arreglo, así
+    // que agregar niveles aquí es la única corrección que necesitaban.
+    { level: 11, name: 'Investigador Multidisciplinario', icon: '🚀', xp: 18000 },
+    { level: 12, name: 'Sabio de las Ciencias',            icon: '🌌', xp: 22000 }
   ];
 
   /* ── Recompensas de XP por tipo de actividad ────────────── */
@@ -272,7 +282,11 @@ const Gamification = (() => {
       id:   'legend',
       name: 'Leyenda',
       icon: '👑',
-      desc: 'Alcanzaste el nivel máximo: Leyenda Química'
+      // AUDITORÍA FASE 2: ya no es "el nivel máximo" (ahora hay niveles
+      // 11-12 por encima) — se corrige el texto para no ser falso: sigue
+      // siendo el mismo hito de siempre (nivel 10), solo que ya no es el
+      // techo del sistema.
+      desc: 'Alcanzaste el nivel 10: Leyenda Química'
     },
     {
       id:   'integrador-final',
@@ -389,28 +403,89 @@ const Gamification = (() => {
   /**
    * Añade XP al estudiante y verifica subida de nivel.
    * @param {string} source  — Clave de XP_REWARDS o string descriptivo
-   * @param {number} [amount]— Si se omite, usa el valor de XP_REWARDS[source]
+   * @param {number|object} [amountOrContext] — AUDITORÍA FASE 2 (XP 2.0,
+   *        set-2026): este segundo parámetro NUNCA fue usado por ningún
+   *        llamador real en todo el repositorio (verificado con grep de
+   *        cada `Gamification.addXP(...)` en js/** antes de este cambio
+   *        — todos pasan un solo argumento). Se reaprovecha para aceptar
+   *        el contexto disciplinar de XP 2.0:
+   *          { disciplina: 'quimica'|'fisica'|'biologia', grado: 10|11 }
+   *          { transversal: true }
+   *        Retrocompatibilidad explícita: si en el futuro algún llamador
+   *        pasa un NÚMERO aquí, se sigue interpretando exactamente igual
+   *        que antes (override manual del monto de XP) — el nuevo
+   *        comportamiento solo se activa cuando el segundo argumento es
+   *        un objeto.
    * @returns {object} { newXP, newLevel, leveledUp }
    */
-  function addXP(source, amount) {
+  function addXP(source, amountOrContext) {
+    // PENDIENTE D — paso 2 (AccessControl): único chokepoint de TODA la
+    // XP del proyecto. Un docente verificado nunca acumula XP real, no
+    // sube de nivel, y no dispara checkBadges() (que además tiene su
+    // propia guarda idéntica abajo, por si se llama fuera de addXP).
+    // No se guarda nada — se devuelve el estado actual, sin tocar
+    // Storage. Ver js/shared/access-control.js y
+    // MQC_PENDIENTE_D_DIAGNOSTICO.md sección 5.
+    if (typeof AccessControl !== 'undefined' && AccessControl && AccessControl.isTeacher && AccessControl.isTeacher()) {
+      const _d = Storage.load();
+      return { newXP: _d.xp.total, newLevel: _d.level, leveledUp: false };
+    }
+
+    const isContext = amountOrContext && typeof amountOrContext === 'object';
+    const amount   = isContext ? undefined : amountOrContext;
+    const context  = isContext ? amountOrContext : null;
+
     const xpGain = amount !== undefined ? amount : (XP_REWARDS[source] || 0);
     if (xpGain <= 0) return { newXP: 0, newLevel: 1, leveledUp: false };
 
     const data    = Storage.load();
     const prevLvl = data.level;
 
+    // XP_HISTORICO_REGISTRADO — SIN CAMBIOS. data.xp.total y data.level
+    // siguen exactamente el mismo comportamiento que antes de XP 2.0 (no
+    // se congelan): así ningún badge/nivel/progreso ya construido sobre
+    // ellos (checkBadges, getLevelInfo, "Mi Progreso") sufre ninguna
+    // regresión. Ver MQC_LOTE_XP2_IMPLEMENTACION.md para la justificación
+    // completa de esta decisión de diseño.
     data.xp.total += xpGain;
-    data.xp.history.push({ amount: xpGain, source, ts: Date.now() });
+    data.xp.history.push({
+      amount: xpGain, source, ts: Date.now(),
+      /* XP 2.0 — contexto explícito SOLO cuando el llamador lo da (eventos
+         nuevos). Entradas sin estos campos son historial previo a XP 2.0;
+         la Bitácora (js/shared/profiles.js:_gradeOf) sabe interpretar
+         ambos casos sin inventar clasificación para las viejas. */
+      disciplina: (context && context.disciplina) || undefined,
+      grado:      (context && context.grado)      || undefined,
+      transversal: (context && context.transversal === true) || undefined
+    });
 
     // Limitar historial a 100 entradas
     if (data.xp.history.length > 100) {
       data.xp.history = data.xp.history.slice(-100);
     }
 
+    // XP 2.0 — enrutamiento disciplinar ADITIVO, en paralelo al sistema
+    // histórico de arriba (nunca lo reemplaza). Si el llamador no da
+    // contexto, o da un contexto que no matchea ninguna disciplina
+    // conocida, no se enruta a ningún acumulador nuevo — "nunca inventar
+    // clasificación" aplica también hacia adelante, no solo al
+    // reconstruir historiales.
+    if (context) {
+      if (context.disciplina === 'quimica' && data.xpQuimica) {
+        data.xpQuimica.total += xpGain;
+      } else if (context.disciplina === 'fisica' && data.xpFisica) {
+        data.xpFisica.total += xpGain;
+      } else if (context.disciplina === 'biologia' && data.xpBiologia) {
+        data.xpBiologia.total += xpGain;
+      } else if (context.transversal === true && data.xpTransversal) {
+        data.xpTransversal.total += xpGain;
+      }
+    }
+
     // EOP-XPCAP: tope de XP total al nivel máximo definido en LEVELS
-    // (hoy 15000, "Leyenda Química"). Se calcula del propio arreglo de
-    // niveles — nunca un número suelto — para que, si algún día se
-    // agrega un nivel 11, el tope se ajuste solo sin tocar esta línea.
+    // (hoy 22000, "Sabio de las Ciencias"). Se calcula del propio arreglo
+    // de niveles — nunca un número suelto — para que, si algún día se
+    // agrega un nivel 13, el tope se ajuste solo sin tocar esta línea.
     // Protege contra cualquier fuente de XP mal calibrada (presente o
     // futura) sin necesidad de auditar cada punto de otorgamiento.
     const MAX_XP = LEVELS[LEVELS.length - 1].xp;
@@ -485,6 +560,13 @@ const Gamification = (() => {
    * @param {object} [data] — Datos del estudiante (opcional, carga si no se da)
    */
   function checkBadges(data, skipPhotonReaction) {
+    // PENDIENTE D — paso 2: un docente verificado nunca recibe medallas
+    // ni dispara el auto-desbloqueo de Química 11.º por progreso
+    // (identityLock/grade11Unlock más abajo en esta función) — ver
+    // comentario equivalente en addXP().
+    if (typeof AccessControl !== 'undefined' && AccessControl && AccessControl.isTeacher && AccessControl.isTeacher()) {
+      return;
+    }
     data = data || Storage.load();
     const newBadges = [];
 
@@ -975,15 +1057,19 @@ const Gamification = (() => {
    * @returns {object} { level, name, icon, xp, xpNext, xpPrev, percent }
    */
   function getLevelInfo() {
-    const data    = Storage.load();
-    const lvl     = data.level;
-    const current = _getLevelObj(lvl);
-    const next    = _getLevelObj(Math.min(lvl + 1, 10));
-    const xpNow   = data.xp.total;
-    const xpPrev  = current.xp;
-    const xpNext  = next.xp;
-    const range   = Math.max(1, xpNext - xpPrev);
-    const percent = lvl >= 10 ? 100 : Math.min(100, Math.round(((xpNow - xpPrev) / range) * 100));
+    const data     = Storage.load();
+    const lvl      = data.level;
+    // AUDITORÍA FASE 2: nivel máximo derivado de LEVELS, nunca un número
+    // suelto — antes decía "10" en tres lugares, lo que habría roto el
+    // cálculo de progreso al agregar niveles por encima del 10.
+    const maxLevel = LEVELS[LEVELS.length - 1].level;
+    const current  = _getLevelObj(lvl);
+    const next     = _getLevelObj(Math.min(lvl + 1, maxLevel));
+    const xpNow    = data.xp.total;
+    const xpPrev   = current.xp;
+    const xpNext   = next.xp;
+    const range    = Math.max(1, xpNext - xpPrev);
+    const percent  = lvl >= maxLevel ? 100 : Math.min(100, Math.round(((xpNow - xpPrev) / range) * 100));
 
     return {
       level:   current.level,
@@ -993,7 +1079,7 @@ const Gamification = (() => {
       xpNext:  xpNext,
       xpPrev:  xpPrev,
       percent: percent,
-      maxed:   lvl >= 10
+      maxed:   lvl >= maxLevel
     };
   }
 
@@ -1012,6 +1098,24 @@ const Gamification = (() => {
   /** Devuelve el objeto de nivel para un número dado */
   function getLevelObj(lvl) { return _getLevelObj(lvl); }
 
+  /**
+   * XP 2.0 — resumen disciplinar del estudiante (solo lectura, no
+   * otorga ni modifica nada). Devuelve null si js/core/xp2.js no está
+   * cargado (defensivo, nunca rompe llamadores existentes).
+   * @returns {object|null} { quimica, fisica, biologia, global }
+   */
+  function getXP2Summary() {
+    if (typeof XP2 === 'undefined' || !XP2) return null;
+    const data = Storage.load();
+    return {
+      quimica:  { total: (data.xpQuimica  && data.xpQuimica.total)  || 0, rango: XP2.getRango('quimica',  (data.xpQuimica  && data.xpQuimica.total)  || 0) },
+      fisica:   { total: (data.xpFisica   && data.xpFisica.total)   || 0, rango: XP2.getRango('fisica',   (data.xpFisica   && data.xpFisica.total)   || 0) },
+      biologia: { total: (data.xpBiologia && data.xpBiologia.total) || 0, rango: null },
+      transversal: (data.xpTransversal && data.xpTransversal.total) || 0,
+      global: XP2.getGlobal(data)
+    };
+  }
+
   /* Exportar API pública */
   return {
     LEVELS,
@@ -1022,7 +1126,8 @@ const Gamification = (() => {
     getLevelInfo,
     getAllBadges,
     getAllLevels,
-    getLevelObj
+    getLevelObj,
+    getXP2Summary
   };
 
 })(); // Gamification

@@ -80,6 +80,20 @@ const Storage = (() => {
     return STORAGE_KEY;                        /* heredado / respaldo */
   }
 
+  /* PENDIENTE D — paso 2 (AccessControl): helper interno, defensivo,
+     usado únicamente por las guardas de escritura académica de este
+     archivo (updateUnit/markTopicRead y sus 3 equivalentes de
+     grade11/fisica10/fisica11). No depende de que access-control.js
+     haya cargado — si AccessControl no existe todavía, se comporta
+     exactamente igual que antes de este cambio (false, sin bloquear
+     nada). Storage.js sigue sin conocer el concepto de "rol": solo
+     delega la pregunta a AccessControl.isTeacher(). */
+  function _esDocenteVerificado() {
+    try {
+      return typeof AccessControl !== 'undefined' && AccessControl && typeof AccessControl.isTeacher === 'function' && AccessControl.isTeacher();
+    } catch (e) { return false; }
+  }
+
   /* Esquema por defecto — el estado inicial de un estudiante nuevo */
   const SCHEMA_DEFAULT = {
     version: SCHEMA_VERSION,
@@ -305,6 +319,22 @@ const Storage = (() => {
       q11:   _emptySuficiencia(),
       fix10: _emptySuficiencia(),
       fix11: _emptySuficiencia()
+    },
+    /* ================================================================
+       XP 2.0 (AUDITORÍA FASE 2, set-2026) — acumuladores disciplinares,
+       100% ADITIVOS. `xp.total`/`xp.history`/`level` de arriba NO se
+       tocan ni se congelan: siguen funcionando exactamente igual que
+       siempre (XP_HISTORICO_REGISTRADO). Estos 4 campos nuevos son
+       XP_VERIFICABLE, calculado/actualizado en paralelo. Ver
+       js/core/xp2.js para la reconstrucción inicial (única vez) y las
+       reglas de enrutamiento por evento nuevo. */
+    xpQuimica:    { total: 0 },
+    xpFisica:     { total: 0 },
+    xpBiologia:   { total: 0 },  /* preparado desde ya; sin contenido real todavía */
+    xpTransversal:{ total: 0 },  /* PNE, login diario, rachas, etc. — nunca se suma a XP_GLOBAL salvo decisión expresa posterior */
+    xp2: {
+      migradoAt: null,       /* timestamp de la única reconstrucción histórica; null = todavía no migrado */
+      migradoVersion: null
     }
   };
 
@@ -378,13 +408,27 @@ const Storage = (() => {
           : JSON.parse(JSON.stringify(SCHEMA_DEFAULT));
       }
       const raw = localStorage.getItem(key);
-      if (!raw) return JSON.parse(JSON.stringify(SCHEMA_DEFAULT));
+      if (!raw) return _xp2Migrate(JSON.parse(JSON.stringify(SCHEMA_DEFAULT)));
       const saved = JSON.parse(raw);
-      return _mergeDeep(JSON.parse(JSON.stringify(SCHEMA_DEFAULT)), saved);
+      return _xp2Migrate(_mergeDeep(JSON.parse(JSON.stringify(SCHEMA_DEFAULT)), saved));
     } catch (err) {
       console.warn('[Storage] Error al cargar datos, usando defaults.', err);
-      return JSON.parse(JSON.stringify(SCHEMA_DEFAULT));
+      return _xp2Migrate(JSON.parse(JSON.stringify(SCHEMA_DEFAULT)));
     }
+  }
+
+  /* XP 2.0 — reconstrucción única de XP_VERIFICABLE por disciplina.
+     Ver js/core/xp2.js. Defensivo: si XP2 no está cargado (orden de
+     scripts, entorno de prueba sin ese archivo), no rompe nada — el
+     perfil sigue funcionando exactamente igual que antes de XP 2.0,
+     solo sin los acumuladores nuevos poblados todavía. */
+  function _xp2Migrate(data) {
+    try {
+      if (typeof XP2 !== 'undefined' && XP2 && typeof XP2.ensureMigrated === 'function') {
+        return XP2.ensureMigrated(data);
+      }
+    } catch (e) { /* silencioso: nunca bloquear la carga normal del perfil */ }
+    return data;
   }
 
   /**
@@ -477,6 +521,15 @@ const Storage = (() => {
    * @param {object} update — Campos a actualizar (merge)
    */
   function updateUnit(unitId, update) {
+    // PENDIENTE D — paso 2 (AccessControl): guarda de escritura
+    // centralizada. Un docente verificado puede explorar/presentar
+    // exámenes de Química 10.º, pero nada se persiste (examBest,
+    // examAttempts, started, completed, simsDone, gameScore) — la
+    // pantalla de resultado que ve en pantalla se calcula de variables
+    // locales del módulo llamador, nunca de una relectura de Storage.
+    // Ver js/shared/access-control.js y MQC_PENDIENTE_D_DIAGNOSTICO.md
+    // sección 5 (Capa 2).
+    if (_esDocenteVerificado()) return;
     const data = load();
     if (!data.units[unitId]) {
       data.units[unitId] = _emptyUnit();
@@ -493,6 +546,10 @@ const Storage = (() => {
    * @param {string} topicId — ID del tema
    */
   function markTopicRead(unitId, topicId) {
+    // PENDIENTE D — paso 2: mismo principio que updateUnit — topicsRead
+    // también es progreso académico (25% de _computePct) y no debe
+    // sobrevivir para un docente verificado.
+    if (_esDocenteVerificado()) return;
     const data = load();
     if (!data.units[unitId]) data.units[unitId] = _emptyUnit();
     const unit = data.units[unitId];
@@ -597,6 +654,8 @@ const Storage = (() => {
     unit.completed = unit.completed || _computePctG11(unit, unitId) === 100;
   }
   function updateGrade11Unit(unitId, update) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.updateUnit.
+    if (_esDocenteVerificado()) return;
     const data = load();
     if (!data.grade11[unitId]) data.grade11[unitId] = _emptyUnit();
     data.grade11[unitId] = Object.assign({}, data.grade11[unitId], update);
@@ -605,6 +664,8 @@ const Storage = (() => {
     save(data);
   }
   function markGrade11TopicRead(unitId, topicId) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.markTopicRead.
+    if (_esDocenteVerificado()) return;
     const data = load();
     if (!data.grade11[unitId]) data.grade11[unitId] = _emptyUnit();
     const unit = data.grade11[unitId];
@@ -655,6 +716,8 @@ const Storage = (() => {
     unit.completed = unit.completed || _computePctFisica10(unit, unitId) === 100;
   }
   function updateFisica10Unit(unitId, update) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.updateUnit.
+    if (_esDocenteVerificado()) return;
     const data = load();
     if (!data.fisica10[unitId]) data.fisica10[unitId] = _emptyUnit();
     data.fisica10[unitId] = Object.assign({}, data.fisica10[unitId], update);
@@ -663,6 +726,8 @@ const Storage = (() => {
     save(data);
   }
   function markFisica10TopicRead(unitId, topicId) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.markTopicRead.
+    if (_esDocenteVerificado()) return;
     const data = load();
     if (!data.fisica10[unitId]) data.fisica10[unitId] = _emptyUnit();
     const unit = data.fisica10[unitId];
@@ -711,6 +776,8 @@ const Storage = (() => {
     unit.completed = unit.completed || _computePctFisica11(unit, unitId) === 100;
   }
   function updateFisica11Unit(unitId, update) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.updateUnit.
+    if (_esDocenteVerificado()) return;
     const data = load();
     if (!data.fisica11[unitId]) data.fisica11[unitId] = _emptyUnit();
     data.fisica11[unitId] = Object.assign({}, data.fisica11[unitId], update);
@@ -719,6 +786,8 @@ const Storage = (() => {
     save(data);
   }
   function markFisica11TopicRead(unitId, topicId) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.markTopicRead.
+    if (_esDocenteVerificado()) return;
     const data = load();
     if (!data.fisica11[unitId]) data.fisica11[unitId] = _emptyUnit();
     const unit = data.fisica11[unitId];
