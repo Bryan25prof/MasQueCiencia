@@ -558,13 +558,32 @@ window.MQCProfilesUI = (function () {
       } else if (!esSoloActualizacionColegio && activeId) {
         p.setGroup(activeId, ''); // un docente no tiene grupo/sección de estudiante
       }
+      // PENDIENTE D (auditoría de cierre del paso 2): si este guardado
+      // cambia el rol real o verifica un código docente recién ahora, el
+      // perfil activo pasa a tener un AccessControl.isTeacher() distinto
+      // al que ya se usó para renderizar la pantalla que quedó detrás de
+      // este modal (candados de contenido, insignia "Modo docente" del
+      // chip flotante) — ninguno de los dos se re-evalúa solo, porque no
+      // hay ningún re-render reactivo enganchado a un cambio de perfil.
+      // Igual que las otras dos vías de activación que SÍ crean un perfil
+      // nuevo (mqc-nf, mqc-cf), se recarga para que toda la app se
+      // re-derive desde cero — así nunca queda una pantalla con un
+      // candado obsoleto ni el chip mostrando un modo que ya no
+      // corresponde. Se detectó este vacío recorriendo exactamente esta
+      // costura entre Activación Docente y AccessControl.
+      let huboVerificacionOCambioDeRol = false;
       if (activeId) {
         p.setEscuela(activeId, colegioSel.schoolId, colegioSel.schoolName, colegioSel.schoolRegion);
         if (!esSoloActualizacionColegio && p.setRol) {
+          huboVerificacionOCambioDeRol = (rolElegido !== rolActual);
           p.setRol(activeId, rolElegido);
-          if (rolElegido === 'docente' && _activacionFueVerificadaAhora('mqc-cp') && p.setRolVerificado) p.setRolVerificado(activeId, Date.now());
+          if (rolElegido === 'docente' && _activacionFueVerificadaAhora('mqc-cp') && p.setRolVerificado) {
+            p.setRolVerificado(activeId, Date.now());
+            huboVerificacionOCambioDeRol = true;
+          }
         }
       }
+      if (huboVerificacionOCambioDeRol) { location.reload(); return; }
       ov.remove();
     });
   }
@@ -710,11 +729,29 @@ window.MQCProfilesUI = (function () {
       if (rol === 'docente') { p.setGroup(id, ''); } else { p.setGroup(id, ov.querySelector('#mqc-ed-group').value); }
       const colegioSel = _valorSelectorColegio('mqc-ed-colegio');
       if (colegioSel.valido) p.setEscuela(id, colegioSel.schoolId, colegioSel.schoolName, colegioSel.schoolRegion);
+      // PENDIENTE D (auditoría de cierre del paso 2): si este guardado
+      // cambia el rol real o verifica un código docente recién ahora, el
+      // perfil editado puede ser el perfil ACTIVO — y su
+      // AccessControl.isTeacher() pasa a ser distinto al que ya se usó
+      // para renderizar la pantalla que quedó detrás de este modal
+      // (candados de contenido, insignia "Modo docente" del chip
+      // flotante), porque ningún re-render reactivo está enganchado a un
+      // cambio de perfil. Igual que las otras dos vías de activación que
+      // SÍ crean un perfil nuevo (mqc-nf, mqc-cf), se recarga para que
+      // toda la app se re-derive desde cero — así nunca queda una
+      // pantalla con un candado obsoleto ni el chip mostrando un modo que
+      // ya no corresponde. Una edición que NO toca el rol (alias, avatar,
+      // colegio) sigue sin recargar, igual que antes.
+      let huboVerificacionOCambioDeRol = (rol !== rolActual);
       if (p.setRol) {
         p.setRol(id, rol);
-        if (rol === 'docente' && _activacionFueVerificadaAhora('mqc-ed') && p.setRolVerificado) p.setRolVerificado(id, Date.now());
+        if (rol === 'docente' && _activacionFueVerificadaAhora('mqc-ed') && p.setRolVerificado) {
+          p.setRolVerificado(id, Date.now());
+          huboVerificacionOCambioDeRol = true;
+        }
       }
       p.setAvatar(id, av);
+      if (huboVerificacionOCambioDeRol) { location.reload(); return; }
       ov.remove(); openManager();
     });
   }
