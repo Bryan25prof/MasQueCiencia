@@ -1,99 +1,66 @@
-PENDIENTE D (paso 2) — ACCESSCONTROL + BLOQUEO DE ESCRITURAS DOCENTES
-=======================================================================
+PENDIENTE D (paso 3) — AUDITORÍA FUNCIONAL CORTA DE CIERRE
+=============================================================
 
-Este paquete contiene ÚNICAMENTE los archivos modificados o nuevos de
-este trabajo. Los archivos dentro de "MasQueCiencia_Beta_v1.0" reflejan
-EXACTAMENTE la misma ruta que tienen en tu repositorio.
+Este paquete contiene ÚNICAMENTE el archivo modificado en este trabajo.
+El archivo dentro de "MasQueCiencia_Beta_v1.0" refleja EXACTAMENTE la
+misma ruta que tiene en tu repositorio.
 
-QUÉ HACE ESTE PASO (regla aplicada en todo el código: "DOCENTE EXPLORA;
-ESTUDIANTE PROGRESA"):
-  - Un docente VERIFICADO (rol='docente' Y con su rol verificado, es
-    decir que ya pasó por la activación docente del paso anterior)
-    puede AHORA entrar y recorrer libremente todo el contenido que
-    antes tenía candado por progreso (Química 11.º, Física 10.º/11.º,
-    PNE Final, Simulacro Nacional, tarjetas y sidebar), para poder
-    revisarlo con sus estudiantes o prepararse, sin tener que "jugar"
-    el progreso él mismo.
-  - Ese mismo docente verificado NO deja ningún rastro académico al
-    hacerlo: no gana XP, no sube de nivel, no gana insignias, no se le
-    guarda ningún intento de examen, no se marca ninguna unidad como
-    aprobada/acreditada, no se desbloquea nada por su cuenta. Ve su
-    resultado en pantalla igual que cualquiera (para poder revisar el
-    feedback), pero ese resultado nunca se guarda.
-  - Un docente que se autodeclaró "docente" pero todavía NO fue
-    verificado (no completó la activación) ve exactamente los mismos
-    candados que vería un estudiante nuevo — cero acceso adelantado
-    sin pasar primero por la verificación real.
-  - Los estudiantes no notan ningún cambio: su progreso, su XP y sus
-    candados funcionan exactamente igual que antes.
-  - Nada de esto tocó Supabase ni requiere ningún paso en el SQL
-    Editor: se verificó que, como las escrituras académicas se
-    bloquean antes de llegar a Storage, la sincronización a Supabase
-    (que solo reacciona a cambios ya guardados en Storage) nunca llega
-    a intentar subir un intento de examen docente. Sí sigue
-    sincronizando normalmente los datos de perfil/rol/institución del
-    docente, como corresponde.
+QUÉ SE ENCONTRÓ Y SE CORRIGIÓ:
+  Revisando la costura entre la Activación Docente (paso 1) y
+  AccessControl (paso 2), se encontró que había DOS formas de verificar
+  el código docente sobre un perfil YA existente (a diferencia de crear
+  un perfil nuevo) que NO recargaban la página al terminar:
+    - "Administrar perfiles → ✏️ Editar" (sobre el perfil activo)
+    - El modal obligatorio "Completa tu perfil" (perfiles antiguos sin
+      grupo o colegio)
+  Por eso, un docente que se verificaba por cualquiera de esas dos vías
+  veía su código aceptado, pero la pantalla que tenía abierta detrás
+  (por ejemplo, Química 11.º bloqueada) seguía mostrando el candado, y
+  el chip flotante seguía sin la insignia "Modo docente" — hasta que,
+  por su cuenta, navegaba a otro lado o recargaba manualmente.
 
-ARCHIVOS DEL REPOSITORIO (copiar a la misma ruta):
-  NUEVO:
-  - js/shared/access-control.js
+  IMPORTANTE: esto NUNCA fue un problema de seguridad. Las guardas que
+  bloquean la escritura académica (XP, exámenes, acreditaciones) del
+  paso 2 siguieron funcionando perfectamente en todo momento — el único
+  problema era que la pantalla no se refrescaba sola para mostrar el
+  candado ya abierto.
 
-  MODIFICADOS:
-  - index.html
-  - js/core/gamification.js
-  - js/core/storage.js
-  - js/modules/grade11.js
-  - js/modules/fisica10.js
-  - js/modules/fisica11.js
-  - js/modules/units.js
-  - js/modules/pne-final.js
-  - js/modules/simulacro-nacional.js
-  - js/modules/suficiencia.js
-  - js/modules/integrador.js
-  - js/shared/sidebar-nav.js
+ARCHIVO DEL REPOSITORIO (copiar a la misma ruta):
+  MODIFICADO:
+  - js/shared/profiles-ui.js
 
-NO HAY ARCHIVO SQL EN ESTE PASO — no se tocó Supabase ni la base de
-datos para nada de este paso 2 (ver explicación arriba).
+NO HAY ARCHIVO SQL EN ESTE PASO.
 
 PASOS PARA DEJAR ESTO FUNCIONANDO:
 
-1. Sube los 13 archivos del repositorio a las mismas rutas indicadas
-   arriba (reemplazando los 12 existentes, agregando el nuevo
-   js/shared/access-control.js). Por ejemplo:
+1. Sube el archivo a la misma ruta indicada arriba (reemplazando el que
+   ya existe). Por ejemplo:
 
-     git add index.html js/core/gamification.js js/core/storage.js js/shared/access-control.js js/modules/grade11.js js/modules/fisica10.js js/modules/fisica11.js js/modules/units.js js/modules/pne-final.js js/modules/simulacro-nacional.js js/modules/suficiencia.js js/modules/integrador.js js/shared/sidebar-nav.js
-     git commit -m "Fase 2 - Pendiente D paso 2: AccessControl + bloqueo de escrituras academicas docentes"
+     git add js/shared/profiles-ui.js
+     git commit -m "Fase 2 - Pendiente D paso 3: auditoria de cierre, recarga tras verificar docente sin crear perfil nuevo"
      git push
 
-2. No hay ningún paso adicional en Supabase ni en variables de
-   configuración. Con solo subir estos 13 archivos, el bloqueo queda
-   activo de inmediato para cualquier docente verificado que ya haya
-   completado la activación del paso anterior.
+2. No hay ningún paso adicional. Con solo subir este archivo, cualquier
+   docente que verifique su código desde "Editar perfil" o desde el
+   modal "Completa tu perfil" va a ver su acceso reflejado de inmediato,
+   sin tener que adivinar que debe navegar a otro lado.
 
 REPORTE COMPLETO:
-  Ver MQC_PENDIENTE_D_ACCESSCONTROL_REPORTE.md (entregado junto con
-  este paquete) para el detalle completo de la arquitectura de dos
-  capas (candados de lectura vs. guardas de escritura), la tabla
-  completa de los 8 puntos de escritura de Storage + 2 de Gamification
-  + 4 puntos sueltos por módulo que quedaron protegidos, la tabla
-  completa de los 8 puntos de lectura que ahora dejan explorar al
-  docente verificado, la verificación de que Analytics/Supabase no
-  necesitó ningún cambio, y el detalle de las 60 pruebas automatizadas
-  nuevas (60/60 exitosas) más los resultados de la regresión contra
-  las suites ya existentes (Pendiente B: 116/116, Activación Docente:
-  20/20, sin regresiones reales encontradas).
+  Ver MQC_PENDIENTE_D_CIERRE_REPORTE.md (entregado junto con este
+  paquete) para el detalle completo de cómo se encontró el problema, el
+  fix exacto aplicado, y las 10 pruebas nuevas (10/10 exitosas) más la
+  regresión completa contra las suites de Activación Docente (20/20) y
+  AccessControl (60/60), ambas sin cambios de resultado.
 
 IMPORTANTE:
-  - No se tocó ningún archivo SQL ni nada de Supabase en este paso.
-  - No se le dio ningún acceso adelantado a un docente NO verificado
-    (autodeclarado): ve los mismos candados que un estudiante nuevo.
-  - No se modificó el comportamiento genérico de Storage.set() — solo
-    las funciones específicas de escritura académica señaladas arriba.
-  - No se tocó Atlas Químico, devtools, profiles.js/profiles-ui.js,
-    teacher-activation.js, ni nada del mecanismo de activación docente
-    del paso anterior.
+  - Con este paso 3, el Pendiente D queda CERRADO en su totalidad
+    (activación docente + AccessControl + esta auditoría de cierre).
+  - No se tocó ningún otro archivo de Pendiente D (AccessControl,
+    Storage, Gamification, ni ningún módulo de contenido).
+  - No se tocó ningún archivo SQL ni nada de Supabase.
+  - No se le dio ningún acceso ni bypass nuevo a nadie — el fix es
+    puramente "refrescar la pantalla cuando corresponde".
   - No se inició Biología.
   - Pendientes A y B permanecen intactos y no fueron tocados.
-  - Los pasos 3 (auditoría funcional corta de cierre) y 4 (Biología)
-    de la secuencia acordada quedan pendientes de tu autorización
-    explícita para arrancar.
+  - El paso 4 (Biología) de la secuencia acordada queda pendiente de tu
+    autorización explícita para arrancar.
