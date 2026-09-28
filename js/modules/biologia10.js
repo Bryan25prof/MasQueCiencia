@@ -29,14 +29,20 @@
 ================================================================ */
 
 /* Metadatos de las 9 unidades de Biología 10.º (tabla de contenidos
-   real del libro fuente). BIO10-U01 y BIO10-U02 ya tienen contenido
-   real (status:'active'); BIO10-U03..U09 quedan como "PRÓXIMAMENTE"
-   hasta que se construyan unidad por unidad — el PDF del libro fuente
-   presentó daño real a partir de la página ~76 (Unidad III en
-   adelante), confirmado con múltiples herramientas, así que esas
-   unidades esperan un archivo íntegro antes de continuar. Regla
-   explícita del sprint: NO construirlas todavía ni inventar su
-   contenido. */
+   real del libro fuente). BIO10-U01, BIO10-U02 y BIO10-U03 ya tienen
+   contenido real (status:'active'); BIO10-U04..U09 quedan como
+   "PRÓXIMAMENTE". El PDF del libro fuente presentó daño real y
+   confirmado (con qpdf/pikepdf/pdftoppm) en puntos puntuales a partir
+   de la Unidad III: una página en blanco, una página faltante por
+   completo y un recuadro de indicadores vacío. Con autorización
+   explícita de Bryan, esos puntos puntuales de BIO10-U03 se
+   reconstruyeron a partir del Programa de Estudio oficial de
+   Biología del MEP (ver cabecera de bio10-u03.js) — el resto de la
+   unidad es contenido real del libro. BIO10-U04..U09 (poblaciones,
+   variabilidad genética, herencia, fuerzas evolutivas, evidencias
+   evolutivas, origen de la vida) siguen esperando que se pueda leer
+   el resto del libro de forma confiable. Regla explícita del sprint:
+   NO construirlas todavía ni inventar su contenido sin una fuente. */
 const BIOLOGIA10_UNIDADES_DATA = [
   { id: 'bio10-u01', num: 1, status: 'active',
     icon: '🧬', color: 'var(--green)',
@@ -58,12 +64,15 @@ const BIOLOGIA10_UNIDADES_DATA = [
     game: { levels: 5 },
     exam: { perExam: 20, pass: 70 }
   },
-  { id: 'bio10-u03', num: 3, status: 'coming',
+  { id: 'bio10-u03', num: 3, status: 'active',
     icon: '🌎', color: 'var(--green)',
     title: 'Ecología',
     subtitle: null,
-    description: 'Próximamente: las relaciones entre los seres vivos y su ambiente.',
-    topics: [], simulators: [], game: { levels: 0 }, exam: { perExam: 20, pass: 70 }
+    description: 'Componentes del ecosistema, factores ambientales, la diferencia entre hábitat y nicho, la fragmentación del hábitat y por qué importa conservarlo — con casos reales de Costa Rica.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 5 },
+    exam: { perExam: 20, pass: 70 }
   },
   { id: 'bio10-u04', num: 4, status: 'coming',
     icon: '👥', color: 'var(--green)',
