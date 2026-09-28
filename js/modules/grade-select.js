@@ -22,7 +22,11 @@ Router.register('grade-select', (() => {
   /* FIX10-U01: Física ya tiene contenido real en 10.º, así que ahora
      también tiene su propia "elegí tu año" (mismo patrón que Química),
      en vez de ir directo al placeholder "en desarrollo". */
-  let _vista = 'hub'; // 'hub' | 'quimica' | 'fisica'
+  /* BIO10-U01 (Fase 2, paso 4): mismo tratamiento para Biología — ahora
+     tiene su propia "elegí tu año" en vez de ir directo al placeholder,
+     aunque por ahora BIO10-U01 sigue oculta detrás de MQC_BIOLOGIA_FLAGS
+     (ver js/shared/mqc-biologia-flags.js) hasta que Bryan la publique. */
+  let _vista = 'hub'; // 'hub' | 'quimica' | 'fisica' | 'biologia'
 
   function _unlockStatus(data) {
     const examsPassed = (typeof UNIDADES_DATA !== 'undefined') ? UNIDADES_DATA.filter(u => {
@@ -43,7 +47,7 @@ Router.register('grade-select', (() => {
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;max-width:1000px;margin-top:1.5rem">
         ${_disciplinaBoton('Química', _iconoQuimica(), 'var(--cyan)', 'Disponible', 'quimica')}
         ${_disciplinaBoton('Física', _iconoFisica(), 'var(--violet)', _fisica10VistaPreviaActiva() ? 'Disponible' : 'En desarrollo', 'fisica')}
-        ${_disciplinaBoton('Biología', _iconoBiologia(), 'var(--green)', 'En desarrollo', 'biologia-proximamente')}
+        ${_disciplinaBoton('Biología', _iconoBiologia(), 'var(--green)', _biologia10VistaPreviaActiva() ? 'Disponible' : 'En desarrollo', 'biologia')}
       </div>
     `;
   }
@@ -177,6 +181,16 @@ Router.register('grade-select', (() => {
     try { return localStorage.getItem('mqc_fisica11_preview') === '1'; } catch (e) { return false; }
   }
 
+  /* BIO10-U01 (Fase 2, paso 4): mismo patrón EXACTO que Física, para
+     evitar desde el día uno el mismo bug histórico (ver
+     js/shared/mqc-biologia-flags.js) — revisa la bandera real de
+     publicación (window.MQC_BIOLOGIA_FLAGS) y, como respaldo, la
+     bandera manual de vista previa por localStorage. */
+  function _biologia10VistaPreviaActiva() {
+    if (typeof window !== 'undefined' && window.MQC_BIOLOGIA_FLAGS && window.MQC_BIOLOGIA_FLAGS.biologia10Publico) return true;
+    try { return localStorage.getItem('mqc_biologia10_preview') === '1'; } catch (e) { return false; }
+  }
+
   function _renderFisica() {
     const habilitado = _fisica10VistaPreviaActiva();
     const habilitado11 = _fisica11VistaPreviaActiva();
@@ -224,22 +238,64 @@ Router.register('grade-select', (() => {
     `;
   }
 
+  /* BIO10-U01 (Fase 2, paso 4): "elegí tu año" de Biología — mismo
+     patrón que Física. 11.º todavía no tiene libro fuente ni
+     autorización para empezar, así que su tarjeta siempre muestra
+     "Próxima etapa de desarrollo" sin consultar ningún Storage (no
+     existe data.biologia11 todavía). */
+  function _renderBiologia() {
+    const habilitado = _biologia10VistaPreviaActiva();
+    const pct10 = habilitado && typeof Storage !== 'undefined' && Storage.getBiologia10UnitProgress
+      ? Storage.getBiologia10UnitProgress('bio10-u01') : 0;
+    const bodyB10 = habilitado ? `
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">BIO10-U01 disponible — las siguientes unidades se irán incorporando.</p>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de BIO10-U01: ${pct10}%</div>
+          <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct10}%;background:var(--green)"></div></div>
+          <button class="btn btn-primary" data-action="go-biologia10">Continuar en Biología 10.º</button>` : `
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
+          <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>`;
+    return `
+      <div class="section-header">
+        <button class="btn btn-ghost btn-sm" data-action="volver-hub" style="margin-bottom:.8rem">← Volver</button>
+        <p class="section-title">🧬 Biología</p>
+        <h2 class="section-heading">Elegí tu año</h2>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;max-width:900px;margin-top:1.5rem">
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem${habilitado ? '' : ';opacity:.85'}">
+          <div class="unit-number">DÉCIMO AÑO</div>
+          <div class="unit-symbol" style="color:${habilitado ? 'var(--green)' : 'var(--text-muted)'}${habilitado ? ';text-shadow:0 0 20px var(--green)' : ''}">🧬</div>
+          <h3 style="margin:.3rem 0">Biología 10.º</h3>
+          ${bodyB10}
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;opacity:.85">
+          <div class="unit-number">UNDÉCIMO AÑO</div>
+          <div class="unit-symbol" style="color:var(--text-muted)">🧬</div>
+          <h3 style="margin:.3rem 0">Biología 11.º</h3>
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próxima etapa de desarrollo.</p>
+          <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>
+        </div>
+
+      </div>
+    `;
+  }
+
   function _rerender() {
     const content = document.getElementById('content');
     if (!content) return;
-    content.innerHTML = _vista === 'quimica' ? _renderQuimica() : _vista === 'fisica' ? _renderFisica() : _renderHub();
+    content.innerHTML = _vista === 'quimica' ? _renderQuimica() : _vista === 'fisica' ? _renderFisica() : _vista === 'biologia' ? _renderBiologia() : _renderHub();
     _bind();
   }
 
   function _bind() {
-    /* Nivel 1 → Nivel 2 (o navegación directa para Biología, que
-       todavía no tiene "elegí tu año" propio, sigue yendo directo
-       al placeholder "en desarrollo") */
+    /* Nivel 1 → Nivel 2 para las 3 disciplinas — Química, Física y
+       Biología ya tienen su propia pantalla "elegí tu año". */
     document.querySelectorAll('[data-disciplina]').forEach(btn => {
       btn.addEventListener('click', () => {
         const destino = btn.getAttribute('data-disciplina');
-        if (destino === 'quimica' || destino === 'fisica') { _vista = destino; _rerender(); }
-        else Router.navigate(destino); // biologia-proximamente
+        if (destino === 'quimica' || destino === 'fisica' || destino === 'biologia') { _vista = destino; _rerender(); }
+        else Router.navigate(destino);
       });
     });
     const volver = document.querySelector('[data-action="volver-hub"]');
@@ -253,6 +309,8 @@ Router.register('grade-select', (() => {
     if (goF10) goF10.addEventListener('click', () => Router.navigate('fisica10'));
     const goF11 = document.querySelector('[data-action="go-fisica11"]');
     if (goF11) goF11.addEventListener('click', () => Router.navigate('fisica11'));
+    const goB10 = document.querySelector('[data-action="go-biologia10"]');
+    if (goB10) goB10.addEventListener('click', () => Router.navigate('biologia10'));
   }
 
   function init() {
