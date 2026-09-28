@@ -1,94 +1,50 @@
-FASE 2 — PASO 4: BIOLOGÍA — PRIMERA ENTREGA (BIO10-U01)
+BIOLOGÍA — CONGELAMIENTO DE LA ESTRUCTURA DE 11.º (solo metadatos)
 =============================================================
 
-Este paquete contiene los archivos NUEVOS y MODIFICADOS de esta
-entrega. Cada archivo dentro de "MasQueCiencia_Beta_v1.0" refleja
-EXACTAMENTE la misma ruta que tiene en tu repositorio.
+QUÉ ES ESTE ARCHIVO:
+  js/data/plan-biologia11.js — declara BIOLOGIA11_UNIDADES_DATA, la
+  lista de las 5 unidades que le corresponden a Biología 11.º según
+  el programa OFICIAL del MEP ("Programa de Estudio de Biología,
+  Educación Diversificada", Undécimo Año), que subiste vos mismo.
 
-QUÉ SE CONSTRUYÓ:
-  La primera unidad real de Biología 10.º — BIO10-U01: "Las formas de
-  vida y el entorno biofísico" — derivada y parafraseada del libro que
-  subiste ("Biología 10º: Un Enfoque Práctico", Licda. Kathia E.
-  Hernández Camacho, Ed. Didáctica Multimedia, 6.ª ed. 2018), Unidad I
-  / Tema 1 (páginas 8-44). Mismo patrón EXACTO ya probado con FIX10-U01
-  (Física 10.º): 6 temas de teoría, 3 simuladores, 1 juego de 5 niveles,
-  1 examen de 50 preguntas (20 al azar por intento) y 1 misión final.
+  Las 5 unidades (todas status:'coming', SIN contenido real todavía):
+    1. Interacciones entre poblaciones
+    2. Relaciones tróficas y flujo de energía
+    3. Ciclos biogeoquímicos y sostenibilidad
+    4. Sucesión y restauración de ecosistemas
+    5. Desarrollo sostenible y cambio climático
 
-  El resto de Biología 10.º (Unidades 2 a 9) y toda Biología 11.º
-  quedan como "Próximamente" — NO se inventó ningún contenido de esas
-  unidades. Biología 11.º espera el libro que dijiste que ya casi
-  conseguís.
+IMPORTANTE — ESTE ARCHIVO ESTÁ INERTE, NO CAMBIA NADA EN EL SITIO:
+  NO está incluido en index.html todavía, NO se conecta a ningún
+  Router, AccessControl ni bandera de publicación. Podés subirlo a
+  GitHub con total tranquilidad: mientras no se agregue su <script>
+  a index.html, no tiene ningún efecto — es solo el "plano" guardado
+  para construir Biología 11.º más adelante, unidad por unidad, igual
+  que se hizo con BIO10-U01.
 
-IMPORTANTE — BIOLOGÍA SIGUE OCULTA PARA LOS ESTUDIANTES:
-  Igual que se hizo con Física antes de su lanzamiento, BIO10-U01 ya
-  está construida y probada, pero se entrega DETRÁS de una bandera de
-  publicación en false (js/shared/mqc-biologia-flags.js,
-  biologia10Publico:false). Ningún estudiante real la va a ver hasta
-  que la revisés y me digas que la active. Mientras tanto, tanto el
-  sidebar como "Selecciona tu ruta científica" van a seguir mostrando
-  "Biología / En desarrollo", exactamente como hoy.
+SOBRE BIOLOGÍA 10.º (tu pregunta de cuántos módulos están activos):
+  Solo 1 de las 9 unidades de Biología 10.º tiene contenido real y
+  está "Disponible": BIO10-U01 ("Las formas de vida y el entorno
+  biofísico"). Las otras 8 (BIO10-U02 a BIO10-U09) están correctamente
+  marcadas "En desarrollo" y NO tienen contenido — eso es exactamente
+  lo que se construyó a propósito, no es un error ni algo que falte
+  revisar. Se ven así tanto en la captura que enviaste como en el
+  código real (BIOLOGIA10_UNIDADES_DATA en js/modules/biologia10.js).
 
-  Para revisarla vos mismo, sin publicarla: entrá una vez a tu sitio
-  con
-    ?biologia10preview=1
-  Eso activa la vista previa solo en tu navegador (queda guardado ahí
-  para siempre). Cuando la revises y quieras publicarla para todos,
-  avisame y cambio esa única bandera a "true".
+PASOS PARA SUBIR ESTO A GITHUB:
 
-ARCHIVOS DEL REPOSITORIO (copiar a las mismas rutas):
+  1. Copiá el archivo a la misma ruta indicada arriba:
+       js/data/plan-biologia11.js  (archivo NUEVO)
 
-  NUEVOS:
-  - js/shared/mqc-biologia-flags.js
-  - js/modules/biologia10.js
-  - js/data/banco-bio10-u01.js
-  - js/units/biologia10/bio10-u01.js
-
-  MODIFICADOS:
-  - js/core/storage.js       (agrega data.biologia10 y sus funciones — no toca Química ni Física)
-  - js/core/gamification.js  (agrega XP/insignia de Biología — no toca Química ni Física)
-  - js/modules/grade-select.js (Biología ya tiene su propia "elegí tu año", como Física)
-  - js/shared/sidebar-nav.js  (el sidebar ya reconoce Biología 10.º cuando esté publicada)
-  - index.html               (agrega los <script> nuevos, en el mismo bloque que Física)
-
-NO HAY ARCHIVO SQL EN ESTE PASO. No se tocó Supabase.
-
-PASOS PARA DEJAR ESTO FUNCIONANDO:
-
-1. Sube los 9 archivos a las mismas rutas indicadas arriba
-   (reemplazando los 5 que ya existen, agregando los 4 nuevos). Por
-   ejemplo:
-
-     git add js/shared/mqc-biologia-flags.js js/modules/biologia10.js \
-             js/data/banco-bio10-u01.js js/units/biologia10/bio10-u01.js \
-             js/core/storage.js js/core/gamification.js \
-             js/modules/grade-select.js js/shared/sidebar-nav.js \
-             index.html
-     git commit -m "Fase 2 - paso 4: Biologia 10.o, primera unidad real (BIO10-U01), oculta detras de bandera de publicacion"
+  2. git add js/data/plan-biologia11.js
+     git commit -m "Fase 2 - paso 4: congelar estructura de Biologia 11.o (solo metadatos, sin conectar)"
      git push
 
-2. No hay ningún paso adicional para que el sitio siga funcionando
-   igual que hoy para los estudiantes — Biología sigue mostrando "En
-   desarrollo" hasta que me confirmes que la revisaste.
+  3. No hay ningún paso adicional — el sitio sigue funcionando
+     exactamente igual que hoy para todos los estudiantes.
 
-3. Cuando quieras revisarla vos mismo: entrá una vez con
-   ?biologia10preview=1 en la URL de tu sitio.
-
-4. Cuando quieras publicarla para todos los estudiantes: avisame y
-   cambio js/shared/mqc-biologia-flags.js (biologia10Publico a true) y
-   la constante equivalente dentro de js/modules/biologia10.js — son 2
-   fuentes relacionadas a propósito, deben coincidir siempre.
-
-REPORTE COMPLETO:
-  Ver MQC_FASE2_PASO4_BIO10_U01_REPORTE.md (entregado junto con este
-  paquete) para el detalle completo del contenido, las pruebas
-  realizadas (30/30 + 6/6 nuevas, más regresión completa contra las
-  suites ya existentes) y las confirmaciones explícitas.
-
-IMPORTANTE:
-  - No se tocó ningún archivo de Química ni de Física.
-  - No se tocó ningún archivo SQL ni nada de Supabase.
-  - No se tocó Pendiente A ni Pendiente B.
-  - Biología 11.º sigue sin iniciarse (a la espera del libro).
-  - Biología 10.º Unidades 2 a 9 siguen sin iniciarse ("Próximamente").
-  - Biología sigue OCULTA para los estudiantes hasta tu autorización
-    explícita de publicarla.
+CUANDO QUERAS EMPEZAR A CONSTRUIR BIOLOGÍA 11.º:
+  Avisame cuál de las 5 unidades querés primero (o si conseguiste ya
+  un libro fuente para 11.º) y la construyo con el mismo patrón EXACTO
+  de BIO10-U01: teoría, simuladores, juego, examen y misión — oculta
+  detrás de bandera de publicación hasta que la revises.
