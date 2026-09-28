@@ -29,11 +29,14 @@
 ================================================================ */
 
 /* Metadatos de las 9 unidades de Biología 10.º (tabla de contenidos
-   real del libro fuente). Solo BIO10-U01 tiene contenido real
-   (status:'active'); BIO10-U02..U09 quedan como "PRÓXIMAMENTE" hasta
-   que se construyan unidad por unidad, con su propio libro/material
-   como fuente cada vez — regla explícita del sprint: NO construirlas
-   todavía ni inventar su contenido. */
+   real del libro fuente). BIO10-U01 y BIO10-U02 ya tienen contenido
+   real (status:'active'); BIO10-U03..U09 quedan como "PRÓXIMAMENTE"
+   hasta que se construyan unidad por unidad — el PDF del libro fuente
+   presentó daño real a partir de la página ~76 (Unidad III en
+   adelante), confirmado con múltiples herramientas, así que esas
+   unidades esperan un archivo íntegro antes de continuar. Regla
+   explícita del sprint: NO construirlas todavía ni inventar su
+   contenido. */
 const BIOLOGIA10_UNIDADES_DATA = [
   { id: 'bio10-u01', num: 1, status: 'active',
     icon: '🧬', color: 'var(--green)',
@@ -45,12 +48,15 @@ const BIOLOGIA10_UNIDADES_DATA = [
     game: { levels: 5 },
     exam: { perExam: 20, pass: 70 }
   },
-  { id: 'bio10-u02', num: 2, status: 'coming',
+  { id: 'bio10-u02', num: 2, status: 'active',
     icon: '🌿', color: 'var(--green)',
     title: 'La biodiversidad',
     subtitle: null,
-    description: 'Próximamente: la diversidad de formas de vida y los niveles de organización de la biodiversidad.',
-    topics: [], simulators: [], game: { levels: 0 }, exam: { perExam: 20, pass: 70 }
+    description: 'Especie, población y biodiversidad, cómo se mide, los ecosistemas, las amenazas que enfrenta y cómo se protege — con datos reales de Costa Rica.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 5 },
+    exam: { perExam: 20, pass: 70 }
   },
   { id: 'bio10-u03', num: 3, status: 'coming',
     icon: '🌎', color: 'var(--green)',
