@@ -277,6 +277,26 @@ const Storage = (() => {
       'fix11-u05': _emptyUnit(),
       'fix11-u06': _emptyUnit()
     },
+    /* PENDIENTE — BIOLOGÍA 10.º, paso 1 (BIO10-U01). Carril paralelo
+       exacto que fisica10/fisica11 — mismo motivo: nunca mezclar
+       disciplinas/niveles. Fuente académica: "Biología 10° — Un
+       enfoque práctico" (Lic. Kathia E. Hernández Camacho, Didáctica
+       Multimedia, 6ª ed. 2018, proporcionado por el docente). El libro
+       tiene 9 unidades/temas (Unidad I a Unidad IX); solo bio10-u01
+       (Unidad I: Las formas de vida y el entorno biofísico) tiene
+       contenido real por ahora. bio10-u02..u09 quedan vacías,
+       reservadas para cuando se construyan ("PRÓXIMAMENTE"). */
+    biologia10: {
+      'bio10-u01': _emptyUnit(),
+      'bio10-u02': _emptyUnit(),
+      'bio10-u03': _emptyUnit(),
+      'bio10-u04': _emptyUnit(),
+      'bio10-u05': _emptyUnit(),
+      'bio10-u06': _emptyUnit(),
+      'bio10-u07': _emptyUnit(),
+      'bio10-u08': _emptyUnit(),
+      'bio10-u09': _emptyUnit()
+    },
     /* IMP-11-U04 — Atlas Químico MQC: registro persistente de qué
        grupos funcionales y biomoléculas ya identificó el estudiante.
        No otorga XP (registro de evidencia de aprendizaje, no un
@@ -803,6 +823,71 @@ const Storage = (() => {
     return _computePctFisica11(unit, unitId);
   }
 
+  /* ================================================================
+     BIO10-U01 — Progreso de Biología 10.º (paralelo, no reemplaza)
+     ================================================================
+     Mismo patrón exacto que los bloques de Física 10.º/11.º de
+     arriba, pero apuntando a data.biologia10 y
+     BIOLOGIA10_UNIDADES_DATA. Se duplica en vez de generalizar, por
+     la misma razón ya documentada en todo el archivo: nunca arriesgar
+     el comportamiento ya probado de una disciplina al tocar el de
+     otra. */
+  function _computePctBiologia10(unit, unitId) {
+    let meta = null;
+    if (typeof BIOLOGIA10_UNIDADES_DATA !== 'undefined') {
+      meta = BIOLOGIA10_UNIDADES_DATA.find(u => u.id === unitId);
+    }
+    const totalTopics = (meta && meta.topics) ? meta.topics.length : 0;
+    const totalSims   = (meta && meta.simulators) ? meta.simulators.length : 0;
+    const totalLevels = (meta && meta.game && meta.game.levels) ? meta.game.levels : 0;
+    const pass        = (meta && meta.exam && meta.exam.pass) ? meta.exam.pass : 70;
+
+    function ratio(done, total) { return total > 0 ? Math.min(1, done / total) : 0; }
+
+    const rTeoria = ratio((unit.topicsRead || []).length, totalTopics);
+    const rSims   = ratio((unit.simsDone || []).length, totalSims);
+    const rJuego  = totalLevels > 0
+      ? ratio((unit.gameLevels || []).length, totalLevels)
+      : ((unit.gameScore || 0) > 0 ? 1 : 0);
+    const rExamen = (unit.examBest || 0) > 0 ? Math.min(1, unit.examBest / pass) : 0;
+
+    const pct = Math.round(25 * (rTeoria + rSims + rJuego + rExamen));
+    return Math.max(0, Math.min(100, pct));
+  }
+  function _refreshCompletedBiologia10(unit, unitId) {
+    if (!unit) return;
+    unit.completed = unit.completed || _computePctBiologia10(unit, unitId) === 100;
+  }
+  function updateBiologia10Unit(unitId, update) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.updateUnit —
+    // un docente verificado explora Biología 10.º libremente, pero
+    // nada de lo que haga persiste como progreso académico.
+    if (_esDocenteVerificado()) return;
+    const data = load();
+    if (!data.biologia10[unitId]) data.biologia10[unitId] = _emptyUnit();
+    data.biologia10[unitId] = Object.assign({}, data.biologia10[unitId], update);
+    data.biologia10[unitId].started = true;
+    _refreshCompletedBiologia10(data.biologia10[unitId], unitId);
+    save(data);
+  }
+  function markBiologia10TopicRead(unitId, topicId) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.markTopicRead.
+    if (_esDocenteVerificado()) return;
+    const data = load();
+    if (!data.biologia10[unitId]) data.biologia10[unitId] = _emptyUnit();
+    const unit = data.biologia10[unitId];
+    if (!unit.topicsRead.includes(topicId)) unit.topicsRead.push(topicId);
+    unit.started = true;
+    _refreshCompletedBiologia10(unit, unitId);
+    save(data);
+  }
+  function getBiologia10UnitProgress(unitId) {
+    const data = load();
+    const unit = data.biologia10[unitId];
+    if (!unit || !unit.started) return 0;
+    return _computePctBiologia10(unit, unitId);
+  }
+
   /**
    * Borra TODOS los datos del estudiante (reset total).
    * ⚠️ Irreversible. Mostrar confirmación antes de llamar.
@@ -857,6 +942,9 @@ const Storage = (() => {
     updateFisica11Unit,
     markFisica11TopicRead,
     getFisica11UnitProgress,
+    updateBiologia10Unit,
+    markBiologia10TopicRead,
+    getBiologia10UnitProgress,
     hasUser,
     reset,
     /* Perfiles Locales MQC (EOP-008) */

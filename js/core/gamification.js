@@ -99,6 +99,7 @@ const Gamification = (() => {
        (HOTFIX-06), no acá. */
     'grade11-mission-done': 100,  // entrega de la misión de cierre de una unidad de 11.º, una sola vez
     'fisica10-mission-done': 100, // FIX10-U01: entrega de la misión de cierre "Tecnología bajo la lupa", una sola vez
+    'biologia10-mission-done': 100, // BIO10-U01: entrega de la misión de cierre "Bajo la lupa: la rana venenosa", una sola vez
 
     /* Periódica */
     'element-explored':     5,   // abrir ficha de un elemento
@@ -341,6 +342,12 @@ const Gamification = (() => {
       name: 'Arquitecto de la Vida',
       icon: '🧬',
       desc: 'Completaste realmente la Unidad IV de Química 11.º — Grupos Funcionales y Biomoléculas'
+    },
+    {
+      id:   'explorador-biologia',
+      name: 'Explorador de la Biología',
+      icon: '🧬',
+      desc: 'Completaste BIO10-U01 — Las formas de vida y el entorno biofísico'
     }
   ];
 
@@ -851,6 +858,26 @@ const Gamification = (() => {
         const missionDoneF8 = !!uf8.missionDone;
         if (allTopicsF8 && allSimsF8 && gamePlayedF8 && examPassedF8 && missionDoneF8) {
           newBadges.push('maestro-energia');
+        }
+      }
+    }
+
+    /* BIO10-U01 — 'explorador-biologia': primera unidad real de
+       Biología. Mismo principio anti-farming exacto que las de
+       Física/Química — topicsRead, simsDone, gameScore, examBest y
+       missionDone deben cumplirse todos, apuntando a data.biologia10 /
+       BIOLOGIA10_UNIDADES_DATA. */
+    if (typeof BIOLOGIA10_UNIDADES_DATA !== 'undefined' && data.biologia10 && !data.badges.includes('explorador-biologia')) {
+      const ub1 = data.biologia10['bio10-u01'];
+      const metab1 = BIOLOGIA10_UNIDADES_DATA.find(x => x.id === 'bio10-u01');
+      if (ub1 && metab1) {
+        const allTopicsB1 = (ub1.topicsRead || []).length >= (metab1.topics || []).length;
+        const allSimsB1 = (ub1.simsDone || []).length >= (metab1.simulators || []).length;
+        const gamePlayedB1 = (ub1.gameScore || 0) > 0;
+        const examPassedB1 = (ub1.examBest || 0) >= (metab1.exam && metab1.exam.pass || 70);
+        const missionDoneB1 = !!ub1.missionDone;
+        if (allTopicsB1 && allSimsB1 && gamePlayedB1 && examPassedB1 && missionDoneB1) {
+          newBadges.push('explorador-biologia');
         }
       }
     }
