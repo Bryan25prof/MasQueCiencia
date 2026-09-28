@@ -1,50 +1,69 @@
-BIOLOGÍA — CONGELAMIENTO DE LA ESTRUCTURA DE 11.º (solo metadatos)
+FASE 2 — PASO 4: BIOLOGÍA — SEGUNDA UNIDAD REAL (BIO10-U02)
 =============================================================
 
-QUÉ ES ESTE ARCHIVO:
-  js/data/plan-biologia11.js — declara BIOLOGIA11_UNIDADES_DATA, la
-  lista de las 5 unidades que le corresponden a Biología 11.º según
-  el programa OFICIAL del MEP ("Programa de Estudio de Biología,
-  Educación Diversificada", Undécimo Año), que subiste vos mismo.
+QUÉ SE CONSTRUYÓ:
+  BIO10-U02: "La biodiversidad" — derivada y parafraseada del mismo
+  libro fuente que BIO10-U01 ("Biología 10º: Un Enfoque Práctico",
+  Licda. Kathia E. Hernández Camacho), Unidad II / Tema 2, páginas
+  46-61. Mismo patrón EXACTO que BIO10-U01: 6 temas de teoría, 3
+  simuladores, 1 juego de 5 niveles, 1 examen de 50 preguntas (20 al
+  azar por intento) y 1 misión final ("Bajo la lupa: los perezosos de
+  Costa Rica").
 
-  Las 5 unidades (todas status:'coming', SIN contenido real todavía):
-    1. Interacciones entre poblaciones
-    2. Relaciones tróficas y flujo de energía
-    3. Ciclos biogeoquímicos y sostenibilidad
-    4. Sucesión y restauración de ecosistemas
-    5. Desarrollo sostenible y cambio climático
+  BIO10-U01 sigue exactamente igual, sin ningún cambio.
 
-IMPORTANTE — ESTE ARCHIVO ESTÁ INERTE, NO CAMBIA NADA EN EL SITIO:
-  NO está incluido en index.html todavía, NO se conecta a ningún
-  Router, AccessControl ni bandera de publicación. Podés subirlo a
-  GitHub con total tranquilidad: mientras no se agregue su <script>
-  a index.html, no tiene ningún efecto — es solo el "plano" guardado
-  para construir Biología 11.º más adelante, unidad por unidad, igual
-  que se hizo con BIO10-U01.
+IMPORTANTE — AVISO SOBRE EL ARCHIVO DEL LIBRO:
+  El PDF que subiste para construir las Unidades III a IX (Ecología,
+  poblaciones, variabilidad genética, herencia, fuerzas evolutivas,
+  evidencias evolutivas, origen de la vida) tiene DAÑO REAL a partir
+  de la página ~76 — confirmado con tres herramientas distintas
+  (qpdf, pikepdf y pdftoppm): errores masivos de lectura y, más grave,
+  contenido de una sección apareciendo mezclado bajo el título de
+  otra. Por eso esta entrega avanza únicamente con BIO10-U02 (páginas
+  46-61, que sí se leyeron de forma íntegra y confiable) y las
+  Unidades III a IX quedan sin tocar, tal como estaban.
 
-SOBRE BIOLOGÍA 10.º (tu pregunta de cuántos módulos están activos):
-  Solo 1 de las 9 unidades de Biología 10.º tiene contenido real y
-  está "Disponible": BIO10-U01 ("Las formas de vida y el entorno
-  biofísico"). Las otras 8 (BIO10-U02 a BIO10-U09) están correctamente
-  marcadas "En desarrollo" y NO tienen contenido — eso es exactamente
-  lo que se construyó a propósito, no es un error ni algo que falte
-  revisar. Se ven así tanto en la captura que enviaste como en el
-  código real (BIOLOGIA10_UNIDADES_DATA en js/modules/biologia10.js).
+  Para continuar con esas unidades voy a necesitar que vuelvas a subir
+  el archivo del libro completo (puede ser el mismo PDF, a veces basta
+  con volver a exportarlo o re-subirlo para que no quede dañado en la
+  transferencia).
 
-PASOS PARA SUBIR ESTO A GITHUB:
+BIOLOGÍA SIGUE OCULTA PARA LOS ESTUDIANTES:
+  Sin cambios respecto a la entrega anterior: la bandera de publicación
+  (js/shared/mqc-biologia-flags.js, biologia10Publico:false) sigue en
+  false. Ningún estudiante real ve nada de esto todavía. Para revisarlo
+  vos mismo: ?biologia10preview=1 en la URL de tu sitio.
 
-  1. Copiá el archivo a la misma ruta indicada arriba:
-       js/data/plan-biologia11.js  (archivo NUEVO)
+ARCHIVOS DEL REPOSITORIO (copiar a las mismas rutas):
 
-  2. git add js/data/plan-biologia11.js
-     git commit -m "Fase 2 - paso 4: congelar estructura de Biologia 11.o (solo metadatos, sin conectar)"
-     git push
+  NUEVOS:
+  - js/data/banco-bio10-u02.js
+  - js/units/biologia10/bio10-u02.js
 
-  3. No hay ningún paso adicional — el sitio sigue funcionando
-     exactamente igual que hoy para todos los estudiantes.
+  MODIFICADOS:
+  - js/modules/biologia10.js   (BIO10-U02 pasa de "coming" a "active")
+  - index.html                 (agrega los 2 <script> nuevos, junto a los de BIO10-U01)
 
-CUANDO QUERAS EMPEZAR A CONSTRUIR BIOLOGÍA 11.º:
-  Avisame cuál de las 5 unidades querés primero (o si conseguiste ya
-  un libro fuente para 11.º) y la construyo con el mismo patrón EXACTO
-  de BIO10-U01: teoría, simuladores, juego, examen y misión — oculta
-  detrás de bandera de publicación hasta que la revises.
+NO HAY ARCHIVO SQL EN ESTE PASO. No se tocó Supabase, ni Química, ni
+Física, ni Pendiente A/B/D.
+
+PASOS PARA DEJAR ESTO FUNCIONANDO:
+
+  git add js/data/banco-bio10-u02.js js/units/biologia10/bio10-u02.js \
+          js/modules/biologia10.js index.html
+  git commit -m "Fase 2 - paso 4: Biologia 10.o, segunda unidad real (BIO10-U02 - La biodiversidad)"
+  git push
+
+  No hay ningún paso adicional — Biología sigue mostrando "En
+  desarrollo" para los estudiantes hasta que confirmes que la revisaste.
+
+PRUEBAS REALIZADAS:
+  - 17/17 pruebas nuevas de punta a punta contra la app real: teoría,
+    los 3 simuladores, los 5 niveles del juego, examen completo,
+    anti-farming del examen, misión final (con dedupe de XP) y guarda
+    de escritura docente.
+  - Regresión de BIO10-U01: 30/30 exitosas, sin cambios de resultado.
+  - Regresión del sidebar de Biología: 6/6 exitosas.
+  - Verificación explícita de que la grilla de Biología 10.º ahora
+    muestra BIO10-U01 y BIO10-U02 como "Disponible" y BIO10-U03 sigue
+    "En desarrollo", sin inventar contenido de las unidades restantes.
