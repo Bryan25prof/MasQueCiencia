@@ -63,6 +63,7 @@ window.MQCSidebarNav = (function () {
     home: 'quimica', units: 'quimica', grade11: 'quimica',
     'atlas-quimico': 'quimica', integrador: 'quimica',
     fisica10: 'fisica', fisica11: 'fisica',
+    biologia10: 'biologia',
     'biologia-proximamente': 'biologia'
   };
 
@@ -115,6 +116,17 @@ window.MQCSidebarNav = (function () {
     }));
   }
 
+  function _dataBiologia10() {
+    if (typeof BIOLOGIA10_UNIDADES_DATA === 'undefined') return [];
+    const data = Storage.load();
+    return BIOLOGIA10_UNIDADES_DATA.map(u => ({
+      section: 'biologia10', unitId: u.id,
+      label: `U${String(u.num).padStart(2, '0')} · ${u.title}`,
+      done: !!(data.biologia10 && data.biologia10[u.id] && data.biologia10[u.id].completed),
+      enDesarrollo: u.status !== 'active'
+    }));
+  }
+
   function _quimica11Unlocked() {
     // PENDIENTE D — paso 2 (AccessControl): a diferencia del resto de
     // este archivo (100% de solo presentación, sin candados propios),
@@ -141,6 +153,18 @@ window.MQCSidebarNav = (function () {
     } catch (e) { return false; }
   }
 
+  function _biologiaHabilitada() {
+    /* Misma fuente única que ya usan grade-select.js/biologia10.js —
+       nunca se reimplementa el criterio a mano. Mientras
+       MQC_BIOLOGIA_FLAGS.biologia10Publico siga en false, esta función
+       devuelve false y _openScience() sigue mandando al placeholder de
+       siempre, exactamente igual que antes de crear BIO10-U01. */
+    try {
+      if (window.MQC_BIOLOGIA_FLAGS && window.MQC_BIOLOGIA_FLAGS.biologia10Publico) return true;
+      return localStorage.getItem('mqc_biologia10_preview') === '1';
+    } catch (e) { return false; }
+  }
+
   /* ── Render: nivel 2 (GRADO) ─────────────────────────────────── */
 
   function _renderNivelGrados(science) {
@@ -156,6 +180,13 @@ window.MQCSidebarNav = (function () {
     } else if (science === 'fisica') {
       filas += `<li class="ctx-item" data-ctx-grado="fisica10">Física 10.º <span class="ctx-chevron">›</span></li>`;
       filas += `<li class="ctx-item" data-ctx-grado="fisica11">Física 11.º <span class="ctx-chevron">›</span></li>`;
+    } else if (science === 'biologia') {
+      /* BIO10-U01: Biología 11.º todavía no tiene libro fuente ni
+         autorización para empezar, así que se muestra como "en
+         desarrollo" en vez de un data-ctx-grado navegable — nunca se
+         inventa una estructura de contenidos que no existe. */
+      filas += `<li class="ctx-item" data-ctx-grado="biologia10">Biología 10.º <span class="ctx-chevron">›</span></li>`;
+      filas += `<li class="ctx-item ctx-item-soon" data-ctx-leaf data-section="biologia-proximamente">Biología 11.º <span class="ctx-soon-tag">🚧</span></li>`;
     }
 
     return `
@@ -177,7 +208,8 @@ window.MQCSidebarNav = (function () {
       ] },
       quimica11: { titulo: 'QUÍMICA 11.º', back: 'Química', items: _dataQuimica11(), extra: [] },
       fisica10:  { titulo: 'FÍSICA 10.º',  back: 'Física',  items: _dataFisica10(),  extra: [] },
-      fisica11:  { titulo: 'FÍSICA 11.º',  back: 'Física',  items: _dataFisica11(),  extra: [] }
+      fisica11:  { titulo: 'FÍSICA 11.º',  back: 'Física',  items: _dataFisica11(),  extra: [] },
+      biologia10: { titulo: 'BIOLOGÍA 10.º', back: 'Biología', items: _dataBiologia10(), extra: [] }
     }[grado];
     if (!meta) return '';
 
@@ -205,8 +237,9 @@ window.MQCSidebarNav = (function () {
     _grado = null;
     _level = 2;
 
-    if (science === 'biologia') {
-      /* Biología no tiene grados ni contenidos todavía — mismo
+    if (science === 'biologia' && !_biologiaHabilitada()) {
+      /* BIO10-U01 ya existe pero sigue detrás de MQC_BIOLOGIA_FLAGS
+         hasta que Bryan la publique — mientras tanto, mismo
          comportamiento de siempre (placeholder "Próxima etapa"), sin
          inventar ninguna estructura ficticia. */
       _close();
