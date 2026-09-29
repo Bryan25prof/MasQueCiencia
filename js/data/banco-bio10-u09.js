@@ -1,0 +1,252 @@
+/* ================================================================
+   MÁSQUECIENCIA — js/data/banco-bio10-u09.js
+   Banco de 50 preguntas — BIO10-U09 "Teorías sobre el origen de la
+   vida y las especies"
+   ================================================================
+   Fuentes combinadas (ver también la cabecera de bio10-u09.js para
+   el detalle completo por tema):
+   (a) Libro fuente "Biología 10º: Un Enfoque Práctico" (Licda. Kathia
+       E. Hernández Camacho, Ed. Didáctica Multimedia, 6.ª ed. 2018),
+       Unidad IX / Tema 9 "Teorías sobre el origen de la vida y las
+       especies" (páginas 333-346): 9.1 Teorías del origen de las
+       especies — Creacionismo y fijismo (Platón, Aristóteles, Cuvier,
+       catastrofismo), Lamarckismo (uso y desuso de las partes),
+       Darwinismo (selección natural de Darwin y Wallace), Mutacionismo
+       (De Vries, Bateson, Morgan) y Teoría sintética o neodarwinismo
+       (Dobzhansky, gradualismo y equilibrio puntuado) — y 9.2 Teorías
+       del origen de la vida — Generación espontánea (Aristóteles, Van
+       Helmont, Redi, Pasteur), Origen quimiosintético (Oparín,
+       experimento de Miller y Urey) y Teoría Cosmozoica o Panspermia.
+   (b) Programa de Estudio de Biología del MEP ("Educar para una Nueva
+       Ciudadanía", Educación Diversificada), Eje temático III de
+       Décimo año (página 59 del programa oficial) — usado únicamente
+       para confirmar los nombres oficiales de las teorías ("origen
+       quimiosintético", "Teoría Cosmozoica o Panspermia") y para
+       reconstruir la conexión puntual dañada del libro entre la
+       formación de los mares primitivos y la propuesta de Oparín, así
+       como el final de la frase sobre el experimento de Miller y Urey
+       que el libro corta a la mitad en la página 341 (ver cabecera de
+       bio10-u09.js).
+   Formato idéntico a banco-bio10-u01.js / u02.js / u03.js:
+   {id, tema, pregunta, opciones:[4], correcta:0, explicacion}.
+   La opción correcta siempre está en el índice 0 — el motor de examen
+   mezcla el orden de las opciones en cada intento.
+================================================================ */
+
+const PREGUNTAS_BIO10_U09 = [
+  // ── t1: Creacionismo y fijismo (6) ───────────────────────────────
+  { id: 'bio10u09-01', tema: 't1',
+    pregunta: '¿Qué creían Platón y Aristóteles sobre el origen de las especies?',
+    opciones: ['Que eran producto de un creador y, por lo tanto, fijas e inmutables', 'Que cambiaban constantemente por selección natural', 'Que se originaban por mutaciones súbitas', 'Que provenían de otros planetas'],
+    correcta: 0, explicacion: 'Ambos filósofos griegos consideraban que las especies eran fijas, es decir, no evolucionaban.' },
+  { id: 'bio10u09-02', tema: 't1',
+    pregunta: 'Según Platón, ¿cómo concebía el mundo en relación con las formas de los seres vivos?',
+    opciones: ['Como dos mundos: uno ideal con formas perfectas y otro "ilusorio" con formas imperfectas', 'Como un único mundo en constante cambio evolutivo', 'Como un mundo formado exclusivamente por mutaciones', 'Como un mundo sin ningún tipo de orden o clasificación'],
+    correcta: 0, explicacion: 'Platón distinguía un mundo ideal y eterno de formas perfectas, y un mundo "ilusorio" de formas imperfectas.' },
+  { id: 'bio10u09-03', tema: 't1',
+    pregunta: 'El concepto de creacionismo revivió durante la Edad Media defendiendo que:',
+    opciones: ['Todas las formas de vida son un acto creativo de Dios, nacidas durante el Génesis', 'Todas las especies mutan constantemente sin ningún patrón', 'La vida se originó por reacciones químicas en la atmósfera primitiva', 'Las especies llegaron a la Tierra desde el espacio'],
+    correcta: 0, explicacion: 'El creacionismo defiende una interpretación literal de la Biblia sobre el origen de las especies durante el Génesis.' },
+  { id: 'bio10u09-04', tema: 't1',
+    pregunta: '¿Qué dedujo Georges Cuvier al estudiar una gran cantidad de fósiles?',
+    opciones: ['Que existían especies que habían desaparecido (se extinguían), lo cual contradecía al fijismo puro', 'Que todas las especies actuales existieron siempre exactamente igual', 'Que las especies se originan por mutaciones súbitas', 'Que la vida llegó a la Tierra desde el espacio'],
+    correcta: 0, explicacion: 'Cuvier encontró evidencia de extinciones, lo que contradecía la idea de que las especies eran completamente fijas.' },
+  { id: 'bio10u09-05', tema: 't1',
+    pregunta: '¿En qué consiste la idea del catastrofismo, propuesta a partir de las ideas de Cuvier?',
+    opciones: ['Las especies se mantenían sin cambios hasta que una gran catástrofe las hacía desaparecer, y luego surgían nuevas especies', 'Las especies cambian gradualmente durante millones de años por selección natural', 'Las especies mutan de golpe sin relación con ningún evento externo', 'Las especies llegan constantemente desde otros planetas'],
+    correcta: 0, explicacion: 'El catastrofismo explica la aparición y desaparición de especies mediante grandes catástrofes sucesivas.' },
+  { id: 'bio10u09-06', tema: 't1',
+    pregunta: 'Las ideas del creacionismo y el fijismo se consideran:',
+    opciones: ['Ideas preevolucionistas, que indican que hasta el siglo XIX se pensaba que los seres vivos eran inmutables', 'Teorías evolucionistas modernas ampliamente aceptadas hoy en día', 'Teorías basadas en experimentos de laboratorio con Drosophila', 'Teorías que explican el origen de la vida a partir de materia inorgánica'],
+    correcta: 0, explicacion: 'El creacionismo y el fijismo son consideradas ideas preevolucionistas, anteriores a Darwin.' },
+
+  // ── t2: Lamarckismo (6) ──────────────────────────────────────────
+  { id: 'bio10u09-07', tema: 't2',
+    pregunta: 'Según Lamarck, ¿qué determina el desarrollo de un órgano en un organismo?',
+    opciones: ['El uso o desuso de ese órgano durante la vida del organismo', 'Únicamente la información heredada de ambos progenitores sin ningún cambio', 'Una mutación súbita en los genes', 'Una catástrofe geológica'],
+    correcta: 0, explicacion: 'La Hipótesis del Uso y Desuso plantea que los órganos que se usan se desarrollan más que los que no se usan.' },
+  { id: 'bio10u09-08', tema: 't2',
+    pregunta: '¿Qué obra publicó Lamarck en 1809, donde planteó su teoría?',
+    opciones: ['Filosofía Zoológica', 'El Origen de las Especies', 'El origen del hombre', 'Sistema Naturae'],
+    correcta: 0, explicacion: 'En su Filosofía Zoológica (1809), Lamarck sugirió que los eventos en la vida de un organismo pueden producir cambios heredables.' },
+  { id: 'bio10u09-09', tema: 't2',
+    pregunta: 'Según Lamarck, ¿qué ocurre con las características adquiridas durante la vida de un organismo?',
+    opciones: ['Se heredan a la descendencia (herencia de caracteres adquiridos)', 'Desaparecen por completo al morir el organismo', 'Solo se heredan si ocurre una mutación adicional', 'Se heredan únicamente en las plantas, no en los animales'],
+    correcta: 0, explicacion: 'Lamarck sostenía que los caracteres adquiridos por el uso o desuso se heredaban a las siguientes generaciones.' },
+  { id: 'bio10u09-10', tema: 't2',
+    pregunta: 'Según la explicación de Lamarck, ¿por qué las jirafas tienen el cuello largo?',
+    opciones: ['Porque sus antepasados de cuello corto lo estiraban para alcanzar las hojas más altas, y ese cambio se heredaba', 'Porque siempre tuvieron el cuello largo desde su creación', 'Porque una mutación súbita alargó su cuello de golpe', 'Porque compiten por el mismo nicho ecológico que otros herbívoros'],
+    correcta: 0, explicacion: 'Este es el ejemplo clásico que usaba Lamarck para explicar su teoría del uso y desuso.' },
+  { id: 'bio10u09-11', tema: 't2',
+    pregunta: '¿Por qué se rechaza en la actualidad la teoría de Lamarck sobre la herencia de caracteres adquiridos?',
+    opciones: ['Porque no hay evidencia de un mecanismo que cambie la información genética en las células sexuales', 'Porque nunca se hicieron experimentos para comprobarla', 'Porque solo se aplica a las plantas', 'Porque fue reemplazada de inmediato por la panspermia'],
+    correcta: 0, explicacion: 'Las pruebas genéticas muestran que los caracteres adquiridos no se heredan; no existe tal mecanismo.' },
+  { id: 'bio10u09-12', tema: 't2',
+    pregunta: 'La teoría de Lamarck sobre el uso y desuso de las partes se conoce también como:',
+    opciones: ['Hipótesis o Teoría del Uso y Desuso de las Partes', 'Teoría de la selección natural', 'Teoría sintética', 'Teoría cosmozoica'],
+    correcta: 0, explicacion: 'Ese es el nombre exacto con el que Lamarck presentó su teoría.' },
+
+  // ── t3: Darwinismo — selección natural (7) ──────────────────────
+  { id: 'bio10u09-13', tema: 't3',
+    pregunta: '¿En qué barco viajó Darwin, reuniendo las observaciones que usaría para su teoría?',
+    opciones: ['El Beagle', 'El Origen', 'El Mayflower', 'El Endeavour'],
+    correcta: 0, explicacion: 'Darwin embarcó como naturalista en el Beagle, un barco pequeño que dio la vuelta al mundo.' },
+  { id: 'bio10u09-14', tema: 't3',
+    pregunta: '¿En qué año publicó Darwin El Origen de las Especies?',
+    opciones: ['1859', '1809', '1900', '1953'],
+    correcta: 0, explicacion: 'Darwin publicó su obra más importante, El Origen de las Especies, en 1859.' },
+  { id: 'bio10u09-15', tema: 't3',
+    pregunta: '¿Quién llegó de forma independiente a la idea de la selección natural, inspirado también en el tratado de Malthus?',
+    opciones: ['Alfred R. Wallace', 'Thomas Hunt Morgan', 'Hugo de Vries', 'Georges Cuvier'],
+    correcta: 0, explicacion: 'Wallace desarrolló la idea de la selección natural sin conocer la obra de Darwin, y ambos presentaron un informe conjunto en 1858.' },
+  { id: 'bio10u09-16', tema: 't3',
+    pregunta: 'Según la teoría de la selección natural, ¿qué ocurre porque nacen más individuos de los que pueden sobrevivir?',
+    opciones: ['Se da una lucha por la existencia por el espacio y el alimento disponibles', 'Todas las especies se extinguen de inmediato', 'Todas las especies mutan al mismo tiempo', 'La reproducción se detiene por completo'],
+    correcta: 0, explicacion: 'Darwin y Wallace explicaban que la sobreproducción de individuos genera una lucha por la existencia.' },
+  { id: 'bio10u09-17', tema: 't3',
+    pregunta: '¿Qué significa la "supervivencia del más apto" según Darwin y Wallace?',
+    opciones: ['Que las variaciones que ayudan a un organismo a sobrevivir favorecen a sus poseedores sobre otros menos adaptados', 'Que solo sobrevive el organismo más fuerte físicamente', 'Que la supervivencia depende exclusivamente del tamaño del organismo', 'Que todos los organismos tienen las mismas probabilidades de sobrevivir'],
+    correcta: 0, explicacion: 'La "supervivencia del más apto" se refiere a que las variaciones ventajosas favorecen la supervivencia y reproducción.' },
+  { id: 'bio10u09-18', tema: 't3',
+    pregunta: '¿Qué demostró Darwin sobre el origen del ser humano, en contraste con las creencias vigentes hasta el siglo XIX?',
+    opciones: ['Que los seres humanos eran el resultado de un proceso de desarrollo biológico, y no de una creación divina', 'Que los seres humanos siempre existieron exactamente como son hoy', 'Que los seres humanos se originaron por generación espontánea', 'Que los seres humanos llegaron a la Tierra por panspermia'],
+    correcta: 0, explicacion: 'Darwin refutó la idea de un origen divino del ser humano, lo cual generó una enorme controversia.' },
+  { id: 'bio10u09-19', tema: 't3',
+    pregunta: 'Darwin y Wallace presentaron en conjunto su teoría de la selección natural a:',
+    opciones: ['La Sociedad Linneo de Londres', 'La Real Academia de Ciencias de Francia', 'La Universidad de Columbia', 'El Vaticano'],
+    correcta: 0, explicacion: 'En 1858, Darwin y Wallace presentaron su informe conjunto a la Sociedad Linneo de Londres.' },
+
+  // ── t4: Mutacionismo (6) ─────────────────────────────────────────
+  { id: 'bio10u09-20', tema: 't4',
+    pregunta: 'Según Hugo de Vries, ¿qué es una mutación?',
+    opciones: ['Un cambio hereditario repentino que no estaba presente en los progenitores ni en ningún antecesor', 'Un cambio gradual acumulado durante millones de años', 'Un cambio producido exclusivamente por el uso o desuso de un órgano', 'Un cambio provocado únicamente por catástrofes geológicas'],
+    correcta: 0, explicacion: 'De Vries llamó mutaciones a los cambios hereditarios repentinos que observó en sus estudios con arvejas.' },
+  { id: 'bio10u09-21', tema: 't4',
+    pregunta: '¿Qué proponía el mutacionismo (o mendelismo) de De Vries sobre la selección natural?',
+    opciones: ['Que la eliminaba como fuente de evolución, a favor de las mutaciones súbitas', 'Que era la única causa posible de la evolución', 'Que actuaba junto con la panspermia', 'Que solo aplicaba a organismos unicelulares'],
+    correcta: 0, explicacion: 'El mutacionismo proponía que las nuevas especies se originan de golpe por mutaciones, eliminando a la selección natural como explicación.' },
+  { id: 'bio10u09-22', tema: 't4',
+    pregunta: '¿Con qué organismo trabajó Thomas Hunt Morgan para apoyar el mutacionismo?',
+    opciones: ['La mosca de la fruta (Drosophila melanogaster)', 'El chimpancé', 'La planta de arvejas', 'La jirafa'],
+    correcta: 0, explicacion: 'Morgan realizó sus experimentos clásicos sobre herencia con la mosca de la fruta.' },
+  { id: 'bio10u09-23', tema: 't4',
+    pregunta: '¿Qué descubrió Morgan al estudiar el color de ojos en la mosca de la fruta?',
+    opciones: ['Que un gen preciso, ubicado en un cromosoma determinado, era responsable del color de los ojos', 'Que el color de los ojos cambiaba por generación espontánea', 'Que todas las moscas tenían exactamente el mismo color de ojos', 'Que el color de los ojos no tenía ninguna base genética'],
+    correcta: 0, explicacion: 'Fue la primera vez que se hizo una asociación clara entre un gen y un rasgo físico observable.' },
+  { id: 'bio10u09-24', tema: 't4',
+    pregunta: '¿Quiénes rebatieron el mutacionismo, defendiendo que la selección natural era la principal causa de la evolución?',
+    opciones: ['Los biómetras, encabezados por el matemático Karl Pearson', 'Los creacionistas medievales', 'Los paleontólogos defensores del equilibrio puntuado', 'Los defensores de la panspermia'],
+    correcta: 0, explicacion: 'Los biómetras, liderados por Karl Pearson, defendían que la selección natural actuaba sobre variaciones pequeñas y continuas.' },
+  { id: 'bio10u09-25', tema: 't4',
+    pregunta: 'Según el mutacionismo, ¿cómo se origina una nueva especie?',
+    opciones: ['De repente, a partir de una especie preexistente, sin ninguna preparación visible ni transición', 'Gradualmente, a lo largo de millones de años de selección natural', 'Únicamente por el uso y desuso de sus órganos', 'Únicamente por un origen extraterrestre'],
+    correcta: 0, explicacion: 'Así lo planteó De Vries: una especie nueva surge de golpe, sin transición gradual.' },
+
+  // ── t5: Teoría sintética / neodarwinismo (7) ────────────────────
+  { id: 'bio10u09-26', tema: 't5',
+    pregunta: 'La teoría sintética (o neodarwinismo) surgió con el objetivo de:',
+    opciones: ['Fusionar el darwinismo clásico con la genética moderna de Mendel', 'Eliminar por completo la idea de la selección natural', 'Reemplazar el mutacionismo por el creacionismo', 'Explicar el origen de la vida a partir de materia inorgánica'],
+    correcta: 0, explicacion: 'La teoría sintética integró las mutaciones (genética) con la selección natural (darwinismo).' },
+  { id: 'bio10u09-27', tema: 't5',
+    pregunta: '¿Qué papel cumple la mutación dentro de la teoría sintética?',
+    opciones: ['Generar diversidad genética, sobre la cual actúa después la selección natural', 'Ser la única causa de la evolución, sin necesidad de selección natural', 'Explicar por sí sola el origen de la vida', 'Sustituir por completo a la selección natural'],
+    correcta: 0, explicacion: 'En la teoría sintética, la mutación genera variabilidad y la selección natural actúa sobre ella.' },
+  { id: 'bio10u09-28', tema: 't5',
+    pregunta: 'Según la teoría sintética, ¿por qué las macromutaciones no suelen ser beneficiosas?',
+    opciones: ['Porque imposibilitan un ritmo de evolución rápido y estable', 'Porque solo ocurren en plantas', 'Porque siempre provocan la extinción inmediata de la especie', 'Porque son idénticas a las mutaciones observadas por De Vries'],
+    correcta: 0, explicacion: 'Según esta teoría, los cambios evolutivos graduales y pequeños son más viables que las macromutaciones.' },
+  { id: 'bio10u09-29', tema: 't5',
+    pregunta: 'El modelo del gradualismo, dentro de la teoría sintética, establece que:',
+    opciones: ['La especiación ocurre por la acumulación de pequeñas diferencias genéticas a lo largo de miles o millones de años', 'La especiación siempre ocurre de forma súbita e inmediata', 'Las especies nunca cambian una vez que se forman', 'El cambio evolutivo depende únicamente de catástrofes geológicas'],
+    correcta: 0, explicacion: 'El gradualismo plantea una especiación lenta, por acumulación de pequeñas diferencias genéticas.' },
+  { id: 'bio10u09-30', tema: 't5',
+    pregunta: 'El modelo del equilibrio puntuado, defendido entre otros por Stephen Jay Gould, plantea que:',
+    opciones: ['La especiación es un fenómeno rápido en términos geológicos, con largos periodos de estabilidad entre un proceso y otro', 'La especiación siempre toma millones de años sin ninguna excepción', 'Las especies cambian constantemente sin ningún periodo de estabilidad', 'La evolución no se puede observar en el registro fósil'],
+    correcta: 0, explicacion: 'En el equilibrio puntuado, la especiación es rápida y va seguida de largos periodos sin cambios morfológicos importantes.' },
+  { id: 'bio10u09-31', tema: 't5',
+    pregunta: '¿Qué observaron algunos paleontólogos en el registro fósil que los llevó a proponer el equilibrio puntuado?',
+    opciones: ['Que los cambios entre especies parecían producirse mucho más rápido de lo que indicaría el gradualismo', 'Que las especies nunca cambiaban a lo largo del tiempo geológico', 'Que todas las especies se originaron al mismo tiempo', 'Que no existía ningún registro fósil de especies extintas'],
+    correcta: 0, explicacion: 'El registro fósil mostraba cambios rápidos y discontinuos, en vez de cambios lentos y constantes.' },
+  { id: 'bio10u09-32', tema: 't5',
+    pregunta: 'Dentro de la teoría sintética, ¿qué impulsa los cambios evolutivos a gran escala (macroevolución)?',
+    opciones: ['La selección de especies, no solo de individuos, que puede ser meramente fortuita', 'Únicamente el uso y desuso de los órganos', 'Únicamente la generación espontánea', 'Un mecanismo que no tiene ninguna relación con la selección natural'],
+    correcta: 0, explicacion: 'Según la teoría sintética, la macroevolución puede depender de la selección entre especies, no solo entre individuos.' },
+
+  // ── t6: Generación espontánea (6) ───────────────────────────────
+  { id: 'bio10u09-33', tema: 't6',
+    pregunta: 'Según la idea de la generación espontánea, sostenida en la Antigua Grecia, los seres vivos:',
+    opciones: ['Provenían directamente del barro, el estiércol u otras materias inertes, sin ningún proceso previo', 'Se originaban exclusivamente por mutaciones genéticas', 'Provenían de otros planetas a través de meteoritos', 'Se formaban por la acumulación de pequeñas diferencias genéticas'],
+    correcta: 0, explicacion: 'La generación espontánea planteaba que los seres vivos simplemente aparecían a partir de materia inerte.' },
+  { id: 'bio10u09-34', tema: 't6',
+    pregunta: '¿Qué experimento ideó Francesco Redi para cuestionar la generación espontánea?',
+    opciones: ['Colocar carne en frascos abiertos y en frascos cerrados, y observar si desarrollaba gusanos', 'Recrear la atmósfera primitiva con descargas eléctricas', 'Cruzar moscas de la fruta con distintos colores de ojos', 'Estudiar fósiles para identificar especies extintas'],
+    correcta: 0, explicacion: 'Redi demostró que solo la carne en frascos abiertos (accesibles a las moscas) desarrollaba gusanos.' },
+  { id: 'bio10u09-35', tema: 't6',
+    pregunta: '¿Qué concluyó Redi a partir de su experimento con la carne y los frascos?',
+    opciones: ['Que los gusanos no aparecían por generación espontánea, sino porque las moscas ponían sus huevos en la carne', 'Que los gusanos aparecían igual en frascos abiertos y cerrados', 'Que la carne se transformaba directamente en gusanos sin intervención de ningún otro organismo', 'Que la generación espontánea era una teoría completamente correcta'],
+    correcta: 0, explicacion: 'Redi demostró que la presencia de gusanos dependía de que las moscas tuvieran acceso a la carne.' },
+  { id: 'bio10u09-36', tema: 't6',
+    pregunta: '¿Qué instrumento permitió a Anton van Leeuwenhoek descubrir los "animáculos" o seres microscópicos?',
+    opciones: ['El primer microscopio', 'El primer telescopio', 'El cuadro de Punnett', 'El frasco de cuello curvado'],
+    correcta: 0, explicacion: 'Leeuwenhoek fabricó el primer microscopio y descubrió así los microorganismos.' },
+  { id: 'bio10u09-37', tema: 't6',
+    pregunta: '¿Qué demostró Louis Pasteur mediante su experimento con el frasco de cuello curvado?',
+    opciones: ['Que la generación espontánea no existía y que los microorganismos provenían de otros microorganismos o del polvo del ambiente', 'Que la generación espontánea sí existía en los líquidos alterables', 'Que los microorganismos no podían provocar enfermedades', 'Que el aire no era necesario para la vida de ningún organismo'],
+    correcta: 0, explicacion: 'El diseño del frasco de cuello curvado de Pasteur permitía la entrada de aire pero no de polvo ni microbios, y el caldo permanecía sin alterarse.' },
+  { id: 'bio10u09-38', tema: 't6',
+    pregunta: 'En el experimento de Pasteur, ¿qué ocurría con el caldo si el frasco de cuello curvado se inclinaba?',
+    opciones: ['El caldo entraba en contacto con el polvo y los microbios retenidos en la curva, y se contaminaba', 'El caldo se evaporaba por completo de inmediato', 'El caldo generaba espontáneamente nuevos microorganismos sin ninguna causa externa', 'No ocurría ningún cambio en el caldo'],
+    correcta: 0, explicacion: 'Al inclinar el frasco, el caldo entraba en contacto con los microbios acumulados en el cuello curvado y se contaminaba.' },
+
+  // ── t7: Origen quimiosintético (6) ──────────────────────────────
+  { id: 'bio10u09-39', tema: 't7',
+    pregunta: 'Según la teoría del origen quimiosintético, ¿cómo se originó la vida en la Tierra?',
+    opciones: ['A partir de materia inerte, mediante reacciones químicas que formaron moléculas cada vez más complejas', 'A partir de organismos que llegaron desde otro planeta', 'Por generación espontánea a partir de la carne en descomposición', 'Únicamente por mutaciones genéticas súbitas'],
+    correcta: 0, explicacion: 'El origen quimiosintético explica la vida como resultado de una evolución química de la materia inerte.' },
+  { id: 'bio10u09-40', tema: 't7',
+    pregunta: '¿Qué gases formaban parte de la protoatmósfera de la Tierra primitiva, según esta teoría?',
+    opciones: ['Metano, amoníaco y vapor de agua', 'Oxígeno puro y nitrógeno únicamente', 'Dióxido de carbono y ozono exclusivamente', 'Hidrógeno puro sin ningún otro gas'],
+    correcta: 0, explicacion: 'La protoatmósfera primitiva estaba formada, entre otros, por metano, amoníaco y vapor de agua.' },
+  { id: 'bio10u09-41', tema: 't7',
+    pregunta: '¿Qué formas de energía hicieron que los gases de la protoatmósfera reaccionaran entre sí, según el libro?',
+    opciones: ['Las radiaciones ultravioletas del Sol y las descargas eléctricas (relámpagos)', 'La luz de la Luna y las mareas oceánicas', 'El calor del interior de las plantas', 'La radiación proveniente de la panspermia'],
+    correcta: 0, explicacion: 'Las intensas radiaciones UV y los relámpagos habrían aportado la energía para las reacciones químicas.' },
+  { id: 'bio10u09-42', tema: 't7',
+    pregunta: '¿Cuáles son, en orden, las cuatro fases que propuso Oparín para la formación de la vida?',
+    opciones: ['Moléculas orgánicas simples, polimerización, organización de moléculas complejas y formación de células primitivas', 'Mutación, selección natural, especiación y extinción', 'Generación espontánea, fijismo, catastrofismo y creacionismo', 'Panspermia, meteoritos, cometas y polvo cósmico'],
+    correcta: 0, explicacion: 'Esas son, en ese orden, las cuatro fases que propuso Oparín para el origen de la vida a partir de materia inorgánica.' },
+  { id: 'bio10u09-43', tema: 't7',
+    pregunta: '¿Quiénes realizaron en 1953 el experimento que demostró la validez del origen quimiosintético?',
+    opciones: ['Stanley L. Miller y Harold C. Urey', 'Charles Darwin y Alfred Wallace', 'Louis Pasteur y Francesco Redi', 'Hugo de Vries y Thomas Hunt Morgan'],
+    correcta: 0, explicacion: 'Miller y Urey recrearon en 1953 las condiciones de la atmósfera primitiva en un experimento de laboratorio.' },
+  { id: 'bio10u09-44', tema: 't7',
+    pregunta: '¿Qué obtuvieron Miller y Urey al recrear las condiciones de la atmósfera primitiva con descargas eléctricas?',
+    opciones: ['Moléculas orgánicas simples, entre ellas aminoácidos', 'Células completamente formadas y funcionales', 'Fósiles de organismos primitivos', 'Panspermia comprobada experimentalmente'],
+    correcta: 0, explicacion: 'El experimento de Miller y Urey produjo moléculas orgánicas simples, como aminoácidos, a partir de gases inorgánicos.' },
+
+  // ── t8: Teoría Cosmozoica o Panspermia (6) ──────────────────────
+  { id: 'bio10u09-45', tema: 't8',
+    pregunta: '¿Qué plantea la teoría cosmozoica o panspermia sobre el origen de la vida?',
+    opciones: ['Que la vida, o los compuestos que la originaron, podrían tener un origen extraplanetario o extraterrestre', 'Que la vida surgió exclusivamente de materia inerte en la propia Tierra', 'Que la vida surgió por el uso y desuso de los órganos', 'Que la vida surgió por mutaciones súbitas en organismos terrestres'],
+    correcta: 0, explicacion: 'La panspermia (teoría cosmozoica) propone un origen extraterrestre para la vida o sus componentes básicos.' },
+  { id: 'bio10u09-46', tema: 't8',
+    pregunta: 'Según el libro, ¿durante qué periodo habría podido ocurrir el posible origen extraplanetario de la vida (panspermia)?',
+    opciones: ['Durante los últimos 13 700 millones de años de evolución del Universo conocido, tras el Big Bang', 'Durante los últimos 100 años de historia humana', 'Únicamente durante la Edad Media', 'Durante los primeros 10 años tras la formación de la Tierra'],
+    correcta: 0, explicacion: 'El libro ubica esta posibilidad dentro de los 13 700 millones de años de evolución del Universo tras el Big Bang.' },
+  { id: 'bio10u09-47', tema: 't8',
+    pregunta: '¿En qué se diferencia principalmente la panspermia de la generación espontánea y el origen quimiosintético?',
+    opciones: ['En que plantea que la vida (o sus componentes) se originó fuera de la Tierra, y no a partir de materia inerte terrestre', 'En que no es considerada una teoría científica del origen de la vida', 'En que fue propuesta por Charles Darwin', 'En que se basa en experimentos con Drosophila melanogaster'],
+    correcta: 0, explicacion: 'A diferencia de las otras dos teorías, la panspermia traslada el origen de la vida fuera del planeta.' },
+  { id: 'bio10u09-48', tema: 't8',
+    pregunta: 'La teoría cosmozoica o panspermia se ubica, según el libro, entre las teorías sobre:',
+    opciones: ['El origen de la vida', 'El origen de las especies', 'La herencia mendeliana', 'La fragmentación del hábitat'],
+    correcta: 0, explicacion: 'El libro clasifica la panspermia junto con la generación espontánea y el origen quimiosintético, como teorías del origen de la vida.' },
+  { id: 'bio10u09-49', tema: 't8',
+    pregunta: 'Según el Programa de Estudio del MEP, la teoría cosmozoica o panspermia se estudia junto con:',
+    opciones: ['La generación espontánea y el origen quimiosintético, como teorías del origen de la vida', 'El uso y desuso de los órganos, como teoría del origen de las especies', 'La teoría sintética, como único modelo de especiación aceptado', 'El equilibrio puntuado, como modelo exclusivo de gradualismo'],
+    correcta: 0, explicacion: 'El programa del MEP agrupa la generación espontánea, el origen quimiosintético y la panspermia como las teorías del origen de la vida.' },
+  { id: 'bio10u09-50', tema: 't8',
+    pregunta: '¿Cuál de las siguientes preguntas se relaciona directamente con la teoría de la panspermia?',
+    opciones: ['¿Pudieron los compuestos que originaron la vida llegar a la Tierra desde el espacio?', '¿Por qué las jirafas tienen el cuello largo?', '¿Por qué se extinguieron ciertas especies según Cuvier?', '¿Cómo explicó Morgan la herencia del color de ojos en la mosca de la fruta?'],
+    correcta: 0, explicacion: 'La pregunta sobre un posible origen extraterrestre de los compuestos de la vida es el núcleo de la teoría de la panspermia.' }
+];
