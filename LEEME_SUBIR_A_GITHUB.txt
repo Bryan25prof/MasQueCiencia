@@ -1,114 +1,104 @@
-ACTIVACIÓN DOCENTE — SE ELIMINA EL BLOQUEO POR CÓDIGO (ahora es libre)
+TERRITORIAL 2.0 — ETAPA 1: NORMALIZACIÓN TERRITORIAL POR PROVINCIA
 =============================================================================
+Implementa únicamente lo aprobado: que la bandeja administrativa que antes
+se llamaba "Gestión de Colegios" pueda resolver colegios legacy externos a
+Heredia contra la provincia correcta. NO se tocaron cantones, no se agregó
+ninguna columna territorial nueva, no se cambió profiles.js, no se tocó la
+creación de perfiles modernos, no se migró ningún dato existente, y no hizo
+falta ninguna migración SQL — la estructura real de school_alias_map ya
+aceptaba estos valores desde antes (confirmado en el diagnóstico previo).
 
-DÓNDE ESTABAS "CONFUNDIDO" (tu pregunta exacta):
-  No te confundiste en nada raro — es exactamente donde pensabas. El
-  proyecto SÍ tiene, desde el sprint "PENDIENTE D — Activación Docente",
-  un requisito de código institucional para que un perfil elegido como
-  "👩‍🏫 Docente" quede realmente habilitado como docente. Vive en UN SOLO
-  archivo: js/shared/profiles-ui.js. Ahí, una función llamada
-  _activacionPuedeConfirmar() se ejecuta en las 4 pantallas donde se
-  puede elegir el rol (crear perfil nuevo, el modal obligatorio "Completa
-  tu perfil", "Editar perfil", y "Crear otro perfil" del administrador) y,
-  si elegías "Docente" sin haber verificado un código válido contra
-  Supabase, esa función bloqueaba el guardado por completo con el mensaje
-  "Activá el código docente para continuar, o volvé a Estudiante." — eso
-  es exactamente lo que les pasó a los docentes que reportaste: nunca
-  llegaban a tener perfil, porque el guardado se rechazaba antes de crear
-  nada.
+QUÉ CAMBIÓ, EN UNA FRASE:
+  La bandeja de "ambiguos" (los colegios legacy que no matchean el catálogo
+  de Heredia) ahora deja elegir, para cada nombre pendiente, si el destino
+  es un "Colegio de Heredia" (como siempre) o una "Provincia" (los 7
+  buckets que ya existían en PROVINCIAS_SIN_CATALOGO, usados desde el
+  Lote 7 para perfiles nuevos, pero que esta bandeja nunca le ofrecía al
+  administrador). Elegido el tipo, el segundo selector ("Destino") se
+  repuebla solo con las opciones de ese tipo — nunca se mezclan.
 
-  Por qué estaba ahí: no fue un error de código, fue una decisión de
-  producto explícita de un sprint anterior (documentada en
-  MQC_PENDIENTE_D_DIAGNOSTICO.md y MQC_PENDIENTE_D_MICROPROPUESTA_
-  ACTIVACION_DOCENTE.md), pensada para que nadie pudiera autodeclararse
-  "Docente" y saltarse el progreso académico sin control. El código
-  institucional era el mecanismo elegido en ese momento para verificar
-  que quien elige "Docente" es realmente parte de la coordinación del
-  proyecto.
+POR QUÉ NO HIZO FALTA TOCAR EL BACKEND NI SUPABASE:
+  `buscarColegioPorId()` (js/data/catalogo-colegios.js) ya buscaba en los
+  DOS catálogos (CATALOGO_COLEGIOS y PROVINCIAS_SIN_CATALOGO) desde el
+  Lote 7, y `_unificarColegio()` en analytics-admin.js ya llamaba a esa
+  misma función para armar lo que escribe en school_alias_map. El único
+  hueco real, confirmado en el diagnóstico, era que la interfaz de la
+  bandeja de "ambiguos" solo le mostraba al administrador los 29 colegios
+  de Heredia como opción — nunca los 7 buckets de provincia. Por eso este
+  cambio es exclusivamente de interfaz (un archivo: analytics-admin.js):
+  agrega el selector "Tipo de resolución" y hace que el selector "Destino"
+  cambie sus opciones según ese tipo. `school_alias_map` (la tabla que de
+  verdad guarda la unificación) no tiene ningún constraint que la limite a
+  Heredia -- acepta cualquier school_id/school_region tal cual estaba.
 
-QUÉ SE CAMBIÓ AHORA (tu decisión: "que sea libre por el momento"):
-  Elegir "👩‍🏫 Docente" y guardar el perfil YA NUNCA SE BLOQUEA, en
-  ninguna de las 4 pantallas — sin necesidad de ningún código. Al
-  guardar, el perfil recibe automáticamente el mismo campo interno
-  (rolVerificadoEn) que antes solo se otorgaba tras un código válido —
-  ese es el campo del que depende TODO lo demás en el proyecto que ya
-  distingue a un docente real (AccessControl.isTeacher(), y las guardas
-  de storage.js que evitan que la exploración de un docente se guarde
-  como progreso académico de estudiante en Química, Física y Biología).
-  En otras palabras: un docente autodeclarado hoy queda exactamente igual
-  de protegido que uno que antes pasaba por el código — la única
-  diferencia es que ya no hace falta el código para llegar ahí.
-
-  Como pediste, esto es libre "por el momento": es un interruptor, no un
-  borrado. Se agregó una única constante, bien comentada, arriba del
-  todo del bloque de activación docente en profiles-ui.js:
-
-      const MQC_ACTIVACION_DOCENTE_LIBRE = true;
-
-  - Si en el futuro el acceso libre se presta a mal uso y querés volver
-    a exigir el código institucional, cambiá esa línea a `false` — nada
-    más en todo el proyecto necesita tocarse. Toda la infraestructura
-    del código (Supabase, la función validar_codigo_docente,
-    teacher-activation.js) sigue intacta, sin ningún cambio.
-  - Si lo que necesitás es deshabilitar a UN docente puntual porque está
-    abusando del acceso (y no todo el mecanismo), no hace falta tocar
-    ese interruptor: abrí "Administrar perfiles" → "✏️ Editar" en el
-    perfil de esa persona y cambiá su rol a "🎓 Estudiante" — eso le
-    quita rolVerificadoEn al instante y pierde el acceso docente, igual
-    que cualquier cambio de rol ya funcionaba antes de este cambio.
-
-  Efecto en pantalla: la caja de "Código de activación" con el campo de
-  texto y el botón "Verificar" ya no aparece. En su lugar, al elegir
-  "Docente" aparece un aviso informativo breve: "Acceso docente activado
-  para este perfil: podés explorar todo el contenido, pero nada de lo
-  que hagas se guarda como progreso académico." — así el docente sabe
-  de inmediato que quedó habilitado, sin tener que adivinar nada.
-
-  Efecto extra (positivo): un docente que YA tenía rol='docente' desde
-  antes de este cambio, pero que se había quedado sin verificar (por
-  ejemplo, si alcanzó a guardar el perfil en algún momento en que el
-  bloqueo no aplicaba, o si vos mismo lo creaste manualmente para
-  probar), ahora queda verificado automáticamente la próxima vez que
-  guarde cualquier cambio en su perfil (el modal obligatorio "Completa tu
-  perfil", o "Editar perfil") — sin que tenga que volver a elegir el rol
-  ni tocar nada más. Ya no se queda "a medias".
+QUÉ NO SE TOCÓ (tal como se pidió):
+  - Cantones: nada, se deja para la Etapa 2.
+  - Ninguna columna territorial nueva, en ningún lado.
+  - profiles.js, profiles-ui.js, catalogo-colegios.js: sin cambios.
+  - Creación/edición de perfiles modernos (ya funcionaba bien, según el
+    diagnóstico): sin cambios.
+  - Los 76 perfiles legacy actuales: ningún dato se migra ni se reescribe
+    automáticamente. Solo se le da al administrador, en esta misma
+    bandeja, la herramienta para resolverlos a mano, uno por uno, igual
+    que ya hacía con los de Heredia.
+  - `students`: nunca se escribe ahí. La resolución sigue viviendo
+    exclusivamente en `school_alias_map`, tal como ya funcionaba.
+  - XP, progreso, exámenes, PNE, Suficiencia, perfiles, historial
+    académico: ninguno de estos se lee ni se escribe en este cambio.
+  - Ninguna migración SQL: no hizo falta ninguna.
 
 ARCHIVO DEL REPOSITORIO (copiar a la misma ruta):
-  - js/shared/profiles-ui.js   (MODIFICADO — versión completa incluida,
-                                 no es un parche)
+  - analytics/analytics-admin.js   (MODIFICADO — versión completa incluida)
 
-  Ningún otro archivo del proyecto fue tocado. Química, Física, Biología
-  10.º y 11.º, Storage, Gamification y AccessControl siguen exactamente
-  igual — este cambio vive solo en la capa de UI de perfiles.
+  Ningún otro archivo del proyecto fue tocado.
+
+CAMBIOS DE INTERFAZ, EN DETALLE:
+  - La pestaña y el título de la sección pasan de "🗂️ Gestión de Colegios"
+    a "🗺️ Normalización Territorial" (el `data-tab` interno sigue siendo
+    "colegios", así que no rompe nada de lo que ya dependía de esa pestaña).
+  - El grupo "✅ Resueltos automáticamente" (coincidencia exacta contra el
+    catálogo de Heredia) sigue exactamente igual — no cambió su lógica.
+  - El grupo "⚠️ Requieren tu criterio" ahora muestra 4 columnas: Nombre
+    registrado | Perfiles | Tipo de resolución | Destino (+ el botón
+    "Unificar"). "Tipo de resolución" arranca en "Colegio de Heredia" por
+    defecto, para que el comportamiento de quien no toca nada sea
+    idéntico al de antes.
+  - El mensaje de confirmación antes de escribir distingue si el destino
+    es una provincia o un colegio, y siempre aclara que el nombre original
+    se conserva y que no se toca XP/progreso/resultados.
 
 PASOS PARA DEJAR ESTO FUNCIONANDO:
-  git add js/shared/profiles-ui.js
-  git commit -m "Activacion docente: eliminar bloqueo por codigo, acceso libre por decision de Bryan"
+  git add analytics/analytics-admin.js
+  git commit -m "Territorial 2.0 Etapa 1: normalizacion por provincia en la bandeja de colegios legacy"
   git push
 
-  No hay ningún paso adicional en Supabase ni en ningún otro archivo.
+  No hay ningún paso en Supabase — no se creó ni modificó ninguna tabla,
+  vista ni política.
 
-PRUEBAS REALIZADAS (contra la app real, no copias temporales):
-  - Crear un perfil NUEVO eligiendo "Docente" sin tocar el campo de
-    código ni el botón "Verificar": el perfil se crea sin ningún bloqueo,
-    queda con rolVerificadoEn puesto, y AccessControl.isTeacher() = true.
-  - Con ese mismo perfil docente, se probó que la exploración NO se
-    guarda como progreso académico (Storage.updateUnit no persiste nada
-    para un docente verificado) — la protección sigue intacta.
-  - Elegir "Estudiante" sigue exigiendo grupo/sección y colegio exactamente
-    como antes — este cambio no afecta en nada el flujo de estudiante.
-  - Se simuló el caso real reportado: un perfil "docente" preexistente sin
-    rolVerificadoEn (el estado exacto de alguien que se había quedado
-    atascado). Al completar el modal obligatorio "Completa tu perfil"
-    sin tocar el selector de rol, el perfil queda verificado
-    automáticamente — deja de estar atascado, sin que nadie tenga que
-    volver a elegir nada.
-  - Regresión de sitio completo (Biología 10.º/11.º, Física, Química):
-    todo sigue cargando sin errores de consola, sin ningún cambio de
-    comportamiento fuera de perfiles.
+PRUEBAS REALIZADAS (contra la app real, con Supabase simulado vía
+interceptación de red, igual que en entregas anteriores de este panel):
 
-PENDIENTE:
-  Ninguno para esta entrega. Si más adelante querés un flujo intermedio
-  (por ejemplo, código opcional pero no obligatorio, o un aviso distinto
-  para docentes autodeclarados vs. verificados por código en algún
-  reporte), decímelo y lo construimos sobre este mismo interruptor.
+  caso | antes | acción admin | después | vista afectada | resultado
+  ---|---|---|---|---|---
+  1. Colegio legacy de Heredia con nombre EXACTO al catálogo ("Liceo de Heredia") | aparece en "Resueltos automáticamente" | clic en "Confirmar" | school_alias_map: school_id=HER_LDH, school_region=Heredia | v_panorama_colegios / v_panorama_provincias | ✅ se agrupa correctamente, deja de estar pendiente
+  2. Colegio legacy de San José ("Colegio Rincón Grande de Pavas") | en "Requieren tu criterio"; ANTES no tenía ninguna opción correcta | Tipo="Provincia" → Destino="San José" → "Unificar" | school_alias_map: school_id=OTHER_SANJOSE, school_region=San José, colegio original intacto | v_panorama_provincias | ✅ se agrupa bajo San José, nombre original conservado
+  3. Colegio legacy de Alajuela ("Liceo de Alajuela Central") | en "Requieren tu criterio" | Tipo="Provincia" → Destino="Alajuela" → "Unificar" | school_alias_map: OTHER_ALAJUELA / Alajuela | v_panorama_provincias | ✅ se agrupa bajo Alajuela
+  4. Colegio REAL de Heredia pero no catalogado ("Colegio Adventista de Heredia") | en "Requieren tu criterio"; antes solo podía asignarse (mal) a uno de los 29 colegios catalogados | Tipo="Provincia" → Destino="Heredia — colegio no catalogado" → "Unificar" | school_alias_map: OTHER_HEREDIA / Heredia | v_panorama_provincias | ✅ se agrupa bajo Heredia sin inventarle un colegio catalogado que no le corresponde
+  5. Cualquiera de los 4 casos anteriores, tras confirmarlo | pendiente | (ninguna — ya se resolvió) | excluido automáticamente por _cargarAliasMapConfirmados() | bandeja de pendientes | ✅ ya no reaparece
+  6. Nombre original del colegio | texto libre del estudiante | (cualquiera de las unificaciones anteriores) | students.colegio nunca se escribe/toca | Seguimiento académico | ✅ se confirmó que ninguna escritura tocó la tabla students en todo el recorrido
+  7. Perfil moderno ya clasificado (school_id=OTHER_SANJOSE de fábrica) | ya no es "legacy" | (ninguna) | nunca aparece en la bandeja (la consulta ya filtraba school_id=is.null, sin cambios) | bandeja de pendientes | ✅ confirmado, sigue excluido
+  8. Cualquier acción de esta pantalla | — | — | — | XP / exámenes / PNE / Suficiencia / sesiones / perfiles | ✅ ninguna escritura tocó ninguna de esas tablas en todo el recorrido de prueba
+  9. Al abrir la pestaña, antes de que el admin haga cualquier clic | 6 nombres legacy pendientes | — | — | — | ✅ cero escrituras automáticas — nada se asigna solo por inferencia
+  10. v_panorama_provincias tras los 3 casos de provincia | sin esas filas, o agrupados en "Sin provincia identificada" | — | refleja San José/Alajuela/Heredia con los conteos correctos | Panorama por Provincia | ✅ confirmado
+
+  Además: se re-visitaron las 5 pestañas restantes del panel (Resumen,
+  Panorama Global, Panorama por Provincia, Candidatos de Fusión,
+  Seguimiento académico) para confirmar que sigan cargando sin errores de
+  consola tras este cambio — sin regresiones.
+
+PENDIENTE (fuera de esta etapa, a la espera de tu autorización explícita):
+  - Territorial 2.0 — Etapa 2 (cantones): no se tocó nada.
+  - Migración masiva/asistida de los 76 perfiles legacy actuales: la
+    herramienta para resolverlos uno por uno ya está lista con esta
+    entrega, pero resolverlos de a uno sigue siendo una decisión manual
+    tuya (o de quien administre el panel) — nada se hizo automático.
