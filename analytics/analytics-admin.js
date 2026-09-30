@@ -205,7 +205,7 @@
           <button class="an-tab" data-tab="resumen">Resumen</button>
           <button class="an-tab" data-tab="panorama">🏫 Panorama Global</button>
           <button class="an-tab" data-tab="provincias">🌎 Panorama por Provincia</button>
-          <button class="an-tab" data-tab="colegios">🗂️ Gestión de Colegios</button>
+          <button class="an-tab" data-tab="colegios">🗺️ Normalización Territorial</button>
           <button class="an-tab" data-tab="fusion">🧬 Candidatos de Fusión</button>
           <button class="an-tab" data-tab="seguimiento">Seguimiento académico</button>
           <button class="an-tab" data-tab="pne">PNE 11.º — Analítica</button>
@@ -250,12 +250,23 @@
   }
 
   /* ================================================================
-     SECCIÓN: GESTIÓN DE COLEGIOS (Parte 9 del hotfix de catálogo)
+     SECCIÓN: NORMALIZACIÓN TERRITORIAL (Parte 9 del hotfix de catálogo;
+     evolucionada en TERRITORIAL 2.0 — ETAPA 1, 30/set/2026)
      ================================================================
      Lista los nombres de colegio LEGACY (sin school_id) con su
-     conteo de perfiles, y permite "Unificar con →" un colegio real
-     del catálogo — esto escribe en school_alias_map (protegida, solo
-     admin), sin tocar ningún dato académico de los perfiles.
+     conteo de perfiles, y permite unificarlos contra:
+       - un colegio real del catálogo detallado de Heredia, o
+       - uno de los 7 buckets de provincia (PROVINCIAS_SIN_CATALOGO),
+         para los colegios legacy que quedaron fuera de Heredia y que
+         antes no tenían NINGUNA opción correcta en esta pantalla.
+     En ambos casos, la unificación escribe en school_alias_map
+     (protegida, solo admin) — NUNCA en students.colegio, que siempre
+     conserva el texto original tal cual lo escribió el estudiante.
+     buscarColegioPorId() (js/data/catalogo-colegios.js) ya buscaba en
+     los dos catálogos desde el Lote 7, así que _unificarColegio() no
+     necesitó ningún cambio: el único hueco real era que esta pantalla
+     nunca le OFRECÍA al admin los buckets de provincia como destino
+     posible. Ver MQC_AUDITORIA_TERRITORIAL_DIAGNOSTICO.md, sección 5.
      ================================================================ */
   let _colegiosLegacy = null;
   let _aliasMapConfirmados = null; // Set de alias_normalizado ya escritos en school_alias_map
@@ -314,14 +325,14 @@
     const catalogo = (typeof CATALOGO_COLEGIOS !== 'undefined' ? CATALOGO_COLEGIOS.slice() : [])
       .sort((a, b) => a.school_name.localeCompare(b.school_name, 'es'));
     return `
-      <h2 class="an-section-title">🗂️ Gestión de Colegios</h2>
-      <p class="an-note" style="margin-bottom:1rem">Nombres de colegio escritos antes de que existiera el catálogo. Unificalos con el centro educativo real para que dejen de aparecer separados en Panorama Global.${yaConfirmados.length ? ` (${yaConfirmados.length} nombre(s) ya unificados no se muestran acá.)` : ''}</p>
+      <h2 class="an-section-title">🗺️ Normalización Territorial</h2>
+      <p class="an-note" style="margin-bottom:1rem">Nombres de colegio escritos antes de que existiera el catálogo/selector de provincia. Unificalos contra un colegio real de Heredia o contra la provincia que corresponda para que dejen de aparecer separados en Panorama Global.${yaConfirmados.length ? ` (${yaConfirmados.length} nombre(s) ya unificados no se muestran acá.)` : ''}</p>
 
       ${resueltos.length ? `
       <h3 class="an-section-title" style="font-size:1rem;margin-top:0">✅ Resueltos automáticamente — confirmá con un clic</h3>
-      <p class="an-note" style="margin-bottom:.6rem">Coinciden, sin ninguna duda (alias ya conocido o el mismo nombre del catálogo con distintas mayúsculas/espacios), con un colegio real. No se escribe nada hasta que confirmés.</p>
+      <p class="an-note" style="margin-bottom:.6rem">Coinciden, sin ninguna duda (alias ya conocido o el mismo nombre del catálogo con distintas mayúsculas/espacios), con un colegio real de Heredia. No se escribe nada hasta que confirmés.</p>
       <div class="an-table-wrap"><table class="an-table">
-        <thead><tr><th>Nombre legacy</th><th>Perfiles</th><th>Colegio sugerido</th><th></th></tr></thead>
+        <thead><tr><th>Nombre registrado</th><th>Perfiles</th><th>Colegio sugerido</th><th></th></tr></thead>
         <tbody>${resueltos.map(r => `
           <tr>
             <td>${_esc(r.nombre)}</td>
@@ -334,23 +345,44 @@
 
       ${ambiguos.length ? `
       <h3 class="an-section-title" style="font-size:1rem;margin-top:1.2rem">⚠️ Requieren tu criterio</h3>
-      <p class="an-note" style="margin-bottom:.6rem">Sin ninguna coincidencia exacta contra el catálogo — elegí a mano el colegio real.</p>
+      <p class="an-note" style="margin-bottom:.6rem">Sin ninguna coincidencia exacta contra el catálogo de Heredia. Elegí primero el tipo de resolución — un colegio real de Heredia, o la provincia que corresponde si el centro educativo queda fuera de ese catálogo — y después el destino exacto. El nombre original nunca se modifica ni se pierde: sigue viéndose igual en Seguimiento académico.</p>
       <div class="an-table-wrap"><table class="an-table">
-        <thead><tr><th>Nombre legacy</th><th>Perfiles</th><th>Unificar con →</th></tr></thead>
+        <thead><tr><th>Nombre registrado</th><th>Perfiles</th><th>Tipo de resolución</th><th>Destino</th><th></th></tr></thead>
         <tbody>${ambiguos.map(a => `
           <tr>
             <td>${_esc(a.nombre)}</td>
             <td>${a.perfiles}</td>
             <td>
-              <select data-unificar-select="${_esc(a.nombre)}" style="margin-right:.4rem">
+              <select data-tipo-select="${_esc(a.nombre)}">
+                <option value="heredia">Colegio de Heredia</option>
+                <option value="provincia">Provincia</option>
+              </select>
+            </td>
+            <td>
+              <select data-unificar-select="${_esc(a.nombre)}">
                 <option value="">— Elegir colegio —</option>
                 ${catalogo.map(c => `<option value="${c.school_id}">${_esc(c.school_name)}</option>`).join('')}
               </select>
-              <button class="btn btn-primary btn-sm" data-unificar-btn="${_esc(a.nombre)}">Unificar</button>
             </td>
+            <td><button class="btn btn-primary btn-sm" data-unificar-btn="${_esc(a.nombre)}">Unificar</button></td>
           </tr>`).join('')}
         </tbody>
       </table></div>` : ''}`;
+  }
+
+  /* TERRITORIAL 2.0 — ETAPA 1: opciones del selector "Destino" de la
+     tabla de ambiguos, según el "Tipo de resolución" elegido. 'heredia'
+     mantiene exactamente las mismas opciones que ya existían (catálogo
+     detallado, orden alfabético); 'provincia' ofrece los 7 buckets
+     reales de PROVINCIAS_SIN_CATALOGO, en su orden original. Nunca se
+     inventa ninguna opción nueva — son los mismos 2 catálogos que ya
+     usa buscarColegioPorId() en todo el proyecto. */
+  function _opcionesDestinoTerritorial(tipo) {
+    if (tipo === 'provincia') {
+      return (typeof PROVINCIAS_SIN_CATALOGO !== 'undefined' ? PROVINCIAS_SIN_CATALOGO : []);
+    }
+    return (typeof CATALOGO_COLEGIOS !== 'undefined' ? CATALOGO_COLEGIOS.slice() : [])
+      .sort((a, b) => a.school_name.localeCompare(b.school_name, 'es'));
   }
 
   async function _unificarColegio(nombreLegacy, schoolId) {
@@ -384,6 +416,21 @@
   }
 
   function _bindColegios() {
+    // TERRITORIAL 2.0 — ETAPA 1: al cambiar "Tipo de resolución", el
+    // selector "Destino" de esa misma fila se repuebla con las
+    // opciones del tipo elegido (colegios de Heredia, o los 7 buckets
+    // de provincia) — nunca se mezclan ambas listas en un solo select.
+    document.querySelectorAll('[data-tipo-select]').forEach(sel => {
+      sel.addEventListener('change', () => {
+        const nombre = sel.getAttribute('data-tipo-select');
+        const destino = document.querySelector(`[data-unificar-select="${CSS.escape(nombre)}"]`);
+        if (!destino) return;
+        const opciones = _opcionesDestinoTerritorial(sel.value);
+        const placeholder = sel.value === 'provincia' ? '— Elegir provincia —' : '— Elegir colegio —';
+        destino.innerHTML = `<option value="">${placeholder}</option>` +
+          opciones.map(c => `<option value="${_esc(c.school_id)}">${_esc(c.school_name)}</option>`).join('');
+      });
+    });
     document.querySelectorAll('[data-confirmar-btn]').forEach(btn => {
       btn.addEventListener('click', () => {
         const nombre = btn.getAttribute('data-confirmar-btn');
@@ -397,10 +444,17 @@
     document.querySelectorAll('[data-unificar-btn]').forEach(btn => {
       btn.addEventListener('click', () => {
         const nombre = btn.getAttribute('data-unificar-btn');
+        const tipoSel = document.querySelector(`[data-tipo-select="${CSS.escape(nombre)}"]`);
         const select = document.querySelector(`[data-unificar-select="${CSS.escape(nombre)}"]`);
         const schoolId = select ? select.value : '';
-        if (!schoolId) { alert('Elegí primero el colegio real con el que querés unificar.'); return; }
-        if (confirm(`¿Unificar "${nombre}" con el colegio elegido? Esto no borra ningún dato, solo corrige la agrupación en Panorama Global.`)) {
+        const esProvincia = tipoSel && tipoSel.value === 'provincia';
+        if (!schoolId) { alert(esProvincia ? 'Elegí primero la provincia con la que querés unificar.' : 'Elegí primero el colegio real con el que querés unificar.'); return; }
+        const destino = buscarColegioPorId(schoolId);
+        const nombreDestino = destino ? destino.school_name : schoolId;
+        const mensaje = esProvincia
+          ? `¿Unificar "${nombre}" con la provincia "${nombreDestino}"? El nombre original ("${nombre}") se conserva sin cambios; solo se corrige cómo se agrupa en Panorama Global/por Provincia. Esto no borra ningún dato ni afecta XP, progreso ni resultados.`
+          : `¿Unificar "${nombre}" con el colegio "${nombreDestino}"? Esto no borra ningún dato, solo corrige la agrupación en Panorama Global.`;
+        if (confirm(mensaje)) {
           _unificarColegio(nombre, schoolId);
         }
       });
