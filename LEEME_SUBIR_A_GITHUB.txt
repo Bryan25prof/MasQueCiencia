@@ -1,157 +1,114 @@
-FASE 2 — PASO 4: BIOLOGÍA — LAS 6 UNIDADES QUE FALTABAN (BIO10-U04 a U09)
+ACTIVACIÓN DOCENTE — SE ELIMINA EL BLOQUEO POR CÓDIGO (ahora es libre)
 =============================================================================
-Con esta entrega, BIOLOGÍA 10.º QUEDA COMPLETA: las 9 unidades del libro
-tienen contenido real. Por tu pedido explícito, no te la entrego unidad por
-unidad — va todo junto.
 
-QUÉ SE CONSTRUYÓ (mismo patrón EXACTO que BIO10-U01/U02/U03: 6-8 temas de
-teoría, 3 simuladores, 1 juego de 5 niveles, 1 examen de 50 preguntas —20 al
-azar por intento— y 1 misión final):
+DÓNDE ESTABAS "CONFUNDIDO" (tu pregunta exacta):
+  No te confundiste en nada raro — es exactamente donde pensabas. El
+  proyecto SÍ tiene, desde el sprint "PENDIENTE D — Activación Docente",
+  un requisito de código institucional para que un perfil elegido como
+  "👩‍🏫 Docente" quede realmente habilitado como docente. Vive en UN SOLO
+  archivo: js/shared/profiles-ui.js. Ahí, una función llamada
+  _activacionPuedeConfirmar() se ejecuta en las 4 pantallas donde se
+  puede elegir el rol (crear perfil nuevo, el modal obligatorio "Completa
+  tu perfil", "Editar perfil", y "Crear otro perfil" del administrador) y,
+  si elegías "Docente" sin haber verificado un código válido contra
+  Supabase, esa función bloqueaba el guardado por completo con el mensaje
+  "Activá el código docente para continuar, o volvé a Estudiante." — eso
+  es exactamente lo que les pasó a los docentes que reportaste: nunca
+  llegaban a tener perfil, porque el guardado se rechazaba antes de crear
+  nada.
 
-  BIO10-U04 "Las poblaciones biológicas" (páginas 111-133)
-    Tamaño y densidad poblacional, natalidad/mortalidad/migraciones,
-    potencial biótico y estrategias r/K, patrones de crecimiento y
-    capacidad de carga, distribución de poblaciones, impacto de la
-    población humana. Juego "Detective de Poblaciones". Misión: el caso
-    real del colapso poblacional de Isla de Pascua (página 133).
-    Contenido 100% del libro original — este rango no presentó daño.
+  Por qué estaba ahí: no fue un error de código, fue una decisión de
+  producto explícita de un sprint anterior (documentada en
+  MQC_PENDIENTE_D_DIAGNOSTICO.md y MQC_PENDIENTE_D_MICROPROPUESTA_
+  ACTIVACION_DOCENTE.md), pensada para que nadie pudiera autodeclararse
+  "Docente" y saltarse el progreso académico sin control. El código
+  institucional era el mecanismo elegido en ese momento para verificar
+  que quien elige "Docente" es realmente parte de la coordinación del
+  proyecto.
 
-  BIO10-U05 "Causas de la variabilidad genética" (páginas 143-176)
-    Ácidos nucleicos, genes y cromosomas, duplicación del ADN,
-    transcripción y síntesis de proteínas, código genético, mutaciones,
-    biotecnología. Contenido 100% del libro original — sin daño en este
-    rango.
+QUÉ SE CAMBIÓ AHORA (tu decisión: "que sea libre por el momento"):
+  Elegir "👩‍🏫 Docente" y guardar el perfil YA NUNCA SE BLOQUEA, en
+  ninguna de las 4 pantallas — sin necesidad de ningún código. Al
+  guardar, el perfil recibe automáticamente el mismo campo interno
+  (rolVerificadoEn) que antes solo se otorgaba tras un código válido —
+  ese es el campo del que depende TODO lo demás en el proyecto que ya
+  distingue a un docente real (AccessControl.isTeacher(), y las guardas
+  de storage.js que evitan que la exploración de un docente se guarde
+  como progreso académico de estudiante en Química, Física y Biología).
+  En otras palabras: un docente autodeclarado hoy queda exactamente igual
+  de protegido que uno que antes pasaba por el código — la única
+  diferencia es que ya no hace falta el código para llegar ahí.
 
-  BIO10-U06 "La herencia y su manipulación" (páginas 209-245)
-    Mendel y Pisum sativum, las 3 Leyes de Mendel, cuadros de Punnett
-    (monohíbridos y dihíbridos 9:3:3:1), herencia ligada al sexo (Reina
-    Victoria, sistema ABO/Rh), científicos clave (Sutton, Bateson, Morgan,
-    McClintock, Sanger, Venter, Doudna). Contenido 100% del libro
-    original — sin daño en este rango.
+  Como pediste, esto es libre "por el momento": es un interruptor, no un
+  borrado. Se agregó una única constante, bien comentada, arriba del
+  todo del bloque de activación docente en profiles-ui.js:
 
-  BIO10-U07 "Las fuerzas evolutivas" (páginas 255-275)
-    Selección natural, deriva genética, cuello de botella, flujo génico.
-    ÚNICO PUNTO RECONSTRUIDO en esta unidad: la página 263 falta por
-    completo del PDF (salto de numeración). Esa página tenía la
-    introducción del concepto de "deriva genética" y el arranque del
-    ejemplo de Zarcero; se reconstruyó con la terminología oficial del
-    Programa de Biología del MEP (página 55) para esa sola frase
-    introductoria — el resto (el ejemplo completo de los Mennonitas de
-    Lancaster con el síndrome de Ellis-van Creveld, y la definición
-    completa de cuello de botella) es 100% libro real, recuperado de la
-    página 264.
+      const MQC_ACTIVACION_DOCENTE_LIBRE = true;
 
-  BIO10-U08 "Evidencias del proceso evolutivo" (páginas 285-317)
-    Los 11 subtemas completos: tipos de fosilización, datación C-14/K-Ar,
-    huellas de Laetoli, los 3 dominios de Woese y LUCA, los ñandúes y
-    gliptodontes de Darwin, homología/analogía/estructuras vestigiales,
-    embriología de von Baer, el 2.5% de diferencia genética con el
-    chimpancé, casos reales de extinción (sapo dorado de Monteverde,
-    tigre de Tasmania, milano de Florida), el viaje del Beagle, y
-    especiación (mosca Rhagoletis pomonella, la mula estéril, los pinzones
-    de Darwin). Contenido 100% del libro original — este rango no
-    presentó ningún daño.
+  - Si en el futuro el acceso libre se presta a mal uso y querés volver
+    a exigir el código institucional, cambiá esa línea a `false` — nada
+    más en todo el proyecto necesita tocarse. Toda la infraestructura
+    del código (Supabase, la función validar_codigo_docente,
+    teacher-activation.js) sigue intacta, sin ningún cambio.
+  - Si lo que necesitás es deshabilitar a UN docente puntual porque está
+    abusando del acceso (y no todo el mecanismo), no hace falta tocar
+    ese interruptor: abrí "Administrar perfiles" → "✏️ Editar" en el
+    perfil de esa persona y cambiá su rol a "🎓 Estudiante" — eso le
+    quita rolVerificadoEn al instante y pierde el acceso docente, igual
+    que cualquier cambio de rol ya funcionaba antes de este cambio.
 
-  BIO10-U09 "Teorías sobre el origen de la vida y las especies"
-    (páginas 333-346)
-    8 temas (no 6, a propósito, para no forzar contenido real dentro de
-    categorías que no le correspondían): las 5 teorías sobre el origen de
-    las especies (Creacionismo/fijismo, Lamarckismo, Darwinismo,
-    Mutacionismo, Teoría sintética) y las 3 teorías sobre el origen de la
-    vida (Generación espontánea, Origen quimiosintético, Panspermia).
-    ÚNICO PUNTO RECONSTRUIDO: el inicio de la página 341 aparece en
-    blanco y la frase sobre el experimento de Miller-Urey queda cortada a
-    la mitad; se completó esa frase con el Programa oficial del MEP
-    (página 59), usando datos que ya estaban implícitos en el texto real
-    que la rodea.
+  Efecto en pantalla: la caja de "Código de activación" con el campo de
+  texto y el botón "Verificar" ya no aparece. En su lugar, al elegir
+  "Docente" aparece un aviso informativo breve: "Acceso docente activado
+  para este perfil: podés explorar todo el contenido, pero nada de lo
+  que hagas se guarda como progreso académico." — así el docente sabe
+  de inmediato que quedó habilitado, sin tener que adivinar nada.
 
-  Ninguna parte de ninguna unidad fue inventada sin una fuente real (ni el
-  libro, ni el Programa de Estudio oficial del MEP). BIO10-U01, U02 y U03
-  siguen exactamente igual, sin ningún cambio.
+  Efecto extra (positivo): un docente que YA tenía rol='docente' desde
+  antes de este cambio, pero que se había quedado sin verificar (por
+  ejemplo, si alcanzó a guardar el perfil en algún momento en que el
+  bloqueo no aplicaba, o si vos mismo lo creaste manualmente para
+  probar), ahora queda verificado automáticamente la próxima vez que
+  guarde cualquier cambio en su perfil (el modal obligatorio "Completa tu
+  perfil", o "Editar perfil") — sin que tenga que volver a elegir el rol
+  ni tocar nada más. Ya no se queda "a medias".
 
-CÓMO SE HIZO LA REVISIÓN DEL DAÑO DEL PDF:
-  Antes de escribir cada unidad, se revisó el PDF página por página (no en
-  bloque) para las páginas correspondientes. De las 6 unidades de esta
-  entrega, 4 (U04, U05, U06, U08) no presentaron ningún daño real: se
-  construyeron 100% con el libro. Solo 2 (U07 y U09) tuvieron un punto
-  puntual dañado —nunca una sección completa—, y en ambos casos se
-  reconstruyó exclusivamente esa frase o esa página faltante con el
-  Programa de Estudio oficial de Biología del MEP, documentando el detalle
-  exacto en la cabecera de cada archivo bio10-u0X.js.
+ARCHIVO DEL REPOSITORIO (copiar a la misma ruta):
+  - js/shared/profiles-ui.js   (MODIFICADO — versión completa incluida,
+                                 no es un parche)
 
-BIOLOGÍA SIGUE OCULTA PARA LOS ESTUDIANTES:
-  Sin cambios: la bandera de publicación (js/shared/mqc-biologia-flags.js,
-  biologia10Publico:false) sigue en false. Ningún estudiante real ve nada
-  de esto todavía. Para revisarlo vos mismo: agregá ?biologia10preview=1 a
-  la URL de tu sitio.
+  Ningún otro archivo del proyecto fue tocado. Química, Física, Biología
+  10.º y 11.º, Storage, Gamification y AccessControl siguen exactamente
+  igual — este cambio vive solo en la capa de UI de perfiles.
 
-ARCHIVOS DEL REPOSITORIO (copiar a las mismas rutas):
-
-  NUEVOS (12 archivos):
-  - js/data/banco-bio10-u04.js       - js/units/biologia10/bio10-u04.js
-  - js/data/banco-bio10-u05.js       - js/units/biologia10/bio10-u05.js
-  - js/data/banco-bio10-u06.js       - js/units/biologia10/bio10-u06.js
-  - js/data/banco-bio10-u07.js       - js/units/biologia10/bio10-u07.js
-  - js/data/banco-bio10-u08.js       - js/units/biologia10/bio10-u08.js
-  - js/data/banco-bio10-u09.js       - js/units/biologia10/bio10-u09.js
-
-  MODIFICADOS (2 archivos):
-  - js/modules/biologia10.js   (BIO10-U04 a U09 pasan de "coming" a "active",
-                                 con sus descripciones, temas, simuladores,
-                                 juego y examen reales)
-  - index.html                 (agrega los 12 <script> nuevos, junto a los
-                                 de BIO10-U01/U02/U03)
-
-  Este paquete incluye las versiones COMPLETAS de esos dos archivos
-  modificados (no un parche) — reemplazalos directamente.
-
-NO HAY ARCHIVO SQL EN ESTE PASO. No se tocó Supabase, ni Química, ni
-Física, ni Pendiente A/B/D. Se verificó explícitamente que el hub
-"Selecciona tu ruta científica" sigue mostrando Química y Física sin
-ningún cambio.
-
-PASOS PARA DEJAR ESTO FUNCIONANDO (recordatorio del problema anterior):
-  Recordá que la vez pasada el problema fue que los archivos de
-  js/units/biologia10/ quedaron sueltos directamente en js/units/, sin la
-  subcarpeta "biologia10". Fijate bien que los 6 archivos bio10-u0X.js de
-  esta entrega queden DENTRO de esa subcarpeta antes de hacer commit.
-
-  git add js/data/banco-bio10-u04.js js/data/banco-bio10-u05.js \
-          js/data/banco-bio10-u06.js js/data/banco-bio10-u07.js \
-          js/data/banco-bio10-u08.js js/data/banco-bio10-u09.js \
-          js/units/biologia10/bio10-u04.js js/units/biologia10/bio10-u05.js \
-          js/units/biologia10/bio10-u06.js js/units/biologia10/bio10-u07.js \
-          js/units/biologia10/bio10-u08.js js/units/biologia10/bio10-u09.js \
-          js/modules/biologia10.js index.html
-  git commit -m "Fase 2 - paso 4: Biologia 10.o, unidades 4 a 9 (Biologia 10.o completa)"
+PASOS PARA DEJAR ESTO FUNCIONANDO:
+  git add js/shared/profiles-ui.js
+  git commit -m "Activacion docente: eliminar bloqueo por codigo, acceso libre por decision de Bryan"
   git push
 
-  No hay ningún paso adicional — Biología sigue mostrando "En desarrollo"
-  para los estudiantes hasta que confirmes que la revisaste.
+  No hay ningún paso adicional en Supabase ni en ningún otro archivo.
 
-PRUEBAS REALIZADAS:
-  - Cada una de las 6 unidades nuevas: 18-19 pruebas de punta a punta
-    contra la app real e INTEGRADA (con las 9 unidades activas a la vez,
-    no cada una por separado): teoría, los 3 simuladores, los 5 niveles
-    del juego, examen completo, anti-farming del examen, misión final
-    (con dedupe de XP) y guarda de escritura docente. Todas exitosas.
-  - Regresión de BIO10-U01: 30/30 exitosas, sin cambios de resultado.
-  - Regresión del sidebar de Biología: 6/6 exitosas.
-  - Regresión de BIO10-U02 y BIO10-U03: exitosas (las únicas "fallas" que
-    salieron son aserciones viejas de pruebas anteriores que esperaban que
-    la siguiente unidad siguiera "En desarrollo" — ahora dice "Disponible"
-    a propósito, porque es justo lo que se activó en esta entrega. No son
-    errores reales).
-  - Verificación consolidada final con las 9 unidades activas al mismo
-    tiempo: las 9 tarjetas de la grilla muestran "Disponible", los 45
-    "plugins" (5 por unidad × 9 unidades) están registrados correctamente,
-    los 9 bancos de preguntas tienen 50 preguntas cada uno, y el hub de
-    Química/Física sigue intacto.
-  - Validación de cada banco de preguntas: 50 preguntas por unidad, IDs
-    únicos, 4 opciones por pregunta, respuesta correcta siempre en el
-    índice 0 (el examen la mezcla en cada intento).
+PRUEBAS REALIZADAS (contra la app real, no copias temporales):
+  - Crear un perfil NUEVO eligiendo "Docente" sin tocar el campo de
+    código ni el botón "Verificar": el perfil se crea sin ningún bloqueo,
+    queda con rolVerificadoEn puesto, y AccessControl.isTeacher() = true.
+  - Con ese mismo perfil docente, se probó que la exploración NO se
+    guarda como progreso académico (Storage.updateUnit no persiste nada
+    para un docente verificado) — la protección sigue intacta.
+  - Elegir "Estudiante" sigue exigiendo grupo/sección y colegio exactamente
+    como antes — este cambio no afecta en nada el flujo de estudiante.
+  - Se simuló el caso real reportado: un perfil "docente" preexistente sin
+    rolVerificadoEn (el estado exacto de alguien que se había quedado
+    atascado). Al completar el modal obligatorio "Completa tu perfil"
+    sin tocar el selector de rol, el perfil queda verificado
+    automáticamente — deja de estar atascado, sin que nadie tenga que
+    volver a elegir nada.
+  - Regresión de sitio completo (Biología 10.º/11.º, Física, Química):
+    todo sigue cargando sin errores de consola, sin ningún cambio de
+    comportamiento fuera de perfiles.
 
-CON ESTA ENTREGA, BIOLOGÍA 10.º QUEDA COMPLETA (BIO10-U01 a BIO10-U09).
-El siguiente paso natural sería que la revisés con calma con
-?biologia10preview=1 antes de decidir cuándo cambiar
-biologia10Publico: false a true y publicarla para los estudiantes reales.
+PENDIENTE:
+  Ninguno para esta entrega. Si más adelante querés un flujo intermedio
+  (por ejemplo, código opcional pero no obligatorio, o un aviso distinto
+  para docentes autodeclarados vs. verificados por código en algún
+  reporte), decímelo y lo construimos sobre este mismo interruptor.
