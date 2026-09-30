@@ -29,20 +29,20 @@
 ================================================================ */
 
 /* Metadatos de las 9 unidades de Biología 10.º (tabla de contenidos
-   real del libro fuente). BIO10-U01, BIO10-U02 y BIO10-U03 ya tienen
-   contenido real (status:'active'); BIO10-U04..U09 quedan como
-   "PRÓXIMAMENTE". El PDF del libro fuente presentó daño real y
-   confirmado (con qpdf/pikepdf/pdftoppm) en puntos puntuales a partir
-   de la Unidad III: una página en blanco, una página faltante por
-   completo y un recuadro de indicadores vacío. Con autorización
-   explícita de Bryan, esos puntos puntuales de BIO10-U03 se
-   reconstruyeron a partir del Programa de Estudio oficial de
-   Biología del MEP (ver cabecera de bio10-u03.js) — el resto de la
-   unidad es contenido real del libro. BIO10-U04..U09 (poblaciones,
-   variabilidad genética, herencia, fuerzas evolutivas, evidencias
-   evolutivas, origen de la vida) siguen esperando que se pueda leer
-   el resto del libro de forma confiable. Regla explícita del sprint:
-   NO construirlas todavía ni inventar su contenido sin una fuente. */
+   real del libro fuente). Las 9 unidades (BIO10-U01 a BIO10-U09) ya
+   tienen contenido real (status:'active'). El PDF del libro fuente
+   presentó daño real y confirmado (con qpdf/pikepdf/pdftoppm) en
+   puntos puntuales a partir de la Unidad III: una página en blanco,
+   alguna página faltante por completo y algún recuadro de
+   indicadores vacío — nunca contaminación completa de un capítulo.
+   Con autorización explícita de Bryan, esos puntos puntuales y
+   específicos (BIO10-U03, BIO10-U07 y BIO10-U09) se reconstruyeron a
+   partir del Programa de Estudio oficial de Biología del MEP (ver la
+   cabecera de cada bio10-u0X.js para el detalle exacto de qué parte
+   viene del libro y qué parte viene del programa oficial). BIO10-U04,
+   U05, U06 y U08 no presentaron daño real en sus páginas fuente y se
+   construyeron enteramente con el libro original. Ninguna unidad
+   tiene contenido inventado sin una fuente real (libro o MEP). */
 const BIOLOGIA10_UNIDADES_DATA = [
   { id: 'bio10-u01', num: 1, status: 'active',
     icon: '🧬', color: 'var(--green)',
@@ -74,47 +74,65 @@ const BIOLOGIA10_UNIDADES_DATA = [
     game: { levels: 5 },
     exam: { perExam: 20, pass: 70 }
   },
-  { id: 'bio10-u04', num: 4, status: 'coming',
+  { id: 'bio10-u04', num: 4, status: 'active',
     icon: '👥', color: 'var(--green)',
     title: 'Las poblaciones biológicas',
     subtitle: null,
-    description: 'Próximamente: dinámica y características de las poblaciones biológicas.',
-    topics: [], simulators: [], game: { levels: 0 }, exam: { perExam: 20, pass: 70 }
+    description: 'Tamaño y densidad poblacional, natalidad y mortalidad, patrones de crecimiento y distribución, y el impacto de la población humana — con datos reales, incluyendo el caso de Isla de Pascua.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 5 },
+    exam: { perExam: 20, pass: 70 }
   },
-  { id: 'bio10-u05', num: 5, status: 'coming',
+  { id: 'bio10-u05', num: 5, status: 'active',
     icon: '🧪', color: 'var(--green)',
     title: 'Causas de la variabilidad genética',
     subtitle: null,
-    description: 'Próximamente: mutaciones, recombinación y otras causas de la variabilidad genética.',
-    topics: [], simulators: [], game: { levels: 0 }, exam: { perExam: 20, pass: 70 }
+    description: 'Ácidos nucleicos, genes y cromosomas, duplicación del ADN, síntesis de proteínas y código genético, mutaciones y biotecnología — la base molecular de la variabilidad genética.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 5 },
+    exam: { perExam: 20, pass: 70 }
   },
-  { id: 'bio10-u06', num: 6, status: 'coming',
+  { id: 'bio10-u06', num: 6, status: 'active',
     icon: '🧫', color: 'var(--green)',
     title: 'La herencia y su manipulación',
     subtitle: null,
-    description: 'Próximamente: leyes de la herencia y biotecnología aplicada a la manipulación genética.',
-    topics: [], simulators: [], game: { levels: 0 }, exam: { perExam: 20, pass: 70 }
+    description: 'Las leyes de Mendel, cruces con cuadros de Punnett, la herencia ligada al sexo y los científicos que abrieron el camino a la biotecnología moderna.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 5 },
+    exam: { perExam: 20, pass: 70 }
   },
-  { id: 'bio10-u07', num: 7, status: 'coming',
+  { id: 'bio10-u07', num: 7, status: 'active',
     icon: '🦎', color: 'var(--green)',
     title: 'Las fuerzas evolutivas',
     subtitle: null,
-    description: 'Próximamente: selección natural, deriva genética y otros mecanismos de la evolución.',
-    topics: [], simulators: [], game: { levels: 0 }, exam: { perExam: 20, pass: 70 }
+    description: 'Selección natural, deriva genética, cuello de botella y otros mecanismos que hacen que las poblaciones cambien con el tiempo.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 5 },
+    exam: { perExam: 20, pass: 70 }
   },
-  { id: 'bio10-u08', num: 8, status: 'coming',
+  { id: 'bio10-u08', num: 8, status: 'active',
     icon: '🦴', color: 'var(--green)',
     title: 'Evidencias del proceso evolutivo',
     subtitle: null,
-    description: 'Próximamente: registro fósil, anatomía comparada y otras evidencias de la evolución.',
-    topics: [], simulators: [], game: { levels: 0 }, exam: { perExam: 20, pass: 70 }
+    description: 'Registro fósil, anatomía comparada, embriología, el viaje de Darwin y casos reales de extinción y especiación — la evidencia detrás de la teoría de la evolución.',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 5 },
+    exam: { perExam: 20, pass: 70 }
   },
-  { id: 'bio10-u09', num: 9, status: 'coming',
+  { id: 'bio10-u09', num: 9, status: 'active',
     icon: '🌌', color: 'var(--green)',
     title: 'Teorías sobre el origen de la vida y las especies',
     subtitle: null,
-    description: 'Próximamente: teorías sobre el origen de la vida y el origen de las especies.',
-    topics: [], simulators: [], game: { levels: 0 }, exam: { perExam: 20, pass: 70 }
+    description: 'Las teorías sobre el origen de las especies (creacionismo, lamarckismo, darwinismo, mutacionismo, teoría sintética) y sobre el origen de la vida (generación espontánea, origen quimiosintético, panspermia).',
+    topics: ['t1', 't2', 't3', 't4', 't5', 't6', 't7', 't8'],
+    simulators: ['sim1', 'sim2', 'sim3'],
+    game: { levels: 5 },
+    exam: { perExam: 20, pass: 70 }
   }
 ];
 
