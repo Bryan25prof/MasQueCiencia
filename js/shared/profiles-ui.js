@@ -333,10 +333,50 @@ window.MQCProfilesUI = (function () {
      rol que el perfil ya tenía al abrir este formulario. Si ya era
      'docente' y no se toca nada, se guarda exactamente igual que antes
      — nadie pierde lo que ya tenía. Ver _activacionYaCubierta().
+
+     ── CAMBIO 30/set/2026, pedido explícito de Bryan ──────────────
+     Varios docentes reales se quedaron sin poder crear/guardar su
+     perfil porque no tenían (o no llegaba) el código de activación
+     institucional. Decisión de Bryan: "mejor dejarlo a la libre" — por
+     ahora, elegir "Docente" NUNCA bloquea el guardado del perfil, sin
+     necesidad de ningún código. Al guardar, el perfil recibe
+     rolVerificadoEn automáticamente (mismo campo que ya usan
+     AccessControl.isTeacher() y las guardas de escritura de
+     storage.js) — así un docente autodeclarado ya puede explorar todo
+     el contenido sin que nada de eso se guarde como progreso
+     académico, exactamente la misma protección que ya existía para un
+     docente verificado por código.
+
+     Esto es un INTERRUPTOR, no un borrado del mecanismo: toda la
+     infraestructura de Activación Docente (Supabase, RPC
+     validar_codigo_docente, teacher-activation.js) sigue intacta y
+     sin tocar. Si más adelante hiciera falta volver a exigir el
+     código institucional (por ejemplo, si el acceso libre se presta a
+     mal uso), basta con volver MQC_ACTIVACION_DOCENTE_LIBRE a `false`
+     acá abajo — nada más en el proyecto necesita cambiar. Para
+     deshabilitar un docente PUNTUAL que ya esté abusando del acceso,
+     no hace falta tocar este interruptor: alcanza con abrir su perfil
+     en "Editar perfil" (Administrar perfiles) y volver su rol a
+     "Estudiante" — eso le quita rolVerificadoEn y con eso pierde el
+     acceso docente al instante.
      ================================================================ */
+  const MQC_ACTIVACION_DOCENTE_LIBRE = true;
   const _activacionDocenteState = {};
 
   function _renderActivacionDocente(idPrefix) {
+    if (MQC_ACTIVACION_DOCENTE_LIBRE) {
+      // Modo libre: sin campo de código ni botón "Verificar" — solo un
+      // aviso informativo que aparece cuando se elige "Docente". El div
+      // conserva el mismo id/estructura que el modo con código para que
+      // _bindActivacionDocente / _actualizarVisibilidad sigan
+      // funcionando igual si el interruptor vuelve a `false`.
+      return `
+        <div id="${idPrefix}-activacion" class="mqc-activacion-docente" style="display:none;background:rgba(31,219,255,.06);border:1px solid var(--border);border-radius:8px;padding:.6rem;margin-bottom:.5rem">
+          <p id="${idPrefix}-codigo-msg" style="font-size:.76rem;color:var(--text-secondary);margin:0;min-height:1em">
+            👩‍🏫 Acceso docente activado para este perfil: podés explorar todo el contenido, pero nada de lo que hagas se guarda como progreso académico.
+          </p>
+        </div>`;
+    }
     return `
       <div id="${idPrefix}-activacion" class="mqc-activacion-docente" style="display:none;background:rgba(31,219,255,.06);border:1px solid var(--border);border-radius:8px;padding:.6rem;margin-bottom:.5rem">
         <p style="font-size:.74rem;color:var(--text-secondary);margin:0 0 .4rem">
@@ -365,6 +405,14 @@ window.MQCProfilesUI = (function () {
       msg.style.color = tipo === 'ok' ? 'var(--green,#00FF88)' : (tipo === 'error' ? 'var(--red,#FF6B6B)' : 'var(--text-muted)');
     }
     function _actualizarVisibilidad() {
+      if (MQC_ACTIVACION_DOCENTE_LIBRE) {
+        // Modo libre: el aviso informativo se muestra cuando "Docente"
+        // está elegido (para que quede claro que ya quedó activado),
+        // sin exigir ni esperar ninguna verificación.
+        const st = _activacionDocenteState[idPrefix];
+        host.style.display = (st && st.rolActual === 'docente') ? 'block' : 'none';
+        return;
+      }
       host.style.display = !_activacionYaCubierta(idPrefix) ? 'block' : 'none';
     }
     _actualizarVisibilidad();
@@ -423,9 +471,21 @@ window.MQCProfilesUI = (function () {
     if (!st) return true;
     return st.rolActual !== 'docente' || st.verificado || st.rolActual === st.rolInicial;
   }
-  function _activacionPuedeConfirmar(idPrefix) { return _activacionYaCubierta(idPrefix); }
+  function _activacionPuedeConfirmar(idPrefix) {
+    // Modo libre: elegir "Docente" nunca bloquea el guardado — ver el
+    // comentario "CAMBIO 30/set/2026" más arriba.
+    if (MQC_ACTIVACION_DOCENTE_LIBRE) return true;
+    return _activacionYaCubierta(idPrefix);
+  }
   function _activacionFueVerificadaAhora(idPrefix) {
     const st = _activacionDocenteState[idPrefix];
+    // Modo libre: se considera "verificado ahora" en el momento de
+    // guardar siempre que el rol elegido sea 'docente' — así el
+    // guardado le asigna rolVerificadoEn automáticamente (ver los 4
+    // puntos que llaman a esta función junto a setRolVerificado), sin
+    // depender de ningún código real. Cubre tanto un perfil nuevo como
+    // uno que recién cambia de Estudiante a Docente.
+    if (MQC_ACTIVACION_DOCENTE_LIBRE) return !!(st && st.rolActual === 'docente');
     return !!(st && st.verificado);
   }
 
