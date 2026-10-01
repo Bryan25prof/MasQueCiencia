@@ -206,6 +206,25 @@ const Router = (() => {
   }
 
   function _aboutPageHTML() {
+    /* CORRECCIÓN 30/set/2026: esta página era texto 100% fijo y decía
+       "Biología constituye la próxima etapa de desarrollo" sin
+       importar el estado real de MQC_BIOLOGIA_FLAGS — con Biología
+       11.º ya publicada, eso pasó a ser una afirmación falsa para
+       cualquier estudiante que la leyera. Ahora lee la misma bandera
+       única que ya usan sidebar-nav.js/grade-select.js/biologia10.js/
+       biologia11.js, para que esta página nunca vuelva a quedar
+       desincronizada del estado real de publicación de cada grado. */
+    const bio10Publico = !!(window.MQC_BIOLOGIA_FLAGS && window.MQC_BIOLOGIA_FLAGS.biologia10Publico);
+    const bio11Publico = !!(window.MQC_BIOLOGIA_FLAGS && window.MQC_BIOLOGIA_FLAGS.biologia11Publico);
+    const bioTextoIntro = (bio10Publico && bio11Publico)
+      ? 'Actualmente, los módulos de Química, Física y Biología se encuentran habilitados.'
+      : (bio10Publico || bio11Publico)
+        ? 'Actualmente, los módulos de Química y Física se encuentran habilitados, y Biología ya está disponible para uno de los dos años (el otro año de Biología sigue en desarrollo).'
+        : 'Actualmente, los módulos de Química y Física se encuentran habilitados, mientras que Biología constituye la próxima etapa de desarrollo del proyecto.';
+    const bioPills = (bio10Publico && bio11Publico)
+      ? `<span class="about-status-pill available">✅ Biología — Disponible</span>`
+      : `<span class="about-status-pill ${bio10Publico ? 'available' : 'soon'}">${bio10Publico ? '✅' : '🧬'} Biología 10.º — ${bio10Publico ? 'Disponible' : 'En desarrollo'}</span>
+         <span class="about-status-pill ${bio11Publico ? 'available' : 'soon'}">${bio11Publico ? '✅' : '🧬'} Biología 11.º — ${bio11Publico ? 'Disponible' : 'En desarrollo'}</span>`;
     return `
       <div class="placeholder-page about-page">
         <div class="placeholder-image-wrap">
@@ -214,7 +233,7 @@ const Router = (() => {
         <h2 class="placeholder-title">Acerca de la Plataforma</h2>
 
         <div class="about-card">
-          <p>MásQueCiencia es una plataforma educativa interactiva orientada al aprendizaje de las ciencias para estudiantes de 10.º y 11.º año del sistema educativo costarricense. Actualmente, los módulos de Química y Física se encuentran habilitados, mientras que Biología constituye la próxima etapa de desarrollo del proyecto. MQC integra contenidos, actividades, simulaciones, juegos y experiencias de evaluación diseñadas para favorecer la comprensión, el razonamiento científico y la aplicación de los conocimientos.</p>
+          <p>MásQueCiencia es una plataforma educativa interactiva orientada al aprendizaje de las ciencias para estudiantes de 10.º y 11.º año del sistema educativo costarricense. ${bioTextoIntro} MQC integra contenidos, actividades, simulaciones, juegos y experiencias de evaluación diseñadas para favorecer la comprensión, el razonamiento científico y la aplicación de los conocimientos.</p>
           <p class="about-card-credit">Un proyecto del Lic. Bryan Chavarría C., pensado para estudiantes de secundaria del sistema educativo de Costa Rica.</p>
         </div>
 
@@ -223,7 +242,7 @@ const Router = (() => {
           <div class="about-status-row">
             <span class="about-status-pill available">✅ Química — Disponible</span>
             <span class="about-status-pill available">✅ Física — Disponible</span>
-            <span class="about-status-pill soon">🧬 Biología — Próxima etapa de desarrollo</span>
+            ${bioPills}
           </div>
         </div>
 
