@@ -63,7 +63,7 @@ window.MQCSidebarNav = (function () {
     home: 'quimica', units: 'quimica', grade11: 'quimica',
     'atlas-quimico': 'quimica', integrador: 'quimica',
     fisica10: 'fisica', fisica11: 'fisica',
-    biologia10: 'biologia',
+    biologia10: 'biologia', biologia11: 'biologia',
     'biologia-proximamente': 'biologia'
   };
 
@@ -127,6 +127,17 @@ window.MQCSidebarNav = (function () {
     }));
   }
 
+  function _dataBiologia11() {
+    if (typeof BIOLOGIA11_UNIDADES_DATA === 'undefined') return [];
+    const data = Storage.load();
+    return BIOLOGIA11_UNIDADES_DATA.map(u => ({
+      section: 'biologia11', unitId: u.id,
+      label: `U${String(u.num).padStart(2, '0')} · ${u.title}`,
+      done: !!(data.biologia11 && data.biologia11[u.id] && data.biologia11[u.id].completed),
+      enDesarrollo: u.status !== 'active'
+    }));
+  }
+
   function _quimica11Unlocked() {
     // PENDIENTE D — paso 2 (AccessControl): a diferencia del resto de
     // este archivo (100% de solo presentación, sin candados propios),
@@ -154,14 +165,26 @@ window.MQCSidebarNav = (function () {
   }
 
   function _biologiaHabilitada() {
-    /* Misma fuente única que ya usan grade-select.js/biologia10.js —
-       nunca se reimplementa el criterio a mano. Mientras
-       MQC_BIOLOGIA_FLAGS.biologia10Publico siga en false, esta función
-       devuelve false y _openScience() sigue mandando al placeholder de
-       siempre, exactamente igual que antes de crear BIO10-U01. */
+    /* Misma fuente única que ya usan grade-select.js/biologia10.js/
+       biologia11.js — nunca se reimplementa el criterio a mano.
+
+       CORRECCIÓN 30/set/2026 (Territorial/Biología, al publicar
+       Biología 11.º): esta función es el gate del HUB "Biología"
+       completo (_openScience) — decide si se puede entrar a ver la
+       lista de grados en absoluto, antes de que cada grado decida por
+       su cuenta qué mostrar. Hasta ahora solo miraba
+       biologia10Publico, así que con Biología 10.º todavía sin
+       publicar, publicar Biología 11.º por sí sola NO alcanzaba para
+       que nadie pudiera entrar nunca al hub — quedaba atrapada detrás
+       de un gate que dependía del OTRO grado. Ahora alcanza con que
+       CUALQUIERA de los dos grados esté público (o en vista previa)
+       para abrir el hub; una vez adentro, cada grado sigue mostrando
+       su propio candado real vía _biologia10Habilitado()/
+       _biologia11Habilitado() dentro de su propio módulo — igual que
+       ya pasaba, sin cambios ahí. */
     try {
-      if (window.MQC_BIOLOGIA_FLAGS && window.MQC_BIOLOGIA_FLAGS.biologia10Publico) return true;
-      return localStorage.getItem('mqc_biologia10_preview') === '1';
+      if (window.MQC_BIOLOGIA_FLAGS && (window.MQC_BIOLOGIA_FLAGS.biologia10Publico || window.MQC_BIOLOGIA_FLAGS.biologia11Publico)) return true;
+      return localStorage.getItem('mqc_biologia10_preview') === '1' || localStorage.getItem('mqc_biologia11_preview') === '1';
     } catch (e) { return false; }
   }
 
@@ -181,12 +204,14 @@ window.MQCSidebarNav = (function () {
       filas += `<li class="ctx-item" data-ctx-grado="fisica10">Física 10.º <span class="ctx-chevron">›</span></li>`;
       filas += `<li class="ctx-item" data-ctx-grado="fisica11">Física 11.º <span class="ctx-chevron">›</span></li>`;
     } else if (science === 'biologia') {
-      /* BIO10-U01: Biología 11.º todavía no tiene libro fuente ni
-         autorización para empezar, así que se muestra como "en
-         desarrollo" en vez de un data-ctx-grado navegable — nunca se
-         inventa una estructura de contenidos que no existe. */
+      /* FASE 2 — paso 4 (Biología), arranque de Biología 11.º (29 de
+         setiembre de 2026, con autorización explícita de Bryan):
+         Biología 11.º ya tiene su propio módulo/Storage/Router,
+         construidos en el mismo carril paralelo que Biología 10.º, así
+         que ahora es un data-ctx-grado navegable como cualquier otro
+         grado — nunca un texto fijo. */
       filas += `<li class="ctx-item" data-ctx-grado="biologia10">Biología 10.º <span class="ctx-chevron">›</span></li>`;
-      filas += `<li class="ctx-item ctx-item-soon" data-ctx-leaf data-section="biologia-proximamente">Biología 11.º <span class="ctx-soon-tag">🚧</span></li>`;
+      filas += `<li class="ctx-item" data-ctx-grado="biologia11">Biología 11.º <span class="ctx-chevron">›</span></li>`;
     }
 
     return `
@@ -209,7 +234,8 @@ window.MQCSidebarNav = (function () {
       quimica11: { titulo: 'QUÍMICA 11.º', back: 'Química', items: _dataQuimica11(), extra: [] },
       fisica10:  { titulo: 'FÍSICA 10.º',  back: 'Física',  items: _dataFisica10(),  extra: [] },
       fisica11:  { titulo: 'FÍSICA 11.º',  back: 'Física',  items: _dataFisica11(),  extra: [] },
-      biologia10: { titulo: 'BIOLOGÍA 10.º', back: 'Biología', items: _dataBiologia10(), extra: [] }
+      biologia10: { titulo: 'BIOLOGÍA 10.º', back: 'Biología', items: _dataBiologia10(), extra: [] },
+      biologia11: { titulo: 'BIOLOGÍA 11.º', back: 'Biología', items: _dataBiologia11(), extra: [] }
     }[grado];
     if (!meta) return '';
 
@@ -369,6 +395,18 @@ window.MQCSidebarNav = (function () {
        sobre #content, para no depender de tocar router.js). */
     _syncActiveScience();
     if (_content) new MutationObserver(_syncActiveScience).observe(_content, { childList: true });
+
+    /* CORRECCIÓN 30/set/2026: la fila "🧬 Biología" en index.html
+       llevaba la clase nav-item-soon escrita a mano y fija — con
+       Biología 11.º ya publicada, esa fila seguía viéndose "en
+       desarrollo" aunque hacer clic ya llevaba a contenido real. Se
+       corrige acá, una sola vez al iniciar, con la misma
+       _biologiaHabilitada() que ya decide si el hub se puede abrir —
+       nunca un criterio nuevo. Si más adelante también se publica
+       Biología 10.º, o si algún día se revierte, esta fila se ajusta
+       sola sin tocar el HTML de nuevo. */
+    const bioToggle = _nav.querySelector('[data-toggle-science="biologia"]');
+    if (bioToggle) bioToggle.classList.toggle('nav-item-soon', !_biologiaHabilitada());
   }
 
   init();

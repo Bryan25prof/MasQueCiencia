@@ -34,5 +34,5 @@
 ================================================================ */
 window.MQC_BIOLOGIA_FLAGS = {
   biologia10Publico: false, /* debe coincidir con BIOLOGIA10_PUBLICO en js/modules/biologia10.js */
-  biologia11Publico: false  /* Biología 11.º: aún sin iniciar (sin libro fuente todavía) */
+  biologia11Publico: true   /* debe coincidir con BIOLOGIA11_PUBLICO en js/modules/biologia11.js — PUBLICADA, autorización explícita de Bryan (30 de setiembre de 2026) */
 };
