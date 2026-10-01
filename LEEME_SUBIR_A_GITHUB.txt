@@ -1,104 +1,142 @@
-TERRITORIAL 2.0 — ETAPA 1: NORMALIZACIÓN TERRITORIAL POR PROVINCIA
-=============================================================================
-Implementa únicamente lo aprobado: que la bandeja administrativa que antes
-se llamaba "Gestión de Colegios" pueda resolver colegios legacy externos a
-Heredia contra la provincia correcta. NO se tocaron cantones, no se agregó
-ninguna columna territorial nueva, no se cambió profiles.js, no se tocó la
-creación de perfiles modernos, no se migró ningún dato existente, y no hizo
-falta ninguna migración SQL — la estructura real de school_alias_map ya
-aceptaba estos valores desde antes (confirmado en el diagnóstico previo).
+MÁSQUECIENCIA — PUBLICACIÓN DE BIOLOGÍA 11.º PARA ESTUDIANTES REALES
+======================================================================
+30 de setiembre de 2026
 
-QUÉ CAMBIÓ, EN UNA FRASE:
-  La bandeja de "ambiguos" (los colegios legacy que no matchean el catálogo
-  de Heredia) ahora deja elegir, para cada nombre pendiente, si el destino
-  es un "Colegio de Heredia" (como siempre) o una "Provincia" (los 7
-  buckets que ya existían en PROVINCIAS_SIN_CATALOGO, usados desde el
-  Lote 7 para perfiles nuevos, pero que esta bandeja nunca le ofrecía al
-  administrador). Elegido el tipo, el segundo selector ("Destino") se
-  repuebla solo con las opciones de ese tipo — nunca se mezclan.
+QUÉ PEDISTE
+-----------
+"continua con Biologia 11." → elegiste explícitamente la opción
+"Publicarla para estudiantes reales" (no vista previa, no revisión
+interna: publicación real, para cualquier estudiante que abra la app).
 
-POR QUÉ NO HIZO FALTA TOCAR EL BACKEND NI SUPABASE:
-  `buscarColegioPorId()` (js/data/catalogo-colegios.js) ya buscaba en los
-  DOS catálogos (CATALOGO_COLEGIOS y PROVINCIAS_SIN_CATALOGO) desde el
-  Lote 7, y `_unificarColegio()` en analytics-admin.js ya llamaba a esa
-  misma función para armar lo que escribe en school_alias_map. El único
-  hueco real, confirmado en el diagnóstico, era que la interfaz de la
-  bandeja de "ambiguos" solo le mostraba al administrador los 29 colegios
-  de Heredia como opción — nunca los 7 buckets de provincia. Por eso este
-  cambio es exclusivamente de interfaz (un archivo: analytics-admin.js):
-  agrega el selector "Tipo de resolución" y hace que el selector "Destino"
-  cambie sus opciones según ese tipo. `school_alias_map` (la tabla que de
-  verdad guarda la unificación) no tiene ningún constraint que la limite a
-  Heredia -- acepta cualquier school_id/school_region tal cual estaba.
+Biología 10.º NO estaba incluida en esta autorización y sigue oculta
+("en desarrollo"), exactamente como antes.
 
-QUÉ NO SE TOCÓ (tal como se pidió):
-  - Cantones: nada, se deja para la Etapa 2.
-  - Ninguna columna territorial nueva, en ningún lado.
-  - profiles.js, profiles-ui.js, catalogo-colegios.js: sin cambios.
-  - Creación/edición de perfiles modernos (ya funcionaba bien, según el
-    diagnóstico): sin cambios.
-  - Los 76 perfiles legacy actuales: ningún dato se migra ni se reescribe
-    automáticamente. Solo se le da al administrador, en esta misma
-    bandeja, la herramienta para resolverlos a mano, uno por uno, igual
-    que ya hacía con los de Heredia.
-  - `students`: nunca se escribe ahí. La resolución sigue viviendo
-    exclusivamente en `school_alias_map`, tal como ya funcionaba.
-  - XP, progreso, exámenes, PNE, Suficiencia, perfiles, historial
-    académico: ninguno de estos se lee ni se escribe en este cambio.
-  - Ninguna migración SQL: no hizo falta ninguna.
+QUÉ SE CAMBIÓ (2 líneas de "intención" + 2 correcciones necesarias)
+---------------------------------------------------------------------
+Los cambios reales de publicación son solo 2 líneas:
 
-ARCHIVO DEL REPOSITORIO (copiar a la misma ruta):
-  - analytics/analytics-admin.js   (MODIFICADO — versión completa incluida)
+1. js/modules/biologia11.js
+   BIOLOGIA11_PUBLICO: false → true
+   (Esta es la puerta real de contenido: decide si al entrar de verdad
+   a la ruta biologia11 se muestran las 5 unidades reales o un
+   candado. Las 5 unidades de Biología 11.º ya estaban construidas,
+   probadas y revisadas — este cambio solo las abre al público.)
 
-  Ningún otro archivo del proyecto fue tocado.
+2. js/shared/mqc-biologia-flags.js
+   biologia11Publico: false → true
+   (Bandera "gemela" que usan las pantallas de descubrimiento — el
+   sidebar y la página "Acerca de la Plataforma" — para saber si deben
+   invitar a entrar. Debe coincidir siempre con la de arriba.)
 
-CAMBIOS DE INTERFAZ, EN DETALLE:
-  - La pestaña y el título de la sección pasan de "🗂️ Gestión de Colegios"
-    a "🗺️ Normalización Territorial" (el `data-tab` interno sigue siendo
-    "colegios", así que no rompe nada de lo que ya dependía de esa pestaña).
-  - El grupo "✅ Resueltos automáticamente" (coincidencia exacta contra el
-    catálogo de Heredia) sigue exactamente igual — no cambió su lógica.
-  - El grupo "⚠️ Requieren tu criterio" ahora muestra 4 columnas: Nombre
-    registrado | Perfiles | Tipo de resolución | Destino (+ el botón
-    "Unificar"). "Tipo de resolución" arranca en "Colegio de Heredia" por
-    defecto, para que el comportamiento de quien no toca nada sea
-    idéntico al de antes.
-  - El mensaje de confirmación antes de escribir distingue si el destino
-    es una provincia o un colegio, y siempre aclara que el nombre original
-    se conserva y que no se toca XP/progreso/resultados.
+Al verificar estos 2 cambios con pruebas automatizadas reales (Playwright,
+simulando un estudiante nuevo sin ningún parámetro de vista previa),
+encontré que NO bastaban por sí solos: había 2 puntos más, ya existentes
+en el código, que seguían mirando solo la bandera de Biología 10.º y por
+lo tanto habrían anulado la publicación en la práctica. No es trabajo
+adicional que agregué por mi cuenta — son 2 correcciones necesarias para
+que la publicación que autorizaste funcione de verdad:
 
-PASOS PARA DEJAR ESTO FUNCIONANDO:
-  git add analytics/analytics-admin.js
-  git commit -m "Territorial 2.0 Etapa 1: normalizacion por provincia en la bandeja de colegios legacy"
-  git push
+3. js/shared/sidebar-nav.js
+   El botón "🧬 Biología" del menú lateral decide si TODO el apartado de
+   Biología puede abrirse revisando una función interna
+   (_biologiaHabilitada()). Esa función solo miraba
+   biologia10Publico — nunca biologia11Publico. Resultado: si solo se
+   publicaba Biología 11.º (como pediste), un estudiante real seguía sin
+   poder ni siquiera abrir el menú de Biología; el clic lo seguía
+   mandando a la pantalla "Próximamente". Lo corregí para que abra el
+   menú si CUALQUIERA de las dos banderas está activa (como ya
+   corresponde para Física/Química). También agregué que la fila del
+   menú deje de verse "atenuada / próximamente" automáticamente cuando
+   corresponda, en vez de quedar con una clase visual fija en el HTML.
 
-  No hay ningún paso en Supabase — no se creó ni modificó ninguna tabla,
-  vista ni política.
+4. js/core/router.js
+   La página "Acerca de la Plataforma" tenía el texto de Biología
+   escrito a mano ("Biología — próxima etapa de desarrollo"), sin
+   depender de ninguna bandera. Si no se corregía, un estudiante real
+   habría visto Biología 11.º funcionando perfectamente en el menú, pero
+   la página "Acerca de" habría seguido diciendo que Biología todavía no
+   existe — información falsa. Ahora ese texto se genera dinámicamente
+   según el estado real de cada grado (10.º y 11.º por separado), así
+   que en este momento muestra: "Biología 11.º — Disponible" y
+   "Biología 10.º — En desarrollo".
 
-PRUEBAS REALIZADAS (contra la app real, con Supabase simulado vía
-interceptación de red, igual que en entregas anteriores de este panel):
+Ningún archivo de perfiles, exámenes, XP, PNE, Suficiencia ni Territorial
+fue tocado. Este cambio es exclusivamente de publicación/visibilidad de
+Biología 11.º.
 
-  caso | antes | acción admin | después | vista afectada | resultado
-  ---|---|---|---|---|---
-  1. Colegio legacy de Heredia con nombre EXACTO al catálogo ("Liceo de Heredia") | aparece en "Resueltos automáticamente" | clic en "Confirmar" | school_alias_map: school_id=HER_LDH, school_region=Heredia | v_panorama_colegios / v_panorama_provincias | ✅ se agrupa correctamente, deja de estar pendiente
-  2. Colegio legacy de San José ("Colegio Rincón Grande de Pavas") | en "Requieren tu criterio"; ANTES no tenía ninguna opción correcta | Tipo="Provincia" → Destino="San José" → "Unificar" | school_alias_map: school_id=OTHER_SANJOSE, school_region=San José, colegio original intacto | v_panorama_provincias | ✅ se agrupa bajo San José, nombre original conservado
-  3. Colegio legacy de Alajuela ("Liceo de Alajuela Central") | en "Requieren tu criterio" | Tipo="Provincia" → Destino="Alajuela" → "Unificar" | school_alias_map: OTHER_ALAJUELA / Alajuela | v_panorama_provincias | ✅ se agrupa bajo Alajuela
-  4. Colegio REAL de Heredia pero no catalogado ("Colegio Adventista de Heredia") | en "Requieren tu criterio"; antes solo podía asignarse (mal) a uno de los 29 colegios catalogados | Tipo="Provincia" → Destino="Heredia — colegio no catalogado" → "Unificar" | school_alias_map: OTHER_HEREDIA / Heredia | v_panorama_provincias | ✅ se agrupa bajo Heredia sin inventarle un colegio catalogado que no le corresponde
-  5. Cualquiera de los 4 casos anteriores, tras confirmarlo | pendiente | (ninguna — ya se resolvió) | excluido automáticamente por _cargarAliasMapConfirmados() | bandeja de pendientes | ✅ ya no reaparece
-  6. Nombre original del colegio | texto libre del estudiante | (cualquiera de las unificaciones anteriores) | students.colegio nunca se escribe/toca | Seguimiento académico | ✅ se confirmó que ninguna escritura tocó la tabla students en todo el recorrido
-  7. Perfil moderno ya clasificado (school_id=OTHER_SANJOSE de fábrica) | ya no es "legacy" | (ninguna) | nunca aparece en la bandeja (la consulta ya filtraba school_id=is.null, sin cambios) | bandeja de pendientes | ✅ confirmado, sigue excluido
-  8. Cualquier acción de esta pantalla | — | — | — | XP / exámenes / PNE / Suficiencia / sesiones / perfiles | ✅ ninguna escritura tocó ninguna de esas tablas en todo el recorrido de prueba
-  9. Al abrir la pestaña, antes de que el admin haga cualquier clic | 6 nombres legacy pendientes | — | — | — | ✅ cero escrituras automáticas — nada se asigna solo por inferencia
-  10. v_panorama_provincias tras los 3 casos de provincia | sin esas filas, o agrupados en "Sin provincia identificada" | — | refleja San José/Alajuela/Heredia con los conteos correctos | Panorama por Provincia | ✅ confirmado
+CONFIRMACIÓN: BIOLOGÍA 10.º SIGUE OCULTA
+-----------------------------------------
+- js/modules/biologia10.js: BIOLOGIA10_PUBLICO sigue en false (no se
+  tocó este archivo).
+- js/shared/mqc-biologia-flags.js: biologia10Publico sigue en false.
+- Un estudiante real que entra a la ruta biologia10 sigue viendo el
+  candado "En desarrollo", igual que siempre.
+- La página "Acerca de la Plataforma" ahora dice, correctamente,
+  "Biología 10.º — En desarrollo" y "Biología 11.º — Disponible" por
+  separado (antes decía una sola frase genérica para toda Biología).
 
-  Además: se re-visitaron las 5 pestañas restantes del panel (Resumen,
-  Panorama Global, Panorama por Provincia, Candidatos de Fusión,
-  Seguimiento académico) para confirmar que sigan cargando sin errores de
-  consola tras este cambio — sin regresiones.
+Sigue funcionando igual que antes, para tus propias pruebas:
+- ?biologia10preview=1 → te deja ver Biología 10.º aunque esté oculta
+  para el público (para cuando quieras revisarla y publicarla después).
+- Los docentes verificados (rol "docente" con verificación aprobada)
+  siguen pudiendo explorar cualquier grado no publicado, vía
+  AccessControl, exactamente como ya funcionaba.
 
-PENDIENTE (fuera de esta etapa, a la espera de tu autorización explícita):
-  - Territorial 2.0 — Etapa 2 (cantones): no se tocó nada.
-  - Migración masiva/asistida de los 76 perfiles legacy actuales: la
-    herramienta para resolverlos uno por uno ya está lista con esta
-    entrega, pero resolverlos de a uno sigue siendo una decisión manual
-    tuya (o de quien administre el panel) — nada se hizo automático.
+PRUEBAS QUE CORRÍ (todas contra la app real, no una copia aislada)
+--------------------------------------------------------------------
+A) Prueba nueva específica de esta publicación (9/9 exitosas, 0 errores
+   de JavaScript), simulando un estudiante real recién llegado, SIN
+   ningún parámetro de vista previa:
+   1. Las banderas quedan biologia10=false / biologia11=true.
+   2. El estudiante puede abrir el menú "Biología" con un clic real
+      (ya no lo manda al placeholder "Próximamente").
+   3. Dentro del menú, "Biología 11.º" aparece como grado real
+      navegable.
+   4. La ruta biologia11 muestra las 5 unidades reales, marcadas
+      "✓ Disponible" (no un candado).
+   5. Ninguna de las 5 unidades aparece como "🚧 En desarrollo".
+   6. La ruta biologia10 sigue mostrando su candado "En desarrollo"
+      (no se publicó de más).
+   7. La página "Acerca de la Plataforma" muestra el estado correcto y
+      diferenciado por grado.
+   8. La pantalla "Selecciona tu ruta científica" sigue cargando sin
+      errores tras estos cambios.
+
+B) Regresión sobre las suites de pruebas existentes del proyecto
+   (sidebar en general, y el flujo específico de vista previa de
+   Biología 10.º): pasaron todas las pruebas relevantes, con 0 errores
+   de JavaScript en toda la corrida. Las únicas pruebas que ya NO pasan
+   (5 en total, en dos archivos de prueba antiguos) son pruebas que
+   asumían explícitamente, por escrito en su propio comentario, que
+   "Biología siempre debe ir al placeholder Próximamente" o que
+   "Biología 11.º debe seguir viéndose en desarrollo" — es decir,
+   describían el comportamiento ANTERIOR a esta publicación, el mismo
+   que hoy cambiaste a propósito. No son errores de la aplicación: son
+   pruebas viejas que ya describen un comportamiento que decidiste
+   reemplazar. Si llevás tu propia suite de pruebas internamente, avisá
+   para actualizar esos 2 archivos también.
+
+C) Verificación de que Física y Química no se vieron afectados por
+   estos cambios (comparten el mismo mecanismo de banderas/menú):
+   ambos siguen funcionando exactamente igual.
+
+ARCHIVOS EN ESTE PAQUETE
+-------------------------
+js/modules/biologia11.js
+js/shared/mqc-biologia-flags.js
+js/shared/sidebar-nav.js
+js/core/router.js
+
+CÓMO SUBIRLO A GITHUB
+-----------------------
+1. Copiá estos 4 archivos a las mismas rutas dentro de tu proyecto
+   (reemplazando los actuales).
+2. Desde la carpeta del proyecto:
+
+   git add js/modules/biologia11.js js/shared/mqc-biologia-flags.js js/shared/sidebar-nav.js js/core/router.js
+   git commit -m "Publicar Biologia 11.o para estudiantes reales; corregir gating del menu lateral y texto de Acerca de"
+   git push
+
+Cualquier duda o si querés que revierta esto (volver a ocultar
+Biología 11.º), decímelo y lo hago en el momento — es literalmente
+volver esas 2 banderas a false.
