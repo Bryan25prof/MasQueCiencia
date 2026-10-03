@@ -47,7 +47,7 @@ Router.register('grade-select', (() => {
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;max-width:1000px;margin-top:1.5rem">
         ${_disciplinaBoton('Química', _iconoQuimica(), 'var(--cyan)', 'Disponible', 'quimica')}
         ${_disciplinaBoton('Física', _iconoFisica(), 'var(--violet)', _fisica10VistaPreviaActiva() ? 'Disponible' : 'En desarrollo', 'fisica')}
-        ${_disciplinaBoton('Biología', _iconoBiologia(), 'var(--green)', _biologia10VistaPreviaActiva() ? 'Disponible' : 'En desarrollo', 'biologia')}
+        ${_disciplinaBoton('Biología', _iconoBiologia(), 'var(--green)', (_biologia10VistaPreviaActiva() || _biologia11VistaPreviaActiva()) ? 'Disponible' : 'En desarrollo', 'biologia')}
       </div>
     `;
   }
@@ -191,6 +191,14 @@ Router.register('grade-select', (() => {
     try { return localStorage.getItem('mqc_biologia10_preview') === '1'; } catch (e) { return false; }
   }
 
+  /* Mismo patrón exacto, ahora para Biología 11.º — arranque de
+     infraestructura, 29 de setiembre de 2026, con autorización
+     explícita de Bryan. */
+  function _biologia11VistaPreviaActiva() {
+    if (typeof window !== 'undefined' && window.MQC_BIOLOGIA_FLAGS && window.MQC_BIOLOGIA_FLAGS.biologia11Publico) return true;
+    try { return localStorage.getItem('mqc_biologia11_preview') === '1'; } catch (e) { return false; }
+  }
+
   function _renderFisica() {
     const habilitado = _fisica10VistaPreviaActiva();
     const habilitado11 = _fisica11VistaPreviaActiva();
@@ -238,20 +246,30 @@ Router.register('grade-select', (() => {
     `;
   }
 
-  /* BIO10-U01 (Fase 2, paso 4): "elegí tu año" de Biología — mismo
-     patrón que Física. 11.º todavía no tiene libro fuente ni
-     autorización para empezar, así que su tarjeta siempre muestra
-     "Próxima etapa de desarrollo" sin consultar ningún Storage (no
-     existe data.biologia11 todavía). */
+  /* "Elegí tu año" de Biología — mismo patrón EXACTO que Física.
+     Desde el 29 de setiembre de 2026, Biología 11.º ya tiene su
+     propia infraestructura (módulo/Storage/Router), así que su
+     tarjeta consulta Storage.getBiologia11UnitProgress igual que la
+     de 10.º, en vez de mostrar un texto fijo de "próxima etapa". */
   function _renderBiologia() {
     const habilitado = _biologia10VistaPreviaActiva();
+    const habilitado11 = _biologia11VistaPreviaActiva();
     const pct10 = habilitado && typeof Storage !== 'undefined' && Storage.getBiologia10UnitProgress
       ? Storage.getBiologia10UnitProgress('bio10-u01') : 0;
+    const pct11 = habilitado11 && typeof Storage !== 'undefined' && Storage.getBiologia11UnitProgress
+      ? Storage.getBiologia11UnitProgress('bio11-u01') : 0;
     const bodyB10 = habilitado ? `
           <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">BIO10-U01 disponible — las siguientes unidades se irán incorporando.</p>
           <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de BIO10-U01: ${pct10}%</div>
           <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct10}%;background:var(--green)"></div></div>
           <button class="btn btn-primary" data-action="go-biologia10">Continuar en Biología 10.º</button>` : `
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
+          <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>`;
+    const bodyB11 = habilitado11 ? `
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">BIO11-U01 disponible — las siguientes unidades se irán incorporando.</p>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de BIO11-U01: ${pct11}%</div>
+          <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct11}%;background:var(--green)"></div></div>
+          <button class="btn btn-primary" data-action="go-biologia11">Continuar en Biología 11.º</button>` : `
           <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
           <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>`;
     return `
@@ -269,12 +287,11 @@ Router.register('grade-select', (() => {
           ${bodyB10}
         </div>
 
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem;opacity:.85">
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.5rem${habilitado11 ? '' : ';opacity:.85'}">
           <div class="unit-number">UNDÉCIMO AÑO</div>
-          <div class="unit-symbol" style="color:var(--text-muted)">🧬</div>
+          <div class="unit-symbol" style="color:${habilitado11 ? 'var(--green)' : 'var(--text-muted)'}${habilitado11 ? ';text-shadow:0 0 20px var(--green)' : ''}">🧬</div>
           <h3 style="margin:.3rem 0">Biología 11.º</h3>
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próxima etapa de desarrollo.</p>
-          <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>
+          ${bodyB11}
         </div>
 
       </div>
@@ -311,6 +328,8 @@ Router.register('grade-select', (() => {
     if (goF11) goF11.addEventListener('click', () => Router.navigate('fisica11'));
     const goB10 = document.querySelector('[data-action="go-biologia10"]');
     if (goB10) goB10.addEventListener('click', () => Router.navigate('biologia10'));
+    const goB11 = document.querySelector('[data-action="go-biologia11"]');
+    if (goB11) goB11.addEventListener('click', () => Router.navigate('biologia11'));
   }
 
   function init() {
