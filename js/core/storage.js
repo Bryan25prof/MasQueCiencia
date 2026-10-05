@@ -297,6 +297,22 @@ const Storage = (() => {
       'bio10-u08': _emptyUnit(),
       'bio10-u09': _emptyUnit()
     },
+    /* RUTA DE CIERRE — BIOLOGÍA 11.º. Carril paralelo exacto que
+       biologia10/fisica10/fisica11 — mismo motivo: nunca mezclar
+       disciplinas/niveles. Fuente académica: Programa de Estudio
+       oficial de Biología del MEP ("Educar para una nueva
+       ciudadanía"), Undécimo Año de Educación Académica, páginas
+       61-77 (sub-temas viii a xii del Anexo 1) — Biología 11.º no
+       tiene libro de texto privado como Décimo, así que el programa
+       oficial es la fuente primaria y transparente de las 5 unidades
+       (ver cabecera de cada bio11-u0X.js). */
+    biologia11: {
+      'bio11-u01': _emptyUnit(),
+      'bio11-u02': _emptyUnit(),
+      'bio11-u03': _emptyUnit(),
+      'bio11-u04': _emptyUnit(),
+      'bio11-u05': _emptyUnit()
+    },
     /* IMP-11-U04 — Atlas Químico MQC: registro persistente de qué
        grupos funcionales y biomoléculas ya identificó el estudiante.
        No otorga XP (registro de evidencia de aprendizaje, no un
@@ -888,6 +904,68 @@ const Storage = (() => {
     return _computePctBiologia10(unit, unitId);
   }
 
+  /* ================================================================
+     RUTA DE CIERRE — Biología 11.º
+     ================================================================
+     Mismo patrón exacto que el bloque de Biología 10.º de arriba, pero
+     apuntando a data.biologia11 y BIOLOGIA11_UNIDADES_DATA. Se duplica
+     por la misma razón ya documentada en todo el archivo. */
+  function _computePctBiologia11(unit, unitId) {
+    let meta = null;
+    if (typeof BIOLOGIA11_UNIDADES_DATA !== 'undefined') {
+      meta = BIOLOGIA11_UNIDADES_DATA.find(u => u.id === unitId);
+    }
+    const totalTopics = (meta && meta.topics) ? meta.topics.length : 0;
+    const totalSims   = (meta && meta.simulators) ? meta.simulators.length : 0;
+    const totalLevels = (meta && meta.game && meta.game.levels) ? meta.game.levels : 0;
+    const pass        = (meta && meta.exam && meta.exam.pass) ? meta.exam.pass : 70;
+
+    function ratio(done, total) { return total > 0 ? Math.min(1, done / total) : 0; }
+
+    const rTeoria = ratio((unit.topicsRead || []).length, totalTopics);
+    const rSims   = ratio((unit.simsDone || []).length, totalSims);
+    const rJuego  = totalLevels > 0
+      ? ratio((unit.gameLevels || []).length, totalLevels)
+      : ((unit.gameScore || 0) > 0 ? 1 : 0);
+    const rExamen = (unit.examBest || 0) > 0 ? Math.min(1, unit.examBest / pass) : 0;
+
+    const pct = Math.round(25 * (rTeoria + rSims + rJuego + rExamen));
+    return Math.max(0, Math.min(100, pct));
+  }
+  function _refreshCompletedBiologia11(unit, unitId) {
+    if (!unit) return;
+    unit.completed = unit.completed || _computePctBiologia11(unit, unitId) === 100;
+  }
+  function updateBiologia11Unit(unitId, update) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.updateUnit —
+    // un docente verificado explora Biología 11.º libremente, pero
+    // nada de lo que haga persiste como progreso académico.
+    if (_esDocenteVerificado()) return;
+    const data = load();
+    if (!data.biologia11[unitId]) data.biologia11[unitId] = _emptyUnit();
+    data.biologia11[unitId] = Object.assign({}, data.biologia11[unitId], update);
+    data.biologia11[unitId].started = true;
+    _refreshCompletedBiologia11(data.biologia11[unitId], unitId);
+    save(data);
+  }
+  function markBiologia11TopicRead(unitId, topicId) {
+    // PENDIENTE D — paso 2: mismo principio que Storage.markTopicRead.
+    if (_esDocenteVerificado()) return;
+    const data = load();
+    if (!data.biologia11[unitId]) data.biologia11[unitId] = _emptyUnit();
+    const unit = data.biologia11[unitId];
+    if (!unit.topicsRead.includes(topicId)) unit.topicsRead.push(topicId);
+    unit.started = true;
+    _refreshCompletedBiologia11(unit, unitId);
+    save(data);
+  }
+  function getBiologia11UnitProgress(unitId) {
+    const data = load();
+    const unit = data.biologia11[unitId];
+    if (!unit || !unit.started) return 0;
+    return _computePctBiologia11(unit, unitId);
+  }
+
   /**
    * Borra TODOS los datos del estudiante (reset total).
    * ⚠️ Irreversible. Mostrar confirmación antes de llamar.
@@ -945,6 +1023,9 @@ const Storage = (() => {
     updateBiologia10Unit,
     markBiologia10TopicRead,
     getBiologia10UnitProgress,
+    updateBiologia11Unit,
+    markBiologia11TopicRead,
+    getBiologia11UnitProgress,
     hasUser,
     reset,
     /* Perfiles Locales MQC (EOP-008) */

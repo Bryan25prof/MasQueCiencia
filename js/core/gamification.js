@@ -100,6 +100,7 @@ const Gamification = (() => {
     'grade11-mission-done': 100,  // entrega de la misión de cierre de una unidad de 11.º, una sola vez
     'fisica10-mission-done': 100, // FIX10-U01: entrega de la misión de cierre "Tecnología bajo la lupa", una sola vez
     'biologia10-mission-done': 100, // BIO10-U01: entrega de la misión de cierre "Bajo la lupa: la rana venenosa", una sola vez
+    'biologia11-mission-done': 100, // BIO11-U01..U05: entrega de la misión de cierre de una unidad de Biología 11.º, una sola vez
 
     /* Periódica */
     'element-explored':     5,   // abrir ficha de un elemento
