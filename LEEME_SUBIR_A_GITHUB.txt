@@ -1,86 +1,54 @@
-MÁSQUECIENCIA — BIOLOGÍA 11.º: ARCHIVO ADICIONAL NECESARIO
+MÁSQUECIENCIA — BIOLOGÍA 11.º: LOS 13 ARCHIVOS QUE FALTAN EN GITHUB
 ======================================================================
-3 de octubre de 2026
+5 de octubre de 2026
 
-QUÉ PASÓ
---------
-Revisé tu sitio en vivo (https://bryan25prof.github.io/MasQueCiencia/)
-como lo pediste. Los 4 archivos del paquete anterior (biologia11.js,
-mqc-biologia-flags.js, sidebar-nav.js, router.js) SÍ están subidos y
-correctos — lo confirmé leyendo el código real que sirve GitHub Pages.
+QUÉ ENCONTRÉ
+------------
+Confirmé en tu sitio en vivo que grade-select.js ya está subido y
+correcto: la tarjeta "Biología" dice "Disponible" y Biología 11.º
+tiene su botón "Continuar en Biología 11.º".
 
-Pero al entrar al sitio como estudiante real (perfil nuevo, sin ningún
-parámetro de vista previa) encontré que Biología 11.º NO se veía
-habilitada en la pantalla principal:
+Pero al tocar ese botón aparece "Sección en construcción". Comparé,
+archivo por archivo, tu sitio en vivo contra el proyecto, y a tu
+repositorio le faltan los archivos del CONTENIDO de Biología 11.º y los
+cables que los conectan (se construyeron antes, pero nunca se subieron):
 
-- "Inicio académico" → la tarjeta "Biología" seguía diciendo
-  "En desarrollo".
-- Al entrar a "Elegí tu año" de Biología, TANTO 10.º como 11.º
-  aparecían bloqueadas ("En desarrollo"), con el botón "Continuar"
-  deshabilitado.
+NO EXISTEN en tu sitio (error 404):
+  js/data/banco-bio11-u01.js ... u05.js        (5 bancos de preguntas)
+  js/units/biologia11/bio11-u01.js ... u05.js  (5 unidades)
 
-Esto SÍ es un problema real, y no tiene que ver con los 4 archivos
-que ya subiste: hay una pantalla distinta a la del menú lateral —
-"Elegí tu año" (la pantalla de aterrizaje que ve cualquier estudiante
-apenas entra con su perfil) — que vive en un archivo que no estaba
-incluido en el paquete anterior: js/modules/grade-select.js.
+EXISTEN pero están desactualizados (distinto tamaño que el proyecto):
+  index.html            (no carga ningún script de Biología 11.º)
+  js/core/storage.js    (no guarda el progreso de Biología 11.º)
+  js/core/gamification.js (falta el XP de la misión de cierre de 11.º)
 
-Al revisar ese archivo encontré que la versión que tenés subida a
-GitHub es una versión ANTERIOR a la que ya existe en el proyecto: le
-falta por completo la función que decide si Biología 11.º está
-habilitada (en tu copia, Biología 11.º está escrita a mano como
-"próxima etapa de desarrollo", sin revisar ninguna bandera). Esto no
-es algo que haya cambiado yo ahora — es una actualización de una etapa
-anterior del proyecto que nunca llegó a subirse a tu repositorio.
-
-Además, al traer la versión más reciente del archivo, encontré y
-corregí un segundo detalle, del mismo tipo que ya corregimos en el
-menú lateral: la tarjeta grande "Biología" de "Inicio académico" solo
-revisaba la bandera de Biología 10.º para decidir si decía
-"Disponible" o "En desarrollo" — nunca la de 11.º. Ya la corregí para
-que revise ambas (igual que ya hacíamos en el menú lateral).
+Todo lo demás (biologia11.js, plan-biologia11.js, grade-select.js,
+mqc-biologia-flags.js, sidebar-nav.js, router.js, biologia10.js) ya
+coincide byte por byte con el proyecto.
 
 QUÉ HACER
 ---------
-Subí el archivo adjunto reemplazando el que ya tenés en tu repositorio
-en esa misma ruta:
+Subí estos 13 archivos a las MISMAS rutas (reemplazando index.html,
+storage.js y gamification.js, y agregando los otros 10):
 
-js/modules/grade-select.js
+  index.html
+  js/core/storage.js
+  js/core/gamification.js
+  js/data/banco-bio11-u01.js .. u05.js
+  js/units/biologia11/bio11-u01.js .. u05.js
 
-No toqué ningún otro archivo. Con este archivo actualizado, un
-estudiante real debería ver, sin hacer nada especial:
+Importante: hacelo todo en UN SOLO commit. Si subís index.html antes
+que los demás, el sitio intentará cargar scripts que todavía no
+existen.
 
-- "Inicio académico" → tarjeta "Biología" → "Disponible".
-- "Elegí tu año" de Biología → tarjeta "Biología 11.º" con botón activo
-  "Continuar en Biología 11.º", y la tarjeta "Biología 10.º" siguiendo
-  bloqueada ("En desarrollo"), como corresponde.
-- Al tocar "Continuar en Biología 11.º", las 5 unidades reales
-  (BIO11-U01 a U05).
+Con eso, un estudiante real verá las 5 unidades de Biología 11.º y
+podrá estudiarlas; Biología 10.º sigue oculta como antes.
 
-PRUEBAS QUE CORRÍ (contra la app real, con el archivo ya corregido)
---------------------------------------------------------------------
-Con un perfil de estudiante real, sin ningún parámetro de vista previa:
-1. La tarjeta "Biología" de "Inicio académico" dice "Disponible".
-2. En "Elegí tu año" aparecen ambas tarjetas (Biología 10.º y 11.º).
-3. Biología 11.º tiene el botón activo "Continuar en Biología 11.º".
-4. Solo UNA tarjeta sigue bloqueada ("En desarrollo") — Biología 10.º,
-   como corresponde.
-5. Al tocar ese botón, se cargan las 5 unidades reales de Biología 11.º.
+CÓMO SUBIRLO
+------------
+  git add index.html js/core/storage.js js/core/gamification.js js/data/banco-bio11-u0*.js js/units/biologia11/
+  git commit -m "Biologia 11.o: subir unidades 1-5, bancos, storage, gamificacion e index"
+  git push
 
-Además volví a correr toda la suite de pruebas de la entrega anterior
-(9 pruebas sobre la publicación, más la suite general de regresión del
-menú lateral) y todo sigue pasando igual que antes — este archivo no
-afecta nada de Química, Física, ni Biología 10.º.
-
-CÓMO SUBIRLO A GITHUB
------------------------
-1. Reemplazá js/modules/grade-select.js en tu proyecto con el que te
-   adjunto.
-2. Desde la carpeta del proyecto:
-
-   git add js/modules/grade-select.js
-   git commit -m "Actualizar grade-select.js: habilitar Biologia 11.o en la pantalla Elegi tu ano"
-   git push
-
-Una vez lo subas, avisame y lo reviso de nuevo en tu sitio en vivo para
-confirmar que ya se ve todo correcto.
+Avisame cuando lo hagas y lo vuelvo a revisar en el sitio en vivo
+(entrando como estudiante, abriendo las unidades).
