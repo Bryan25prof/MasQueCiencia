@@ -440,7 +440,11 @@ const Gamification = (() => {
     }
 
     const isContext = amountOrContext && typeof amountOrContext === 'object';
-    const amount   = isContext ? undefined : amountOrContext;
+    /* BLINDAJE (oct-2026, diagnóstico "[object Object]"): un monto solo
+       se acepta si es un número finito. Cualquier otra cosa se ignora y
+       se usa XP_REWARDS[source], de modo que nada que no sea un número
+       pueda volver a concatenarse a data.xp.total. */
+    const amount   = (!isContext && typeof amountOrContext === 'number' && isFinite(amountOrContext)) ? amountOrContext : undefined;
     const context  = isContext ? amountOrContext : null;
 
     const xpGain = amount !== undefined ? amount : (XP_REWARDS[source] || 0);
@@ -1155,7 +1159,10 @@ const Gamification = (() => {
     getAllBadges,
     getAllLevels,
     getLevelObj,
-    getXP2Summary
+    getXP2Summary,
+    /* Usado por Storage para reparar el nivel de un perfil con XP corrupto
+       (ver _xpRepair en js/core/storage.js). Solo lectura. */
+    calcLevelForXP: _calcLevel
   };
 
 })(); // Gamification

@@ -458,7 +458,104 @@ const Storage = (() => {
      scripts, entorno de prueba sin ese archivo), no rompe nada — el
      perfil sigue funcionando exactamente igual que antes de XP 2.0,
      solo sin los acumuladores nuevos poblados todavía. */
+  /* ================================================================
+     REPARACIÓN CONSERVADORA DE XP CORRUPTO ("[object Object]")
+     ================================================================
+     Diagnóstico (oct-2026): cuando una unidad nueva llama
+     addXP(source, { disciplina, grado }) contra un gamification.js
+     ANTERIOR a XP 2.0 (caché del navegador, o archivos subidos en otro
+     orden), el 2.º parámetro se sumaba como si fuera el monto:
+     xp.total pasaba a ser un TEXTO como "4805[object Object]25252525",
+     la entrada del historial quedaba con amount = {disciplina, grado}, y
+     el nivel se recalculaba en 1 (texto >= número es siempre falso).
+     Ese dato corrupto se guardaba y nada lo corregía después.
+
+     Esta función repara SOLO ese daño, de forma idempotente (si todo
+     está bien, no hace nada ni escribe nada):
+       · xp.total no numérico -> número válido = prefijo numérico
+         original (último total sano, "4805") + suma de los montos
+         numéricos del historial registrados DESPUÉS de la primera
+         entrada corrupta. La entrada corrupta misma NO se acredita
+         (principio "subestimar es seguro", igual que XP 2.0). Si esa
+         entrada ya salió de la ventana de 100 del historial, solo se
+         recupera el prefijo.
+       · entradas del historial con amount no numérico -> amount = 0,
+         recuperando disciplina/grado del objeto cuando venían ahí.
+       · nivel -> recalculado desde el XP reparado, sin bajarlo nunca.
+       · se deja constancia en data.xp.reparado (valor original incluido).
+     Nunca toca progreso, exámenes, PNE, medallas ni otro dato. */
+  function _esNumFinito(n) { return typeof n === 'number' && isFinite(n); }
+  function _prefijoNumerico(v) {
+    if (typeof v !== 'string') return 0;
+    const m = v.match(/^\s*(\d+(?:\.\d+)?)/);
+    return m ? Math.max(0, parseFloat(m[1])) : 0;
+  }
+  function _xpRepair(data) {
+    try {
+      if (!data || !data.xp || typeof data.xp !== 'object') return data;
+      let cambio = false;
+      const hist = Array.isArray(data.xp.history) ? data.xp.history : [];
+
+      let primeraMala = -1;
+      for (let i = 0; i < hist.length; i++) {
+        const h = hist[i];
+        if (!h || typeof h !== 'object' || _esNumFinito(h.amount)) continue;
+        if (primeraMala < 0) primeraMala = i;
+        const a = h.amount;
+        if (a && typeof a === 'object' && !Array.isArray(a)) {
+          if (!h.disciplina && typeof a.disciplina === 'string') h.disciplina = a.disciplina;
+          if (!h.grado && _esNumFinito(a.grado)) h.grado = a.grado;
+          if (a.transversal === true && !h.transversal) h.transversal = true;
+        }
+        h.amount = 0;
+        h.amountInvalido = true;
+        cambio = true;
+      }
+
+      let rehacerNivel = !!(data.xp.reparado && data.xp.reparado.nivelPendiente);
+      if (!_esNumFinito(data.xp.total)) {
+        const original = data.xp.total;
+        const base = _prefijoNumerico(original);
+        let extra = 0;
+        if (primeraMala >= 0) {
+          for (let i = primeraMala + 1; i < hist.length; i++) {
+            const x = hist[i] && hist[i].amount;
+            if (_esNumFinito(x) && x > 0) extra += x;
+          }
+        }
+        data.xp.total = base + extra;
+        data.xp.reparado = { ts: Date.now(), version: 1, original: String(original).slice(0, 80), total: data.xp.total };
+        rehacerNivel = true;
+        cambio = true;
+      }
+
+      ['xpQuimica', 'xpFisica', 'xpBiologia', 'xpTransversal'].forEach(k => {
+        if (data[k] && typeof data[k] === 'object' && !_esNumFinito(data[k].total)) {
+          data[k].total = _prefijoNumerico(data[k].total);
+          cambio = true;
+        }
+      });
+
+      if (rehacerNivel) {
+        if (typeof Gamification !== 'undefined' && Gamification && typeof Gamification.calcLevelForXP === 'function') {
+          data.level = Math.max(data.level || 1, Gamification.calcLevelForXP(data.xp.total));
+          if (data.xp.reparado) delete data.xp.reparado.nivelPendiente;
+        } else if (data.xp.reparado) {
+          data.xp.reparado.nivelPendiente = true; /* se resuelve en la próxima carga */
+        }
+        cambio = true;
+      }
+
+      if (cambio) {
+        const key = _activeKey();
+        if (key !== null) localStorage.setItem(key, JSON.stringify(data));
+      }
+    } catch (e) { /* silencioso: la reparación nunca debe bloquear la carga del perfil */ }
+    return data;
+  }
+
   function _xp2Migrate(data) {
+    data = _xpRepair(data);
     try {
       if (typeof XP2 !== 'undefined' && XP2 && typeof XP2.ensureMigrated === 'function') {
         return XP2.ensureMigrated(data);
