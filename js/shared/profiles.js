@@ -109,6 +109,12 @@ window.MQCProfiles = (function () {
   function activeId(){ ready(); return _reg.guest ? null : _reg.activeId; }
   function hasActive(){ ready(); return !!_reg.activeId && !_reg.guest; }
 
+  /* Lectura segura del XP para listas/resúmenes: si el total guardado quedó
+     corrupto por texto ("4805[object Object]2525...", ver _xpRepair en
+     js/core/storage.js) muestra el prefijo numérico sano en vez del texto
+     — solo visualización, no escribe nada. */
+  function _xpNum(t){ return (typeof t === 'number' && isFinite(t)) ? t : (parseFloat(t) || 0); }
+
   /* estadísticas rápidas leídas del progreso del perfil */
   function _stats(id){
     const d = _lsGet(_dataKey(id));
@@ -116,7 +122,7 @@ window.MQCProfiles = (function () {
     let completed = 0;
     if (d.units) for (const k in d.units) if (d.units[k] && d.units[k].completed) completed++;
     return {
-      xp: (d.xp && d.xp.total) || 0,
+      xp: _xpNum(d.xp && d.xp.total),
       level: d.level || 1,
       badges: Array.isArray(d.badges) ? d.badges.length : 0,
       completed
@@ -465,7 +471,7 @@ window.MQCProfiles = (function () {
       tiempoEstudioMs: (d.study && d.study.totalMs) || 0,
       tiempoEstudio: _fmtStudy((d.study && d.study.totalMs) || 0),
       mqcVersion: MQC_VERSION,
-      xp: (d.xp && d.xp.total) || 0,
+      xp: _xpNum(d.xp && d.xp.total),
       nivel: d.level || 1,
       insignias: Array.isArray(d.badges) ? d.badges.slice() : [],
       progresoGeneral: nImpl ? Math.round(sumPct / nImpl) : 0,
