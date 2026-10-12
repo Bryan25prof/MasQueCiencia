@@ -33,6 +33,6 @@
    de descubrimiento invitan a entrar. Deben coincidir siempre.
 ================================================================ */
 window.MQC_BIOLOGIA_FLAGS = {
-  biologia10Publico: false, /* debe coincidir con BIOLOGIA10_PUBLICO en js/modules/biologia10.js */
+  biologia10Publico: true,  /* debe coincidir con BIOLOGIA10_PUBLICO en js/modules/biologia10.js — PUBLICADA, autorización explícita de Bryan (octubre de 2026) */
   biologia11Publico: true   /* debe coincidir con BIOLOGIA11_PUBLICO en js/modules/biologia11.js — PUBLICADA, autorización explícita de Bryan (30 de setiembre de 2026) */
 };
