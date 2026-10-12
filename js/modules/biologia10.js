@@ -150,7 +150,7 @@ const BIOLOGIA10_UNIDADES_DATA = [
      ?biologia10preview=1
    Igual que el mecanismo ya usado para Física — queda guardado
    localmente en ese navegador únicamente. */
-const BIOLOGIA10_PUBLICO = false; /* EN REVISIÓN — BIO10-U01 recién construida, 25 de setiembre de 2026 */
+const BIOLOGIA10_PUBLICO = true; /* PUBLICADA — autorización explícita de Bryan, octubre de 2026. Las 9 unidades (BIO10-U01 a U09) ya están construidas, probadas y revisadas. */
 const BIOLOGIA10_PREVIEW_KEY = 'mqc_biologia10_preview';
 try {
   const params = new URLSearchParams(window.location.search);
