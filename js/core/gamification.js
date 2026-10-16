@@ -1142,7 +1142,7 @@ const Gamification = (() => {
     return {
       quimica:  { total: (data.xpQuimica  && data.xpQuimica.total)  || 0, rango: XP2.getRango('quimica',  (data.xpQuimica  && data.xpQuimica.total)  || 0) },
       fisica:   { total: (data.xpFisica   && data.xpFisica.total)   || 0, rango: XP2.getRango('fisica',   (data.xpFisica   && data.xpFisica.total)   || 0) },
-      biologia: { total: (data.xpBiologia && data.xpBiologia.total) || 0, rango: null },
+      biologia: { total: (data.xpBiologia && data.xpBiologia.total) || 0, rango: XP2.getRango('biologia', (data.xpBiologia && data.xpBiologia.total) || 0) },
       transversal: (data.xpTransversal && data.xpTransversal.total) || 0,
       global: XP2.getGlobal(data)
     };
