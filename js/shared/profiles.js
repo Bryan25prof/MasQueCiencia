@@ -376,7 +376,13 @@ window.MQCProfiles = (function () {
     'game-highscore':'Nuevo récord', 'lab-done':'Completaste un laboratorio',
     'exam-done':'Aprobaste un examen', 'general-exam-done':'Examen general',
     'element-explored':'Exploraste un elemento', 'daily-login':'Entraste a MQC',
-    'section-visited':'Visitaste una sección'
+    'section-visited':'Visitaste una sección',
+    /* Rótulos agregados en oct-2026: antes salían como "Actividad". Solo
+       texto de pantalla; no cambia XP ni la clasificación por grado. */
+    'grade11-mission-done':'Entregaste una misión', 'fisica10-mission-done':'Entregaste una misión',
+    'biologia10-mission-done':'Entregaste una misión', 'biologia11-mission-done':'Entregaste una misión',
+    'pne-first-pass':'Aprobaste el Desafío Final', 'pne-improved':'Mejoraste tu resultado en el Desafío Final',
+    'integrador-estacion':'Completaste una estación del Integrador', 'integrador-completado':'Completaste el Proyecto Integrador'
   };
   function _histText(src){ return HIST_LABEL[src] || 'Actividad'; }
   function _fmtStudy(ms){
@@ -449,7 +455,11 @@ window.MQCProfiles = (function () {
       if (source && source.indexOf('pne-') === 0) return 'pne';
       if (h && h.disciplina === 'quimica')  return h.grado === 11 ? 11 : 10;
       if (h && h.disciplina === 'fisica')   return h.grado === 11 ? 'fisica11' : 'fisica10';
-      if (h && h.disciplina === 'biologia') return 'biologia';
+      /* Biología 10.º y 11.º (oct-2026): se separan por grado igual que
+         Física, para que la Bitácora tenga una pestaña por grado. Sin
+         grado explícito se conserva 'biologia' (visible solo en "Todo"):
+         no se inventa una clasificación que el evento no trae. */
+      if (h && h.disciplina === 'biologia') return h.grado === 10 ? 'biologia10' : (h.grado === 11 ? 'biologia11' : 'biologia');
       if (h && h.transversal === true)      return 'transversal';
       if (source && source.indexOf('g11-') === 0) return 11;
       return 10;

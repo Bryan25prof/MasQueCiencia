@@ -1010,8 +1010,10 @@ window.MQCProfilesUI = (function () {
        'fisica11' porque, con el contexto explícito nuevo, la actividad
        de Física ya se clasifica correctamente en vez de caer (mal)
        bajo "Química 10.º" como antes (ver profiles.js:_gradeOf). Sin
-       pestaña de Biología todavía: no hay contenido real que mostrar. */
-    const FILTERS = [['all','Todo'],[10,'Química 10.º'],['pne','Examen Final 10.º'],[11,'Química 11.º'],['fisica10','Física 10.º'],['fisica11','Física 11.º']];
+       pestaña de Biología todavía: no hay contenido real que mostrar.
+       (oct-2026) Ya hay contenido real: se agregan 'biologia10' y
+       'biologia11', clasificados en profiles.js:_gradeOf. */
+    const FILTERS = [['all','Todo'],[10,'Química 10.º'],['pne','Examen Final 10.º'],[11,'Química 11.º'],['fisica10','Física 10.º'],['fisica11','Física 11.º'],['biologia10','Biología 10.º'],['biologia11','Biología 11.º']];
     const filterBtns = FILTERS.map(([val,label],i)=>
       `<button class="btn btn-ghost btn-sm mqc-tl-filter" data-filter="${val}" style="${i===0?'border-color:var(--cyan,#1FDBFF)':''}">${label}</button>`
     ).join('');
