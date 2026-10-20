@@ -364,9 +364,52 @@ window.SimulacroNacional = (function () {
     const progresoPromedio = Math.round(sumaProgreso / G11_IDS.length);
     const rutaProgreso = (progresoPromedio >= PROGRESO_REQUERIDO) || (examenesAprobados >= EXAMENES_REQUERIDOS);
 
+    /* ---- Dos caminos nuevos, claros para el estudiante (oct-2026) ----
+       Solo LEEN datos que ya existen (data.suficiencia y el
+       `examBest` que cada unidad ya guarda); no escriben nada.
+       Camino 1 — Suficiencia acreditada en Química Y en Física (cada
+                  una en 10.º o en 11.º). Biología todavía no tiene
+                  Suficiencia; cuando exista (bio10/bio11) se suma sola
+                  a `cursosAcreditados`, pero no se exige para este camino.
+       Camino 2 — Al menos EXAMENES_POR_CIENCIA exámenes de unidad
+                  aprobados (>= 70 %) en CADA una de las tres ciencias,
+                  sumando 10.º y 11.º. No hace falta completar módulos. */
+    const suf = (data && data.suficiencia) || {};
+    const cursosAcreditados = Object.keys(suf).filter(k => suf[k] && suf[k].acreditado === true);
+    const acredita = (...ks) => ks.some(k => suf[k] && suf[k].acreditado === true);
+    const sufQuimica = acredita('q10', 'q11');
+    const sufFisica  = acredita('fix10', 'fix11');
+    const rutaSuficiencia = sufQuimica && sufFisica;
+
+    const EXAMENES_POR_CIENCIA = 2;
+    const PASS_UNIDAD = 70;   /* mismo umbral de todas las unidades de las tres ciencias */
+    const contarAprobados = (...contenedores) => {
+      let n = 0;
+      contenedores.forEach(c => {
+        Object.keys(c || {}).forEach(id => { if (c[id] && (c[id].examBest || 0) >= PASS_UNIDAD) n++; });
+      });
+      return n;
+    };
+    const examenes = {
+      quimica:  contarAprobados(data && data.units, data && data.grade11),
+      fisica:   contarAprobados(data && data.fisica10, data && data.fisica11),
+      biologia: contarAprobados(data && data.biologia10, data && data.biologia11)
+    };
+    const rutaExamenes = examenes.quimica >= EXAMENES_POR_CIENCIA
+      && examenes.fisica >= EXAMENES_POR_CIENCIA
+      && examenes.biologia >= EXAMENES_POR_CIENCIA;
+
     return {
-      desbloqueado: rutaGrade11 || rutaProgreso,
+      desbloqueado: rutaGrade11 || rutaProgreso || rutaSuficiencia || rutaExamenes,
       rutaGrade11Unlocked: rutaGrade11,
+      rutaProgreso,
+      rutaSuficiencia,
+      rutaExamenes,
+      sufQuimica,
+      sufFisica,
+      examenes,
+      examenesPorCiencia: EXAMENES_POR_CIENCIA,
+      cursosAcreditados,
       progresoPromedio,
       progresoRequerido: PROGRESO_REQUERIDO,
       examenesAprobados,
