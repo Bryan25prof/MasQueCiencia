@@ -75,30 +75,69 @@ Router.register('simulacro-nacional', (() => {
      grade11Unlock ni en ningún dato del núcleo.
      ================================================================ */
   function _renderBloqueado(estado) {
-    const pctProgreso = Math.min(100, Math.round((estado.progresoPromedio / estado.progresoRequerido) * 100));
-    const pctExamenes = Math.min(100, Math.round((estado.examenesAprobados / estado.examenesRequeridos) * 100));
+    /* Guía de dos caminos (oct-2026): la pantalla le explica al
+       estudiante QUÉ hacer y cuánto lleva, en vez de mostrar solo un
+       candado. Las reglas viejas (Química 11.º desbloqueada / progreso
+       en 11.º) siguen abriendo el Simulacro, pero no se muestran acá. */
+    const REQ = estado.examenesPorCiencia;
+    const ciencias = [
+      { k: 'quimica',  nombre: 'Química',  icono: '🧪', color: '#B983FF', suf: estado.sufQuimica, cursos: [['q10', '10.º'], ['q11', '11.º']], destino: 'home' },
+      { k: 'fisica',   nombre: 'Física',   icono: '⚛',  color: '#1FDBFF', suf: estado.sufFisica,  cursos: [['fix10', '10.º'], ['fix11', '11.º']], destino: 'fisica10' },
+      { k: 'biologia', nombre: 'Biología', icono: '🧬', color: '#5CF2A8', suf: null,              cursos: [], destino: 'biologia10' }
+    ];
+    const caja = 'background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.4rem;text-align:left';
+
+    const filasSuf = ciencias.filter(c => c.cursos.length).map(c => `
+        <div style="margin-bottom:.9rem">
+          <div style="display:flex;justify-content:space-between;gap:.5rem;font-size:.88rem;color:var(--text-primary)">
+            <span>${c.icono} ${c.nombre}</span>
+            <span style="color:${c.suf ? 'var(--green)' : 'var(--text-muted)'}">${c.suf ? '✓ Acreditada' : 'Pendiente'}</span>
+          </div>
+          ${c.suf ? '' : `<div style="display:flex;gap:.5rem;margin-top:.4rem;flex-wrap:wrap">
+            ${c.cursos.map(([curso, lbl]) => `<button class="btn btn-ghost btn-sm" data-sn-suf="${curso}">Suficiencia ${c.nombre} ${lbl}</button>`).join('')}
+          </div>`}
+        </div>`).join('');
+
+    const filasEx = ciencias.map(c => {
+      const n = estado.examenes[c.k];
+      const ok = n >= REQ;
+      const pct = Math.min(100, Math.round((n / REQ) * 100));
+      return `
+        <div style="margin-bottom:.9rem">
+          <div style="display:flex;justify-content:space-between;gap:.5rem;font-size:.88rem;color:var(--text-primary)">
+            <span>${c.icono} ${c.nombre}</span>
+            <span style="color:${ok ? 'var(--green)' : 'var(--text-muted)'}">${ok ? '✓ Listo' : ''} ${Math.min(n, REQ)} de ${REQ} exámenes</span>
+          </div>
+          <div class="progress-bar" style="margin:.3rem 0"><div class="progress-fill" style="width:${pct}%;background:${ok ? 'var(--green)' : c.color}"></div></div>
+          ${ok ? '' : `<button class="btn btn-ghost btn-sm" data-sn-ir="${c.destino}">Ir a ${c.nombre}</button>`}
+        </div>`;
+    }).join('');
+
     return `
       <div class="section-header"><p class="section-title">Undécimo Año</p><h2 class="section-heading">🎯 Simulacro PNE · Ciencias</h2></div>
-      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;text-align:center;max-width:560px;margin:0 auto">
-        <div style="font-size:2.4rem">🔒</div>
-        <h3 style="margin:.5rem 0">Todavía no está desbloqueado</h3>
-        <p style="color:var(--text-secondary);font-size:.9rem;margin-bottom:1.2rem">Se desbloquea con cualquiera de estas dos rutas:</p>
-
-        <div style="text-align:left;margin-bottom:1rem">
-          <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:.3rem">Ruta 1 — Química 11.º ya desbloqueada</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${estado.rutaGrade11Unlocked ? 100 : 0}%;background:var(--green)"></div></div>
-          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem">${estado.rutaGrade11Unlocked ? '✓ Cumplida' : 'Aprobá 6 de 9 exámenes de Química 10.º, o alcanzá 80+ en el Desafío Final de 10.º'}</div>
+      <div style="max-width:760px;margin:0 auto">
+        <div style="text-align:center;margin-bottom:1.2rem">
+          <div style="font-size:2rem">🔒</div>
+          <h3 style="margin:.3rem 0">Elegí cómo desbloquearlo</h3>
+          <p style="color:var(--text-secondary);font-size:.9rem;margin:0">Con cumplir <strong>uno</strong> de los dos caminos ya podés hacer el Simulacro. No hace falta completar los módulos enteros.</p>
         </div>
-
-        <div style="text-align:left;margin-bottom:1.2rem">
-          <div style="font-size:.82rem;color:var(--text-secondary);margin-bottom:.3rem">Ruta 2 — Progreso real en Química 11.º</div>
-          <div class="progress-bar"><div class="progress-fill" style="width:${Math.max(pctProgreso, pctExamenes)}%;background:var(--gold)"></div></div>
-          <div style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem">
-            ${estado.progresoPromedio}% de progreso promedio (necesitás ${estado.progresoRequerido}%) · ${estado.examenesAprobados}/4 exámenes de unidad aprobados (necesitás ${estado.examenesRequeridos})
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:1rem">
+          <div style="${caja}">
+            <div style="font-size:.72rem;letter-spacing:.06em;color:var(--text-muted)">CAMINO 1 · RÁPIDO</div>
+            <h4 style="margin:.2rem 0 .3rem">Acreditá las Suficiencias</h4>
+            <p style="color:var(--text-secondary);font-size:.82rem;margin:0 0 .9rem">Aprobá el Examen de Suficiencia de <strong>Química</strong> y el de <strong>Física</strong> (de 10.º o de 11.º). Son 20 preguntas, se aprueba con 14 y podés repetirlo cuantas veces quieras. Ideal si ya dominás los temas.</p>
+            ${filasSuf}
+          </div>
+          <div style="${caja}">
+            <div style="font-size:.72rem;letter-spacing:.06em;color:var(--text-muted)">CAMINO 2 · GUIADO</div>
+            <h4 style="margin:.2rem 0 .3rem">Aprobá exámenes de unidad</h4>
+            <p style="color:var(--text-secondary);font-size:.82rem;margin:0 0 .9rem">Aprobá <strong>${REQ} exámenes de unidad</strong> (70 % o más) en cada ciencia: Química, Física y Biología, de 10.º o de 11.º. Solo los exámenes, no todo el módulo. Ideal para ir aprendiendo mientras avanzás.</p>
+            ${filasEx}
           </div>
         </div>
-
-        <button class="btn btn-ghost" data-action="sn-volver-g11">← Volver a Química 11.º</button>
+        <div style="text-align:center;margin-top:1.2rem">
+          <button class="btn btn-ghost" data-action="sn-volver-g11">← Volver al inicio</button>
+        </div>
       </div>`;
   }
 
@@ -716,13 +755,16 @@ Router.register('simulacro-nacional', (() => {
     const estado = S.estadoDesbloqueo();
     // PENDIENTE D — paso 2: un docente verificado entra al Simulacro
     // Nacional aunque estado.desbloqueado sea false — el candado real
-    // (grade11Unlock o progreso/exámenes de Química 11.º) no se toca.
+    // (grade11Unlock, progreso/exámenes de Química 11.º o Suficiencia
+    // acreditada en cualquier curso) no se toca.
     if (!AccessControl.canExplore(estado.desbloqueado)) {
       const root = document.getElementById('content');
       if (root) {
         root.innerHTML = _renderBloqueado(estado);
         const back = root.querySelector('[data-action="sn-volver-g11"]');
-        if (back) back.addEventListener('click', () => Router.navigate('grade11'));
+        if (back) back.addEventListener('click', () => Router.navigate('grade-select'));
+        root.querySelectorAll('[data-sn-suf]').forEach(b => b.addEventListener('click', () => Router.navigate('suficiencia', { curso: b.dataset.snSuf })));
+        root.querySelectorAll('[data-sn-ir]').forEach(b => b.addEventListener('click', () => Router.navigate(b.dataset.snIr)));
       }
       return;
     }
