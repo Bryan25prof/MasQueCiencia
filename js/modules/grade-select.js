@@ -199,23 +199,37 @@ Router.register('grade-select', (() => {
     try { return localStorage.getItem('mqc_biologia11_preview') === '1'; } catch (e) { return false; }
   }
 
+  /* Progreso PROMEDIO de un curso completo (todas sus unidades), para que
+     la tarjeta "Elegí tu año" no siga mostrando solo la unidad 1 ahora
+     que Física y Biología tienen todas sus unidades publicadas. Solo
+     LEE con las mismas funciones de Storage que ya usaba cada tarjeta. */
+  function _progresoCurso(fnName, prefijo, total) {
+    if (typeof Storage === 'undefined' || typeof Storage[fnName] !== 'function') return 0;
+    let suma = 0;
+    for (let i = 1; i <= total; i++) {
+      const id = prefijo + '-u' + String(i).padStart(2, '0');
+      let v = 0;
+      try { v = Number(Storage[fnName](id)) || 0; } catch (e) { v = 0; }
+      suma += Math.max(0, Math.min(100, v));
+    }
+    return Math.round(suma / total);
+  }
+
   function _renderFisica() {
     const habilitado = _fisica10VistaPreviaActiva();
     const habilitado11 = _fisica11VistaPreviaActiva();
-    const pct10 = habilitado && typeof Storage !== 'undefined' && Storage.getFisica10UnitProgress
-      ? Storage.getFisica10UnitProgress('fix10-u01') : 0;
-    const pct11 = habilitado11 && typeof Storage !== 'undefined' && Storage.getFisica11UnitProgress
-      ? Storage.getFisica11UnitProgress('fix11-u01') : 0;
+    const pct10 = habilitado ? _progresoCurso('getFisica10UnitProgress', 'fix10', 8) : 0;
+    const pct11 = habilitado11 ? _progresoCurso('getFisica11UnitProgress', 'fix11', 6) : 0;
     const bodyF10 = habilitado ? `
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">FIX10-U01 disponible — las siguientes unidades se irán incorporando.</p>
-          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de FIX10-U01: ${pct10}%</div>
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">8 unidades disponibles — empezá por la primera y avanzá a tu ritmo.</p>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso del curso: ${pct10}%</div>
           <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct10}%;background:var(--violet)"></div></div>
           <button class="btn btn-primary" data-action="go-fisica10">Continuar en Física 10.º</button>` : `
           <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
           <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>`;
     const bodyF11 = habilitado11 ? `
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">FIX11-U01 (Hidrostática) disponible — las siguientes unidades se irán incorporando.</p>
-          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de FIX11-U01: ${pct11}%</div>
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">6 unidades disponibles — empezá por la primera y avanzá a tu ritmo.</p>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso del curso: ${pct11}%</div>
           <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct11}%;background:var(--violet)"></div></div>
           <button class="btn btn-primary" data-action="go-fisica11">Continuar en Física 11.º</button>` : `
           <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
@@ -254,20 +268,18 @@ Router.register('grade-select', (() => {
   function _renderBiologia() {
     const habilitado = _biologia10VistaPreviaActiva();
     const habilitado11 = _biologia11VistaPreviaActiva();
-    const pct10 = habilitado && typeof Storage !== 'undefined' && Storage.getBiologia10UnitProgress
-      ? Storage.getBiologia10UnitProgress('bio10-u01') : 0;
-    const pct11 = habilitado11 && typeof Storage !== 'undefined' && Storage.getBiologia11UnitProgress
-      ? Storage.getBiologia11UnitProgress('bio11-u01') : 0;
+    const pct10 = habilitado ? _progresoCurso('getBiologia10UnitProgress', 'bio10', 9) : 0;
+    const pct11 = habilitado11 ? _progresoCurso('getBiologia11UnitProgress', 'bio11', 5) : 0;
     const bodyB10 = habilitado ? `
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">BIO10-U01 disponible — las siguientes unidades se irán incorporando.</p>
-          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de BIO10-U01: ${pct10}%</div>
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">9 unidades disponibles — empezá por la primera y avanzá a tu ritmo.</p>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso del curso: ${pct10}%</div>
           <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct10}%;background:var(--green)"></div></div>
           <button class="btn btn-primary" data-action="go-biologia10">Continuar en Biología 10.º</button>` : `
           <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
           <button class="btn btn-ghost" disabled style="opacity:.5;cursor:not-allowed">En desarrollo</button>`;
     const bodyB11 = habilitado11 ? `
-          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">BIO11-U01 disponible — las siguientes unidades se irán incorporando.</p>
-          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso de BIO11-U01: ${pct11}%</div>
+          <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">5 unidades disponibles — empezá por la primera y avanzá a tu ritmo.</p>
+          <div style="font-size:.8rem;color:var(--text-muted);margin-bottom:.2rem">Progreso del curso: ${pct11}%</div>
           <div class="progress-bar" style="margin-bottom:1rem"><div class="progress-fill" style="width:${pct11}%;background:var(--green)"></div></div>
           <button class="btn btn-primary" data-action="go-biologia11">Continuar en Biología 11.º</button>` : `
           <p style="color:var(--text-secondary);font-size:.85rem;margin-bottom:.8rem">Próximamente nuevas experiencias de aprendizaje.</p>
