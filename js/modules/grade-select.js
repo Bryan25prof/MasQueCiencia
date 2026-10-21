@@ -37,6 +37,50 @@ Router.register('grade-select', (() => {
     return { examsPassed, totalExams: (typeof UNIDADES_DATA !== 'undefined') ? UNIDADES_DATA.length : 9 };
   }
 
+  /* ── Tarjeta "Primeros pasos" (oct-2026) ──────────────────
+     Guía corta para el estudiante nuevo, que al entrar no sabía cómo
+     seguir. Aparece SOLO en el hub, mientras el Simulacro PNE siga
+     bloqueado, y se puede cerrar con "Entendido" (se recuerda por
+     perfil en este navegador; si el almacenamiento falla, simplemente
+     vuelve a aparecer). No aparece para docentes verificados. Solo LEE
+     el estado de desbloqueo del Simulacro; no escribe progreso. */
+  function _primerosPasosClave() {
+    let id = 'invitado';
+    try { const m = (typeof MQCProfiles !== 'undefined' && MQCProfiles.activeMeta) ? MQCProfiles.activeMeta() : null; if (m && m.id) id = m.id; } catch (e) {}
+    return 'mqc_primeros_pasos_oculto_' + id;
+  }
+  function _primerosPasosVisible() {
+    try {
+      if (typeof SimulacroNacional === 'undefined' || !SimulacroNacional.estadoDesbloqueo) return null;
+      if (typeof AccessControl !== 'undefined' && AccessControl.isTeacher && AccessControl.isTeacher()) return null;
+      const estado = SimulacroNacional.estadoDesbloqueo();
+      if (estado.desbloqueado) return null;
+      try { if (localStorage.getItem(_primerosPasosClave()) === '1') return null; } catch (e) {}
+      return estado;
+    } catch (e) { return null; }
+  }
+  function _renderPrimerosPasos() {
+    const estado = _primerosPasosVisible();
+    if (!estado) return '';
+    const REQ = estado.examenesPorCiencia;
+    const ex = estado.examenes;
+    const paso = (n, html) => `<li style="display:flex;gap:.7rem;align-items:flex-start;margin-bottom:.6rem"><span style="flex:none;width:1.5rem;height:1.5rem;border-radius:50%;background:var(--cyan);color:#06121f;font-weight:700;font-size:.8rem;display:flex;align-items:center;justify-content:center">${n}</span><span style="color:var(--text-secondary);font-size:.88rem;line-height:1.45">${html}</span></li>`;
+    return `
+      <div id="primeros-pasos" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.3rem;max-width:1000px;margin-top:1.5rem">
+        <h3 style="margin:0 0 .8rem">👋 Primeros pasos</h3>
+        <ol style="list-style:none;margin:0;padding:0">
+          ${paso(1, '<strong>Elegí una ciencia</strong> (Química, Física o Biología) y tu año.')}
+          ${paso(2, '<strong>Estudiá una unidad</strong> (teoría, simuladores y juego) y hacé su examen. Con 70 % o más lo aprobás y ganás XP.')}
+          ${paso(3, '<strong>Desbloqueá el Simulacro PNE · Ciencias:</strong> acreditá las Suficiencias de Química y Física, o aprobá ' + REQ + ' exámenes de unidad en cada ciencia.')}
+        </ol>
+        <div style="font-size:.78rem;color:var(--text-muted);margin:.4rem 0 .9rem">Exámenes aprobados hacia el Simulacro: Química ${Math.min(ex.quimica, REQ)}/${REQ} · Física ${Math.min(ex.fisica, REQ)}/${REQ} · Biología ${Math.min(ex.biologia, REQ)}/${REQ}</div>
+        <div style="display:flex;gap:.6rem;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" data-action="pp-simulacro">Ver cómo desbloquear el Simulacro PNE</button>
+          <button class="btn btn-ghost btn-sm" data-action="pp-cerrar">Entendido</button>
+        </div>
+      </div>`;
+  }
+
   /* ── Nivel 1: los 3 botones grandes ─────────────────────── */
   function _renderHub() {
     return `
@@ -49,6 +93,7 @@ Router.register('grade-select', (() => {
         ${_disciplinaBoton('Física', _iconoFisica(), 'var(--violet)', _fisica10VistaPreviaActiva() ? 'Disponible' : 'En desarrollo', 'fisica')}
         ${_disciplinaBoton('Biología', _iconoBiologia(), 'var(--green)', (_biologia10VistaPreviaActiva() || _biologia11VistaPreviaActiva()) ? 'Disponible' : 'En desarrollo', 'biologia')}
       </div>
+      ${_renderPrimerosPasos()}
     `;
   }
 
@@ -326,6 +371,14 @@ Router.register('grade-select', (() => {
         if (destino === 'quimica' || destino === 'fisica' || destino === 'biologia') { _vista = destino; _rerender(); }
         else Router.navigate(destino);
       });
+    });
+    const ppSim = document.querySelector('[data-action="pp-simulacro"]');
+    if (ppSim) ppSim.addEventListener('click', () => Router.navigate('simulacro-nacional'));
+    const ppCerrar = document.querySelector('[data-action="pp-cerrar"]');
+    if (ppCerrar) ppCerrar.addEventListener('click', () => {
+      try { localStorage.setItem(_primerosPasosClave(), '1'); } catch (e) {}
+      const card = document.getElementById('primeros-pasos');
+      if (card) card.remove();
     });
     const volver = document.querySelector('[data-action="volver-hub"]');
     if (volver) volver.addEventListener('click', () => { _vista = 'hub'; _rerender(); });
