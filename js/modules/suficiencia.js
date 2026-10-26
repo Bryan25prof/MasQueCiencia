@@ -2,9 +2,10 @@
    MÁSQUECIENCIA — js/modules/suficiencia.js
    Módulo: Examen de Suficiencia (Finales/Suficiencia — Fase 2)
    ================================================================
-   Registra el módulo con nombre 'suficiencia', ÚNICO para los 4
-   cursos (Química 10.º/11.º, Física 10.º/11.º) — se parametriza vía
-   Router.navigate('suficiencia', { curso: 'q10'|'q11'|'fix10'|'fix11' }).
+   Registra el módulo con nombre 'suficiencia', ÚNICO para los 6
+   cursos (Química 10.º/11.º, Física 10.º/11.º, Biología 10.º/11.º) —
+   se parametriza vía Router.navigate('suficiencia', { curso:
+   'q10'|'q11'|'fix10'|'fix11'|'bio10'|'bio11' }).
    Reutiliza el componente CSS .mqc-exam-nav (main.css) y el patrón de
    navegación libre de preguntas ya probado en simulacro-nacional.js.
 
@@ -20,7 +21,7 @@ Router.register('suficiencia', (() => {
 
   const E = window.SuficienciaEngine;
 
-  const RUTA_VOLVER = { q10: 'units', q11: 'grade11', fix10: 'fisica10', fix11: 'fisica11' };
+  const RUTA_VOLVER = { q10: 'units', q11: 'grade11', fix10: 'fisica10', fix11: 'fisica11', bio10: 'biologia10', bio11: 'biologia11' };
 
   let _curso = 'q10';
   let _vista = 'entrada';   // 'entrada' | 'examen' | 'resultados'

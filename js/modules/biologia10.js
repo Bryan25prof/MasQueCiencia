@@ -178,6 +178,25 @@ Router.register('biologia10', (() => {
     { id: 'mision',      label: '🔎 Misión' }
   ];
 
+  /* Suficiencia de Biología (oct-2026, "por simetría" con Química y Física):
+     misma tarjeta sin candado — no otorga XP, no desbloquea nada y no
+     condiciona el Simulacro PNE. */
+  function _renderSufCard(data) {
+    const sufData = (data.suficiencia && data.suficiencia.bio10) || {};
+    return `
+      <div class="unit-card" style="--unit-color:#5CF2A8" data-action="open-suficiencia-bio10">
+        <div class="unit-badge" style="color:${sufData.acreditado ? 'var(--green)' : 'var(--text-muted)'};border-color:${sufData.acreditado ? 'rgba(92,242,168,.3)' : 'var(--border)'}">
+          ${sufData.acreditado ? '🏅 Acreditado' : '✓ Disponible'}
+        </div>
+        <div class="unit-number">SUFICIENCIA</div>
+        <div class="unit-symbol">🏅</div>
+        <div class="unit-name">Examen de Suficiencia<br><span style="font-weight:400;color:var(--text-muted);font-size:.85em">Biología 10.º</span></div>
+        <div class="unit-meta">
+          <span class="unit-meta-item unit-meta-item-clamp">${sufData.attempts ? `${sufData.attempts} intento${sufData.attempts !== 1 ? 's' : ''} · mejor: ${sufData.bestScore}/100` : 'Demostrá dominio del curso completo'}</span>
+        </div>
+      </div>`;
+  }
+
   function _renderGrid() {
     const cards = BIOLOGIA10_UNIDADES_DATA.map(u => {
       if (u.status === 'active') {
@@ -207,7 +226,7 @@ Router.register('biologia10', (() => {
           <span class="unit-meta-item unit-meta-item-clamp">${u.description}</span>
         </div>
       </div>`;
-    }).join('');
+    }).join('') + _renderSufCard(Storage.load());
 
     return `
       <div class="section-header">
@@ -215,7 +234,7 @@ Router.register('biologia10', (() => {
         <p class="section-title">Décimo Año</p><h2 class="section-heading">🧬 Biología 10.º</h2>
       </div>
       <p style="color:var(--text-secondary);margin-bottom:.6rem;max-width:60ch">
-        Biología 10.° está en desarrollo progresivo. Explorá las unidades disponibles y continuá construyendo tu dominio de la Biología.
+        Explorá las unidades, hacé sus exámenes y, si ya dominás el curso, acreditalo con el Examen de Suficiencia.
       </p>
       <div class="units-grid">${cards}</div>
     `;
@@ -319,6 +338,11 @@ Router.register('biologia10', (() => {
     if (back1) back1.addEventListener('click', () => Router.navigate('grade-select'));
     const back2 = document.querySelector('[data-action="back-grid"]');
     if (back2) back2.addEventListener('click', () => { _infoUnitId = null; _currentUnitId = null; _rerender(); });
+    document.querySelectorAll('[data-action="open-suficiencia-bio10"]').forEach(el => {
+      el.addEventListener('click', () => {
+        if (typeof Router !== 'undefined' && Router.navigate) Router.navigate('suficiencia', { curso: 'bio10' });
+      });
+    });
     document.querySelectorAll('[data-action="open-biologia10-info"]').forEach(el => {
       el.addEventListener('click', () => { _infoUnitId = el.getAttribute('data-unit'); _rerender(); });
     });
