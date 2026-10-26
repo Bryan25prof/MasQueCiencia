@@ -58,6 +58,29 @@ const Gamification = (() => {
     ║  Agrega una clave aquí y úsala en Gamification.addXP()  ║
     ╚═══════════════════════════════════════════════════════════╝
   */
+  /* ── CLAVES RESERVADAS DE XP_REWARDS (documentadas oct-2026) ─────────
+     Estas 9 claves existen en la tabla de abajo pero NINGÚN archivo del
+     proyecto las otorga hoy con addXP() (verificado buscando cada clave
+     en todo js/**; solo aparecen como texto en la tabla, y 3 de ellas
+     como rótulo en profiles.js:HIST_LABEL). Por decisión de Bryan están
+     RESERVADAS: no se conectan ni se eliminan.
+
+       exam-60 (60) · exam-80 (100) · exam-100 (200)   → bonos por nota del
+            examen de unidad; hoy el examen paga solo 'exam-done' (40).
+       general-exam-done (100)   → examen general; no existe esa pantalla.
+       unit-completed (150)      → completar una unidad al 100 %; el
+            progreso de unidad se mide aparte (medallas), sin pagar XP.
+       lab-done (75)             → práctica de laboratorio; no existe.
+       streak-3 (50) · streak-7 (150) · streak-30 (500)   → bonos de
+            racha. OJO: 'streak-3' y 'streak-7' también son ids de MEDALLA
+            (BADGES/checkBadges), cosa distinta de estas claves de XP.
+
+     POR QUÉ NO CONECTARLAS A LA LIGERA: los máximos legítimos y los
+     rangos de XP 2.0 están calibrados SIN ellas (Química 8 535, Física
+     8 880, Biología 8 145). Conectar cualquiera cambia ese máximo; por
+     ejemplo, 'unit-completed' sumaría 150 × 41 unidades = 6 150 XP.
+     Si algún día se conecta una, hay que recalcular el máximo y revisar
+     los umbrales de RANGOS_* en js/core/xp2.js antes de publicarla. */
   const XP_REWARDS = {
     /* Teoría */
     'topic-read':          15,   // leer un tema
