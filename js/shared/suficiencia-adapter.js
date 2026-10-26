@@ -5,9 +5,9 @@
    Suficiencia, priorizado por Bryan después del Lote 3 de fragmentación).
    NO depende del DOM. NO llama a Router ni a Gamification. Solo lee
    los bancos de preguntas ya cargados en window/global. Motor ÚNICO
-   y genérico reutilizado por los 4 cursos (Química 10.º, Química
-   11.º, Física 10.º, Física 11.º) — se parametriza por `curso`, no se
-   duplica 4 veces.
+   y genérico reutilizado por los 6 cursos (Química 10.º/11.º, Física
+   10.º/11.º y, desde oct-2026, Biología 10.º/11.º) — se parametriza
+   por `curso`, no se duplica.
 
    ── DECISIONES DE PRODUCTO CONFIRMADAS POR BRYAN (2026-09-15) ──
    1. Se construye para los 4 cursos a la vez, no un piloto.
@@ -35,6 +35,9 @@
                        Por eso aquí se referencian como identificador suelto
                        (mismo scope global de script), nunca como window[...].
      - Física 11.º:   PREGUNTAS_FIX11_U01..U06    — igual que Física 10.º.
+     - Biología 10.º: PREGUNTAS_BIO10_U01..U09    — igual que Física (const de
+                       script, sin campo item.unidad, `explicacion` única).
+     - Biología 11.º: PREGUNTAS_BIO11_U01..U05    — igual.
    Todos los 4 cursos SÍ comparten la misma convención de `correcta`
    (índice 0-based dentro de `opciones`) — no hace falta ninguna
    adaptación de letras A/B/C/D como en el Simulacro PNE nacional.
@@ -129,6 +132,33 @@ window.SuficienciaEngine = (function () {
     }
   }
 
+  /* BIO10/BIO11 (oct-2026, "por simetría"): mismo patrón que Física —
+     identificadores sueltos (const de script), uno por unidad. */
+  function _bancoBio10(n) {
+    switch (n) {
+      case 1: return (typeof PREGUNTAS_BIO10_U01 !== 'undefined') ? PREGUNTAS_BIO10_U01 : [];
+      case 2: return (typeof PREGUNTAS_BIO10_U02 !== 'undefined') ? PREGUNTAS_BIO10_U02 : [];
+      case 3: return (typeof PREGUNTAS_BIO10_U03 !== 'undefined') ? PREGUNTAS_BIO10_U03 : [];
+      case 4: return (typeof PREGUNTAS_BIO10_U04 !== 'undefined') ? PREGUNTAS_BIO10_U04 : [];
+      case 5: return (typeof PREGUNTAS_BIO10_U05 !== 'undefined') ? PREGUNTAS_BIO10_U05 : [];
+      case 6: return (typeof PREGUNTAS_BIO10_U06 !== 'undefined') ? PREGUNTAS_BIO10_U06 : [];
+      case 7: return (typeof PREGUNTAS_BIO10_U07 !== 'undefined') ? PREGUNTAS_BIO10_U07 : [];
+      case 8: return (typeof PREGUNTAS_BIO10_U08 !== 'undefined') ? PREGUNTAS_BIO10_U08 : [];
+      case 9: return (typeof PREGUNTAS_BIO10_U09 !== 'undefined') ? PREGUNTAS_BIO10_U09 : [];
+      default: return [];
+    }
+  }
+  function _bancoBio11(n) {
+    switch (n) {
+      case 1: return (typeof PREGUNTAS_BIO11_U01 !== 'undefined') ? PREGUNTAS_BIO11_U01 : [];
+      case 2: return (typeof PREGUNTAS_BIO11_U02 !== 'undefined') ? PREGUNTAS_BIO11_U02 : [];
+      case 3: return (typeof PREGUNTAS_BIO11_U03 !== 'undefined') ? PREGUNTAS_BIO11_U03 : [];
+      case 4: return (typeof PREGUNTAS_BIO11_U04 !== 'undefined') ? PREGUNTAS_BIO11_U04 : [];
+      case 5: return (typeof PREGUNTAS_BIO11_U05 !== 'undefined') ? PREGUNTAS_BIO11_U05 : [];
+      default: return [];
+    }
+  }
+
   const CURSOS = {
     q10: {
       label: 'Química 10.º',
@@ -179,6 +209,32 @@ window.SuficienciaEngine = (function () {
         { n: 4, id: 'fix11-u04', nombre: 'Magnetismo y electromagnetismo' },
         { n: 5, id: 'fix11-u05', nombre: 'Movimiento ondulatorio' },
         { n: 6, id: 'fix11-u06', nombre: 'Teoría de la Relatividad' }
+      ]
+    },
+    bio10: {
+      label: 'Biología 10.º',
+      banco: _bancoBio10,
+      unidades: [
+        { n: 1, id: 'bio10-u01', nombre: 'Las formas de vida y el entorno biofísico' },
+        { n: 2, id: 'bio10-u02', nombre: 'La biodiversidad' },
+        { n: 3, id: 'bio10-u03', nombre: 'Ecología' },
+        { n: 4, id: 'bio10-u04', nombre: 'Las poblaciones biológicas' },
+        { n: 5, id: 'bio10-u05', nombre: 'Causas de la variabilidad genética' },
+        { n: 6, id: 'bio10-u06', nombre: 'La herencia y su manipulación' },
+        { n: 7, id: 'bio10-u07', nombre: 'Las fuerzas evolutivas' },
+        { n: 8, id: 'bio10-u08', nombre: 'Evidencias del proceso evolutivo' },
+        { n: 9, id: 'bio10-u09', nombre: 'Teorías sobre el origen de la vida y las especies' }
+      ]
+    },
+    bio11: {
+      label: 'Biología 11.º',
+      banco: _bancoBio11,
+      unidades: [
+        { n: 1, id: 'bio11-u01', nombre: 'Interacciones entre poblaciones' },
+        { n: 2, id: 'bio11-u02', nombre: 'Relaciones tróficas y flujo de energía' },
+        { n: 3, id: 'bio11-u03', nombre: 'Ciclos biogeoquímicos y sostenibilidad' },
+        { n: 4, id: 'bio11-u04', nombre: 'Sucesión y restauración de ecosistemas' },
+        { n: 5, id: 'bio11-u05', nombre: 'Desarrollo sostenible y cambio climático' }
       ]
     }
   };
