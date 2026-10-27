@@ -48,7 +48,16 @@ const Gamification = (() => {
     // ya se derivan dinámicamente del último elemento de este arreglo, así
     // que agregar niveles aquí es la única corrección que necesitaban.
     { level: 11, name: 'Investigador Multidisciplinario', icon: '🚀', xp: 18000 },
-    { level: 12, name: 'Sabio de las Ciencias',            icon: '🌌', xp: 22000 }
+    { level: 12, name: 'Sabio de las Ciencias',            icon: '🌌', xp: 22000 },
+    // NIVEL 13 (oct-2026, XP 2.0): el máximo legítimo del pool histórico
+    // sumando las tres ciencias es 25 710 (26 300 con la Tabla Periódica),
+    // por ENCIMA del tope que imponía el nivel 12 (22 000): quien completara
+    // todo quedaba recortado a 22 000 y perdía XP legítimo. Este nivel sube
+    // el tope a 27 000 (MAX_XP se deriva de este arreglo) sin alterar
+    // ninguno de los 12 niveles anteriores (mismos umbrales, nombres e
+    // íconos), así que ningún estudiante cambia de nivel por este cambio.
+    // El nombre es provisional (decisión de Bryan).
+    { level: 13, name: 'Leyenda de las Ciencias',           icon: '🌠', xp: 27000 }
   ];
 
   /* ── Recompensas de XP por tipo de actividad ────────────── */
@@ -518,9 +527,9 @@ const Gamification = (() => {
     }
 
     // EOP-XPCAP: tope de XP total al nivel máximo definido en LEVELS
-    // (hoy 22000, "Sabio de las Ciencias"). Se calcula del propio arreglo
-    // de niveles — nunca un número suelto — para que, si algún día se
-    // agrega un nivel 13, el tope se ajuste solo sin tocar esta línea.
+    // (hoy 27000, "Leyenda de las Ciencias", nivel 13). Se calcula del propio arreglo
+    // de niveles — nunca un número suelto — para que, cuando se
+    // agregue un nivel nuevo, el tope se ajuste solo sin tocar esta línea.
     // Protege contra cualquier fuente de XP mal calibrada (presente o
     // futura) sin necesidad de auditar cada punto de otorgamiento.
     const MAX_XP = LEVELS[LEVELS.length - 1].xp;
