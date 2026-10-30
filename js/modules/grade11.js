@@ -108,7 +108,7 @@ Router.register('grade11', (() => {
     return `
       <div class="section-header"><p class="section-title">Undécimo Año</p><h2 class="section-heading">🎓 Química 11.º</h2></div>
       <p style="color:var(--text-secondary);margin-bottom:1.5rem;max-width:60ch">
-        Tu acceso ya está preparado. Las experiencias de este nivel se irán incorporando gradualmente.
+        Explorá las unidades, hacé sus exámenes y, si ya dominás el curso, acreditalo con el Examen de Suficiencia.
       </p>
       <div class="units-grid">${cards}${sufCard}</div>
     `;

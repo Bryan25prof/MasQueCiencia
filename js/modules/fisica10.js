@@ -199,7 +199,7 @@ Router.register('fisica10', (() => {
         <p class="section-title">Décimo Año</p><h2 class="section-heading">⚛️ Física 10.º</h2>
       </div>
       <p style="color:var(--text-secondary);margin-bottom:.6rem;max-width:60ch">
-        Física 10.° está en desarrollo progresivo. Explorá las unidades disponibles y continuá construyendo tu dominio de la Física.
+        Explorá las unidades, hacé sus exámenes y, si ya dominás el curso, acreditalo con el Examen de Suficiencia.
       </p>
       <button class="btn btn-ghost btn-sm" data-action="go-fisica11-desde-f10" style="margin-bottom:1.2rem">Undécimo Año → Física 11.º</button>
       <div class="units-grid">${cards}${_renderSufCard(data)}</div>

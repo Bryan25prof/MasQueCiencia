@@ -141,7 +141,16 @@ Router.register('grade-select', (() => {
   /* ── Nivel 2: Química (tarjetas 10.º/11.º — SIN CAMBIOS de lógica) ── */
   function _renderQuimica() {
     const data = Storage.load();
-    const g11 = data.grade11Unlock || { unlocked: false };
+    const g11raw = data.grade11Unlock || { unlocked: false };
+    /* Docente verificado: no ve el candado de Química 11.º (mismo
+       AccessControl.canExplore que ya usan el menú lateral y el módulo
+       grade11.js). Antes esta tarjeta era la única que no lo consultaba
+       y mostraba "Bloqueada" con el botón deshabilitado. Un docente sin
+       verificar o un estudiante siguen viendo exactamente lo de siempre. */
+    const g11 = Object.assign({}, g11raw, {
+      unlocked: (typeof AccessControl !== 'undefined' && AccessControl.canExplore)
+        ? AccessControl.canExplore(!!g11raw.unlocked) : !!g11raw.unlocked
+    });
     const pne = data.pne || { bestScore: 0 };
     const { examsPassed } = _unlockStatus(data);
     const levelInfo = (typeof Gamification !== 'undefined') ? Gamification.getLevelInfo() : { percent: 0 };
@@ -153,7 +162,7 @@ Router.register('grade-select', (() => {
     if (g11.unlocked) {
       g11Body = `
         <div class="unit-badge" style="color:var(--xp-gold, #F9FF4D);border-color:rgba(249,255,77,.3)">🔓 Disponible</div>
-        <p style="color:var(--text-secondary);font-size:.85rem;margin:.6rem 0">4 experiencias en desarrollo — el contenido se irá incorporando en próximas actualizaciones.</p>
+        <p style="color:var(--text-secondary);font-size:.85rem;margin:.6rem 0">4 unidades disponibles — empezá por la primera y avanzá a tu ritmo.</p>
         <button class="btn btn-primary" data-action="go-grade11">Explorar Química 11.º</button>`;
     } else {
       const routeAPct = Math.min(100, Math.round((examsPassed / 6) * 100));

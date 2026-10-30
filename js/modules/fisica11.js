@@ -155,7 +155,7 @@ Router.register('fisica11', (() => {
         <p class="section-title">Undécimo Año</p><h2 class="section-heading">⚛️ Física 11.º</h2>
       </div>
       <p style="color:var(--text-secondary);margin-bottom:1.5rem;max-width:60ch">
-        Física 11.° está en desarrollo progresivo. Explorá las unidades disponibles y continuá construyendo tu dominio de la Física.
+        Explorá las unidades, hacé sus exámenes y, si ya dominás el curso, acreditalo con el Examen de Suficiencia.
       </p>
       <div class="units-grid">${cards}${_renderSufCard(data)}</div>
     `;
